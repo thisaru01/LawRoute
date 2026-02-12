@@ -14,12 +14,12 @@ app.use(morgan("dev"));
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Peace & Justice API is running",
+    message: "LawRoute API is running",
   });
 });
 
-// API Routes
-
+// API auth Routes
+app.use("/api/auth", require("./routes/authRoutes"));
 
 // Global Error Handler
 app.use(errorMiddleware);
