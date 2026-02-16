@@ -1,4 +1,6 @@
 const Article = require('../models/articleModel');
+const jwt = require('jsonwebtoken');
+const User = require('../models/userModel');
 
 // Create article
 // - Admins: article is immediately published
@@ -49,4 +51,38 @@ const createArticle = async (req, res, next) => {
   }
 };
 
-module.exports = { createArticle };
+// Get all articles
+// - Public: returns only published articles
+// - Admin (with valid Bearer token): returns all articles
+const getAllArticles = async (req, res, next) => {
+  try {
+    let isAdmin = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('role');
+        if (user && user.role === 'admin') isAdmin = true;
+      } catch (e) {
+        // Invalid token - ignore and treat as unauthenticated
+      }
+    }
+
+    const filter = {};
+    if (!isAdmin) filter.status = 'published';
+    if (req.query.category) filter.category = req.query.category;
+    if (req.query.author) filter.author = req.query.author;
+
+    const articles = await Article.find(filter)
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ success: false, message: err.message || 'Server error' });
+  }
+};
+
+module.exports = { createArticle, getAllArticles };
