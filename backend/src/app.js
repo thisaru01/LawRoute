@@ -20,6 +20,8 @@ app.get("/", (req, res) => {
 
 // API auth Routes
 app.use("/api/auth", require("./routes/authRoutes"));
+// API articles Routes
+app.use('/api/articles', require('./routes/articleRoutes'));
 
 // Global Error Handler
 app.use(errorMiddleware);
