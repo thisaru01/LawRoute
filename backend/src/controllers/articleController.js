@@ -70,7 +70,16 @@ const getAllArticles = async (req, res, next) => {
     }
 
     const filter = {};
-    if (!isAdmin) filter.status = 'published';
+    // Status handling: allow admins to request any status via ?status=...
+    if (req.query.status) {
+      if (req.query.status !== 'published' && !isAdmin) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      filter.status = req.query.status;
+    } else if (!isAdmin) {
+      filter.status = 'published';
+    }
+
     if (req.query.category) filter.category = req.query.category;
     if (req.query.author) filter.author = req.query.author;
 
