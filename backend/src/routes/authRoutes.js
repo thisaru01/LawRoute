@@ -5,6 +5,13 @@ const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.get("/profile", protect, authController.getProfile);
+router.patch(
+  "/lawyer/profile",
+  protect,
+  authorizeRoles("lawyer"),
+  authController.updateLawyerProfile,
+);
 
 // Example protected route for testing
 router.get("/admin-only", protect, authorizeRoles("admin"), (req, res) => {
