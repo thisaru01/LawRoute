@@ -65,3 +65,127 @@ exports.getAssignedRequestsForLawyer = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get a single lawyer request (only by involved user or assigned lawyer)
+exports.getLawyerRequestById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const request = await LawyerRequest.findById(id)
+      .populate("user", "name email")
+      .populate("lawyer", "name email role expertise");
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    const isUser =
+      request.user && request.user._id.toString() === req.user._id.toString();
+    const isLawyer =
+      request.lawyer &&
+      request.lawyer._id.toString() === req.user._id.toString();
+
+    if (!isUser && !isLawyer) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to view this request",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: request,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Accept a lawyer request (only the assigned lawyer)
+exports.acceptLawyerRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const request = await LawyerRequest.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    const isAssignedLawyer =
+      request.lawyer.toString() === req.user._id.toString();
+
+    if (!isAssignedLawyer) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the assigned lawyer can accept this request",
+      });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "This request has already been responded to",
+      });
+    }
+
+    request.status = "accepted";
+    await request.save();
+
+    res.status(200).json({
+      success: true,
+      data: request,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Reject a lawyer request (only the assigned lawyer)
+exports.rejectLawyerRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const request = await LawyerRequest.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    const isAssignedLawyer =
+      request.lawyer.toString() === req.user._id.toString();
+
+    if (!isAssignedLawyer) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the assigned lawyer can reject this request",
+      });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "This request has already been responded to",
+      });
+    }
+
+    request.status = "rejected";
+    await request.save();
+
+    res.status(200).json({
+      success: true,
+      data: request,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
