@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const LawyerProfile = require("../models/lawyerProfileModel");
+const { findAllLawyerProfiles } = require("../services/lawyerProfileService");
 
 const ALLOWED_BASIC_FIELDS = [
 	"profilePhoto",
@@ -171,6 +172,20 @@ const computeProfileCompleted = (lawyerProfile) => {
 			basic.bio &&
 			hasPracticeAreas,
 	);
+};
+
+exports.getAllLawyerProfiles = async (req, res, next) => {
+	try {
+		const lawyerProfiles = await findAllLawyerProfiles();
+
+		return res.status(200).json({
+			success: true,
+			count: lawyerProfiles.length,
+			lawyerProfiles,
+		});
+	} catch (error) {
+		next(error);
+	}
 };
 
 exports.updateLawyerProfile = async (req, res, next) => {
