@@ -21,7 +21,9 @@ app.get("/", (req, res) => {
 // API auth Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 // API articles Routes
-app.use('/api/articles', require('./routes/articleRoutes'));
+app.use("/api/articles", require("./routes/articleRoutes"));
+// API lawyer request Routes (users describe their legal matters)
+app.use("/api/lawyer-requests", require("./routes/lawyerRequestRoutes"));
 
 // Global Error Handler
 app.use(errorMiddleware);
