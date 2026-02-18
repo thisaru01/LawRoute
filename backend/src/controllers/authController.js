@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const LawyerProfile = require("../models/lawyerProfileModel");
 const jwt = require("jsonwebtoken");
 
 // Generate JWT
@@ -11,7 +12,7 @@ const generateToken = (user) => {
 // Register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, expertise, isFree } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -27,6 +28,14 @@ exports.register = async (req, res, next) => {
       password,
       role,
     });
+
+    if (user.role === "lawyer") {
+      await LawyerProfile.create({
+        user: user._id,
+        ...(expertise && { expertise }),
+        ...(typeof isFree === "boolean" && { isFree }),
+      });
+    }
 
     const token = generateToken(user);
 
