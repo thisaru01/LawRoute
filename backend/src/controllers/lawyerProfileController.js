@@ -1,5 +1,6 @@
 const {
 	findAllLawyerProfiles,
+	findLawyerProfileByUser,
 	updateLawyerProfileByUser,
 } = require("../services/lawyerProfileService");
 
@@ -24,6 +25,19 @@ exports.updateLawyerProfile = async (req, res, next) => {
 		return res.status(200).json({
 			success: true,
 			message: "Lawyer profile updated successfully",
+			lawyerProfile,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+exports.getMyLawyerProfile = async (req, res, next) => {
+	try {
+		const lawyerProfile = await findLawyerProfileByUser(req.user);
+
+		return res.status(200).json({
+			success: true,
 			lawyerProfile,
 		});
 	} catch (error) {

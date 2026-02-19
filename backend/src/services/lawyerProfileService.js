@@ -203,6 +203,41 @@ const findAllLawyerProfiles = async () => {
   return lawyerProfiles.map(mapLawyerProfileResponse);
 };
 
+const findLawyerProfileByUser = async (authUser) => {
+  if (!authUser || !authUser._id) {
+    const error = new Error("Unauthorized");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const user = await User.findById(authUser._id);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.role !== "lawyer") {
+    const error = new Error("Only lawyers can access lawyer profile");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  let lawyerProfile = await LawyerProfile.findOne({ user: user._id })
+    .populate("user", "name email role")
+    .lean();
+
+  if (!lawyerProfile) {
+    const createdProfile = await LawyerProfile.create({ user: user._id });
+    lawyerProfile = await LawyerProfile.findById(createdProfile._id)
+      .populate("user", "name email role")
+      .lean();
+  }
+
+  return mapLawyerProfileResponse(lawyerProfile);
+};
+
 const updateLawyerProfileByUser = async (authUser, body) => {
   if (!authUser || !authUser._id) {
     const error = new Error("Unauthorized");
@@ -253,5 +288,6 @@ const updateLawyerProfileByUser = async (authUser, body) => {
 
 module.exports = {
   findAllLawyerProfiles,
+  findLawyerProfileByUser,
   updateLawyerProfileByUser,
 };

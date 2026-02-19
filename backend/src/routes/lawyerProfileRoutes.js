@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
 	getAllLawyerProfiles,
+	getMyLawyerProfile,
 	updateLawyerProfile,
 } = require("../controllers/lawyerProfileController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
@@ -13,6 +14,9 @@ const {
 
 // Get all lawyer profiles with details
 router.get("/", getAllLawyerProfiles);
+
+// Get logged-in lawyer profile
+router.get("/me", protect, authorizeRoles("lawyer"), getMyLawyerProfile);
 
 // Update logged-in lawyer profile
 router.put(
