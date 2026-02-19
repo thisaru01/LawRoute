@@ -1,6 +1,7 @@
 const Article = require('../models/articleModel');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const mongoose = require('mongoose');
 
 // Create article
 // - Admins: article is immediately published
@@ -94,4 +95,39 @@ const getAllArticles = async (req, res, next) => {
   }
 };
 
-module.exports = { createArticle, getAllArticles };
+// export bottom of file (includes updateArticleStatus)
+
+// Update article status (admin only)
+const updateArticleStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // strip angle brackets if client included them (e.g. <id>)
+    const cleanId = String(id).replace(/[<>]/g, '');
+
+    // validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+      return res.status(400).json({ success: false, message: 'Invalid article id' });
+    }
+
+    if (!['pending', 'published', 'rejected', 'archived'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    const article = await Article.findById(cleanId);
+    if (!article) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    article.status = status;
+    await article.save();
+
+    return res.status(200).json({ success: true, article });
+  } catch (err) {
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ success: false, message: err.message || 'Server error' });
+  }
+};
+
+module.exports = { createArticle, getAllArticles, updateArticleStatus };
