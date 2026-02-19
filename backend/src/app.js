@@ -24,6 +24,8 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/articles", require("./routes/articleRoutes"));
 // API lawyer request Routes (users describe their legal matters)
 app.use("/api/lawyer-requests", require("./routes/lawyerRequestRoutes"));
+// API lawyer profile Routes
+app.use("/api/lawyer-profile", require("./routes/lawyerProfileRoutes"));
 
 // Global Error Handler
 app.use(errorMiddleware);
