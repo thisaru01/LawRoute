@@ -1,47 +1,46 @@
-const {
-	findAllLawyerProfiles,
-	findLawyerProfileByUser,
-	updateLawyerProfileByUser,
-} = require("../services/lawyerProfileService");
+import {
+  findAllLawyerProfiles,
+  findLawyerProfileByUser,
+  updateLawyerProfileByUser,
+} from "../services/lawyerProfileService.js";
 
-exports.getAllLawyerProfiles = async (req, res, next) => {
-	try {
-		const lawyerProfiles = await findAllLawyerProfiles();
+export const getAllLawyerProfiles = async (req, res, next) => {
+  try {
+    const lawyerProfiles = await findAllLawyerProfiles();
 
-		return res.status(200).json({
-			success: true,
-			count: lawyerProfiles.length,
-			lawyerProfiles,
-		});
-	} catch (error) {
-		next(error);
-	}
+    return res.status(200).json({
+      success: true,
+      count: lawyerProfiles.length,
+      lawyerProfiles,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.updateLawyerProfile = async (req, res, next) => {
-	try {
-		const lawyerProfile = await updateLawyerProfileByUser(req.user, req.body);
+export const updateLawyerProfile = async (req, res, next) => {
+  try {
+    const lawyerProfile = await updateLawyerProfileByUser(req.user, req.body);
 
-		return res.status(200).json({
-			success: true,
-			message: "Lawyer profile updated successfully",
-			lawyerProfile,
-		});
-	} catch (error) {
-		next(error);
-	}
+    return res.status(200).json({
+      success: true,
+      message: "Lawyer profile updated successfully",
+      lawyerProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.getMyLawyerProfile = async (req, res, next) => {
-	try {
-		const lawyerProfile = await findLawyerProfileByUser(req.user);
+export const getMyLawyerProfile = async (req, res, next) => {
+  try {
+    const lawyerProfile = await findLawyerProfileByUser(req.user);
 
-		return res.status(200).json({
-			success: true,
-			lawyerProfile,
-		});
-	} catch (error) {
-		next(error);
-	}
+    return res.status(200).json({
+      success: true,
+      lawyerProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
-

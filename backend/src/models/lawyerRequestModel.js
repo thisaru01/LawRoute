@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
@@ -19,4 +19,4 @@ LawyerRequestSchema.pre("save", function () {
   this.updatedAt = Date.now();
 });
 
-module.exports = mongoose.model("LawyerRequest", LawyerRequestSchema);
+export default mongoose.model("LawyerRequest", LawyerRequestSchema);
