@@ -1,7 +1,7 @@
 // config/cloudinaryMulter.js
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const multer = require("multer");
-const cloudinary = require("../config/cloudinaryConfig");
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
+import { cloudinary } from "../config/cloudinary.js";
 
 // Configure Cloudinary storage for Multer
 const storage = new CloudinaryStorage({
@@ -15,4 +15,4 @@ const storage = new CloudinaryStorage({
 // Create Multer instance using Cloudinary storage
 const upload = multer({ storage });
 
-module.exports = upload;
+export default upload;

@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import * as authController from "../controllers/authController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const authController = require("../controllers/authController");
-const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 router.post("/register", authController.register);
 router.post("/login", authController.login);
@@ -14,4 +15,4 @@ router.get("/admin-only", protect, authorizeRoles("admin"), (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

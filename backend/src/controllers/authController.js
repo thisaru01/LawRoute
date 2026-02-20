@@ -1,7 +1,7 @@
-const User = require("../models/userModel");
-const LawyerProfile = require("../models/lawyerProfileModel");
-const AuthorityProfile = require("../models/authorityProfileModel");
-const jwt = require("jsonwebtoken");
+import User from "../models/userModel.js";
+import LawyerProfile from "../models/lawyerProfileModel.js";
+import AuthorityProfile from "../models/authorityProfileModel.js";
+import jwt from "jsonwebtoken";
 
 // Generate JWT
 const generateToken = (user) => {
@@ -11,9 +11,10 @@ const generateToken = (user) => {
 };
 
 // Register
-exports.register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, expertise, isFree, managedCategory } = req.body;
+    const { name, email, password, role, expertise, isFree, managedCategory } =
+      req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -57,7 +58,7 @@ exports.register = async (req, res, next) => {
 };
 
 // Login
-exports.login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 

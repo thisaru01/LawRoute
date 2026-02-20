@@ -1,14 +1,14 @@
-const express = require("express");
+import express from "express";
+
+import {
+  submitCivilIssue,
+  getMyCivilIssues,
+  getAssignedCivilIssues,
+} from "../../controllers/civilIssues/civilIssueController.js";
+
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 
 const router = express.Router();
-
-const {
-    submitCivilIssue,
-    getMyCivilIssues,
-    getAssignedCivilIssues,
-} = require("../../controllers/civilIssues/civilIssueController");
-
-const { protect, authorizeRoles } = require("../../middleware/authMiddleware");
 
 // Citizen: submit a new civil issue (auto-routed to correct authority by category)
 router.post("/", protect, authorizeRoles("user"), submitCivilIssue);
@@ -17,6 +17,11 @@ router.post("/", protect, authorizeRoles("user"), submitCivilIssue);
 router.get("/my", protect, authorizeRoles("user"), getMyCivilIssues);
 
 // Authority: view assigned civil issues (optional ?district= filter)
-router.get("/assigned", protect, authorizeRoles("authority"), getAssignedCivilIssues);
+router.get(
+  "/assigned",
+  protect,
+  authorizeRoles("authority"),
+  getAssignedCivilIssues,
+);
 
-module.exports = router;
+export default router;

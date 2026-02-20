@@ -1,5 +1,5 @@
-const User = require("../models/userModel");
-const LawyerProfile = require("../models/lawyerProfileModel");
+import User from "../models/userModel.js";
+import LawyerProfile from "../models/lawyerProfileModel.js";
 
 const ALLOWED_BASIC_FIELDS = [
   "profilePhoto",
@@ -64,7 +64,9 @@ const applyStructuredPayload = (lawyerProfile, body) => {
 
   let applied = false;
 
-  if (applySectionFields(basicInfo, ALLOWED_BASIC_FIELDS, lawyerProfile.basicInfo)) {
+  if (
+    applySectionFields(basicInfo, ALLOWED_BASIC_FIELDS, lawyerProfile.basicInfo)
+  ) {
     applied = true;
   }
 
@@ -88,7 +90,11 @@ const applyStructuredPayload = (lawyerProfile, body) => {
     applied = true;
   }
 
-  if (basicInfo && typeof basicInfo === "object" && hasOwn(basicInfo, "isFree")) {
+  if (
+    basicInfo &&
+    typeof basicInfo === "object" &&
+    hasOwn(basicInfo, "isFree")
+  ) {
     lawyerProfile.isFree = Boolean(basicInfo.isFree);
     applied = true;
   }
@@ -102,7 +108,11 @@ const applyStructuredPayload = (lawyerProfile, body) => {
 };
 
 const applyLegacyContactInfo = (lawyerProfile, body) => {
-  if (!hasOwn(body, "phone") && !hasOwn(body, "officeAddress") && !hasOwn(body, "location")) {
+  if (
+    !hasOwn(body, "phone") &&
+    !hasOwn(body, "officeAddress") &&
+    !hasOwn(body, "location")
+  ) {
     return false;
   }
 
@@ -129,7 +139,8 @@ const applyLegacyPayload = (lawyerProfile, body) => {
 
   Object.keys(LEGACY_BASIC_FIELD_MAP).forEach((legacyField) => {
     if (hasOwn(body, legacyField)) {
-      lawyerProfile.basicInfo[LEGACY_BASIC_FIELD_MAP[legacyField]] = body[legacyField];
+      lawyerProfile.basicInfo[LEGACY_BASIC_FIELD_MAP[legacyField]] =
+        body[legacyField];
       applied = true;
     }
   });
@@ -166,10 +177,10 @@ const computeProfileCompleted = (lawyerProfile) => {
 
   return Boolean(
     basic.professionalTitle &&
-      typeof exp.totalYearsExperience === "number" &&
-      exp.totalYearsExperience >= 0 &&
-      basic.bio &&
-      hasPracticeAreas,
+    typeof exp.totalYearsExperience === "number" &&
+    exp.totalYearsExperience >= 0 &&
+    basic.bio &&
+    hasPracticeAreas,
   );
 };
 
@@ -194,7 +205,7 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
   updatedAt: lawyerProfile.updatedAt,
 });
 
-const findAllLawyerProfiles = async () => {
+export const findAllLawyerProfiles = async () => {
   const lawyerProfiles = await LawyerProfile.find({})
     .populate("user", "name email role")
     .sort({ createdAt: -1 })
@@ -203,7 +214,7 @@ const findAllLawyerProfiles = async () => {
   return lawyerProfiles.map(mapLawyerProfileResponse);
 };
 
-const findLawyerProfileByUser = async (authUser) => {
+export const findLawyerProfileByUser = async (authUser) => {
   if (!authUser || !authUser._id) {
     const error = new Error("Unauthorized");
     error.statusCode = 401;
@@ -238,7 +249,7 @@ const findLawyerProfileByUser = async (authUser) => {
   return mapLawyerProfileResponse(lawyerProfile);
 };
 
-const updateLawyerProfileByUser = async (authUser, body) => {
+export const updateLawyerProfileByUser = async (authUser, body) => {
   if (!authUser || !authUser._id) {
     const error = new Error("Unauthorized");
     error.statusCode = 401;
@@ -284,10 +295,4 @@ const updateLawyerProfileByUser = async (authUser, body) => {
   await lawyerProfile.save();
 
   return lawyerProfile;
-};
-
-module.exports = {
-  findAllLawyerProfiles,
-  findLawyerProfileByUser,
-  updateLawyerProfileByUser,
 };

@@ -1,7 +1,13 @@
-const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
-const errorMiddleware = require("./middleware/errorMiddleware");
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import errorMiddleware from "./middleware/errorMiddleware.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import articleRoutes from "./routes/articleRoutes.js";
+import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
+import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
+import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 
 const app = express();
 
@@ -19,20 +25,19 @@ app.get("/", (req, res) => {
 });
 
 // API auth Routes
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", authRoutes);
 // API articles Routes
-app.use("/api/articles", require("./routes/articleRoutes"));
+app.use("/api/articles", articleRoutes);
 // API lawyer request Routes (users describe their legal matters)
-app.use("/api/lawyer-requests", require("./routes/lawyerRequestRoutes"));
+app.use("/api/lawyer-requests", lawyerRequestRoutes);
 
 // API civil issues Routes (citizens report civil issues, auto-routed to authority)
-app.use("/api/civil-issues", require("./routes/civilIssues/civilIssueRoutes"));
+app.use("/api/civil-issues", civilIssueRoutes);
 
 // API lawyer profile Routes
-app.use("/api/lawyer-profile", require("./routes/lawyerProfileRoutes"));
-
+app.use("/api/lawyer-profile", lawyerProfileRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);
 
-module.exports = app;
+export default app;

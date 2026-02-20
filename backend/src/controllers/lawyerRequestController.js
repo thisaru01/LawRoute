@@ -1,7 +1,7 @@
-const lawyerRequestService = require("../services/lawyerRequestService");
+import * as lawyerRequestService from "../services/lawyerRequestService.js";
 
 // Create a new lawyer request (user describes their legal matter)
-exports.createLawyerRequest = async (req, res, next) => {
+export const createLawyerRequest = async (req, res, next) => {
   try {
     const { summary, lawyerId } = req.body;
 
@@ -27,7 +27,7 @@ exports.createLawyerRequest = async (req, res, next) => {
 };
 
 // Get requests created by the logged-in user
-exports.getMyLawyerRequests = async (req, res, next) => {
+export const getMyLawyerRequests = async (req, res, next) => {
   try {
     const requests = await lawyerRequestService.getLawyerRequestsForUser(
       req.user._id,
@@ -43,7 +43,7 @@ exports.getMyLawyerRequests = async (req, res, next) => {
 };
 
 // Get requests assigned to the logged-in lawyer
-exports.getAssignedRequestsForLawyer = async (req, res, next) => {
+export const getAssignedRequestsForLawyer = async (req, res, next) => {
   try {
     const requests = await lawyerRequestService.getLawyerRequestsForLawyer(
       req.user._id,
@@ -59,7 +59,7 @@ exports.getAssignedRequestsForLawyer = async (req, res, next) => {
 };
 
 // Get a single lawyer request (only by involved user or assigned lawyer)
-exports.getLawyerRequestById = async (req, res, next) => {
+export const getLawyerRequestById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -84,7 +84,7 @@ exports.getLawyerRequestById = async (req, res, next) => {
 };
 
 // Accept a lawyer request (only the assigned lawyer)
-exports.acceptLawyerRequest = async (req, res, next) => {
+export const acceptLawyerRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -109,7 +109,7 @@ exports.acceptLawyerRequest = async (req, res, next) => {
 };
 
 // Reject a lawyer request (only the assigned lawyer)
-exports.rejectLawyerRequest = async (req, res, next) => {
+export const rejectLawyerRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
 

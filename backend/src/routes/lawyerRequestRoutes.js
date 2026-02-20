@@ -1,17 +1,17 @@
-const express = require("express");
+import express from "express";
 
-const router = express.Router();
-
-const {
+import {
   createLawyerRequest,
   getMyLawyerRequests,
   getAssignedRequestsForLawyer,
   getLawyerRequestById,
   acceptLawyerRequest,
   rejectLawyerRequest,
-} = require("../controllers/lawyerRequestController");
+} from "../controllers/lawyerRequestController.js";
 
-const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
 
 // Create a new lawyer request
 router.post("/", protect, createLawyerRequest);
@@ -46,4 +46,4 @@ router.patch(
   rejectLawyerRequest,
 );
 
-module.exports = router;
+export default router;

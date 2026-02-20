@@ -1,7 +1,7 @@
-const LawyerRequest = require("../models/lawyerRequestModel");
+import LawyerRequest from "../models/lawyerRequestModel.js";
 
 // Create a new lawyer request
-async function createLawyerRequest({ userId, summary, lawyerId }) {
+export async function createLawyerRequest({ userId, summary, lawyerId }) {
   if (!summary || !summary.trim()) {
     const error = new Error("Summary is required");
     error.statusCode = 400;
@@ -24,7 +24,7 @@ async function createLawyerRequest({ userId, summary, lawyerId }) {
 }
 
 // Get requests created by a specific user
-async function getLawyerRequestsForUser(userId) {
+export async function getLawyerRequestsForUser(userId) {
   const requests = await LawyerRequest.find({ user: userId })
     .populate("lawyer", "name email role expertise")
     .sort({ createdAt: -1 });
@@ -33,7 +33,7 @@ async function getLawyerRequestsForUser(userId) {
 }
 
 // Get requests assigned to a specific lawyer
-async function getLawyerRequestsForLawyer(lawyerId) {
+export async function getLawyerRequestsForLawyer(lawyerId) {
   const requests = await LawyerRequest.find({ lawyer: lawyerId })
     .populate("user", "name email")
     .sort({ createdAt: -1 });
@@ -42,7 +42,10 @@ async function getLawyerRequestsForLawyer(lawyerId) {
 }
 
 // Get a single request ensuring the requester has access
-async function getLawyerRequestByIdForUser({ requestId, currentUserId }) {
+export async function getLawyerRequestByIdForUser({
+  requestId,
+  currentUserId,
+}) {
   const request = await LawyerRequest.findById(requestId)
     .populate("user", "name email")
     .populate("lawyer", "name email role expertise");
@@ -69,7 +72,7 @@ async function getLawyerRequestByIdForUser({ requestId, currentUserId }) {
 }
 
 // Accept a request as the assigned lawyer
-async function acceptLawyerRequest({ requestId, lawyerId }) {
+export async function acceptLawyerRequest({ requestId, lawyerId }) {
   const request = await LawyerRequest.findById(requestId);
 
   if (!request) {
@@ -99,7 +102,7 @@ async function acceptLawyerRequest({ requestId, lawyerId }) {
 }
 
 // Reject a request as the assigned lawyer
-async function rejectLawyerRequest({ requestId, lawyerId }) {
+export async function rejectLawyerRequest({ requestId, lawyerId }) {
   const request = await LawyerRequest.findById(requestId);
 
   if (!request) {
@@ -127,12 +130,3 @@ async function rejectLawyerRequest({ requestId, lawyerId }) {
 
   return request;
 }
-
-module.exports = {
-  createLawyerRequest,
-  getLawyerRequestsForUser,
-  getLawyerRequestsForLawyer,
-  getLawyerRequestByIdForUser,
-  acceptLawyerRequest,
-  rejectLawyerRequest,
-};
