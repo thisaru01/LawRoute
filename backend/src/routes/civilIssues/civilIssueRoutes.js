@@ -12,10 +12,16 @@ import {
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 
+import {
+  validateSubmitCivilIssue,
+  validateUpdateCivilIssue,
+  validateUpdateCivilIssueStatus,
+} from "../../validations/civilIssueValidation.js";
+
 const router = express.Router();
 
 // Citizen: submit a new civil issue (auto-routed to correct authority by category)
-router.post("/", protect, authorizeRoles("user"), submitCivilIssue);
+router.post("/", protect, authorizeRoles("user"), validateSubmitCivilIssue, submitCivilIssue);
 
 // Citizen: view own submitted civil issues
 router.get("/my", protect, authorizeRoles("user"), getMyCivilIssues);
@@ -41,11 +47,12 @@ router.patch(
   "/:id/status",
   protect,
   authorizeRoles("authority"),
+  validateUpdateCivilIssueStatus,
   updateCivilIssueStatus,
 );
 
 // Citizen: update own issue description/district (only while pending)
-router.patch("/:id", protect, authorizeRoles("user"), updateCivilIssue);
+router.patch("/:id", protect, authorizeRoles("user"), validateUpdateCivilIssue, updateCivilIssue);
 
 // Citizen: delete own civil issue
 router.delete("/:id", protect, authorizeRoles("user"), deleteCivilIssue);
