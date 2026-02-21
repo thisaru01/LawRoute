@@ -76,3 +76,120 @@ export const getAssignedCivilIssues = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/civil-issues/:id
+// Citizen or assigned authority views a single civil issue by ID.
+export const getCivilIssueById = async (req, res, next) => {
+  try {
+    const issue = await CivilIssue.findById(req.params.id)
+      .populate("reporterId", "name email")
+      .populate("assignedTo", "name email");
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Civil issue not found.",
+      });
+    }
+
+    const isReporter =
+      issue.reporterId._id.toString() === req.user._id.toString();
+    const isAssigned =
+      issue.assignedTo &&
+      issue.assignedTo._id.toString() === req.user._id.toString();
+
+    if (!isReporter && !isAssigned) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    res.status(200).json({ success: true, data: issue });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/civil-issues/:id
+// Citizen updates their own issue's description or district (only while pending).
+export const updateCivilIssue = async (req, res, next) => {
+  try {
+    const issue = await CivilIssue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Civil issue not found.",
+      });
+    }
+
+    if (issue.reporterId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    if (issue.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Issue can only be edited while it is pending.",
+      });
+    }
+
+    const { description, district } = req.body;
+
+    if (!description && !district) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Provide at least one field to update: description or district.",
+      });
+    }
+
+    if (description) issue.description = description;
+    if (district) issue.district = district;
+
+    await issue.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Civil issue updated successfully.",
+      data: issue,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/civil-issues/:id
+// Citizen cancels/deletes their own civil issue.
+export const deleteCivilIssue = async (req, res, next) => {
+  try {
+    const issue = await CivilIssue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Civil issue not found.",
+      });
+    }
+
+    if (issue.reporterId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    await issue.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Civil issue deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

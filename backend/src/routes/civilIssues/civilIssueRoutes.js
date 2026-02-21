@@ -4,6 +4,9 @@ import {
   submitCivilIssue,
   getMyCivilIssues,
   getAssignedCivilIssues,
+  getCivilIssueById,
+  updateCivilIssue,
+  deleteCivilIssue,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -23,5 +26,19 @@ router.get(
   authorizeRoles("authority"),
   getAssignedCivilIssues,
 );
+
+// Citizen or Authority: view a single civil issue by ID
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("user", "authority"),
+  getCivilIssueById,
+);
+
+// Citizen: update own issue description/district (only while pending)
+router.patch("/:id", protect, authorizeRoles("user"), updateCivilIssue);
+
+// Citizen: delete own civil issue
+router.delete("/:id", protect, authorizeRoles("user"), deleteCivilIssue);
 
 export default router;
