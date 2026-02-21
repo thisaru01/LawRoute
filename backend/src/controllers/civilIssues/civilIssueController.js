@@ -193,3 +193,46 @@ export const deleteCivilIssue = async (req, res, next) => {
     next(error);
   }
 };
+
+// PATCH /api/civil-issues/:id/status
+// Authority updates the status of a civil issue assigned to them.
+export const updateCivilIssueStatus = async (req, res, next) => {
+  try {
+    const VALID_STATUSES = ["pending", "in_progress", "resolved"];
+    const { status } = req.body;
+
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Status must be one of: ${VALID_STATUSES.join(", ")}.`,
+      });
+    }
+
+    const issue = await CivilIssue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Civil issue not found.",
+      });
+    }
+
+    if (!issue.assignedTo || issue.assignedTo.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not assigned to this issue.",
+      });
+    }
+
+    issue.status = status;
+    await issue.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Civil issue status updated successfully.",
+      data: issue,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

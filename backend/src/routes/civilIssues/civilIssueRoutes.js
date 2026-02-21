@@ -7,6 +7,7 @@ import {
   getCivilIssueById,
   updateCivilIssue,
   deleteCivilIssue,
+  updateCivilIssueStatus,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -33,6 +34,14 @@ router.get(
   protect,
   authorizeRoles("user", "authority"),
   getCivilIssueById,
+);
+
+// Authority: update the status of an assigned civil issue (must be before /:id)
+router.patch(
+  "/:id/status",
+  protect,
+  authorizeRoles("authority"),
+  updateCivilIssueStatus,
 );
 
 // Citizen: update own issue description/district (only while pending)
