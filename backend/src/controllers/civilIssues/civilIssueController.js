@@ -1,5 +1,4 @@
-import CivilIssue from "../../models/civilIssues/civilIssueModel.js";
-import AuthorityProfile from "../../models/authorityProfileModel.js";
+import * as civilIssueService from "../../services/civilIssueService.js";
 
 // POST /api/civil-issues
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
@@ -7,30 +6,11 @@ export const submitCivilIssue = async (req, res, next) => {
   try {
     const { category, district, description } = req.body;
 
-    if (!category || !district || !description) {
-      return res.status(400).json({
-        success: false,
-        message: "category, district, and description are required.",
-      });
-    }
-
-    const authorityProfile = await AuthorityProfile.findOne({
-      managedCategory: category,
-    });
-
-    if (!authorityProfile) {
-      return res.status(404).json({
-        success: false,
-        message: "No responsible authority found for this category.",
-      });
-    }
-
-    const issue = await CivilIssue.create({
+    const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
       district,
       description,
-      assignedTo: authorityProfile.user,
     });
 
     res.status(201).json({
@@ -39,6 +19,11 @@ export const submitCivilIssue = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
@@ -47,10 +32,7 @@ export const submitCivilIssue = async (req, res, next) => {
 // Citizen views their own submitted civil issues.
 export const getMyCivilIssues = async (req, res, next) => {
   try {
-    const issues = await CivilIssue.find({ reporterId: req.user._id })
-      .populate("assignedTo", "name email")
-      .sort({ createdAt: -1 });
-
+    const issues = await civilIssueService.getIssuesByReporter(req.user._id);
     res.status(200).json({ success: true, data: issues });
   } catch (error) {
     next(error);
@@ -61,16 +43,10 @@ export const getMyCivilIssues = async (req, res, next) => {
 // Authority views civil issues assigned to them, with optional ?district= filter.
 export const getAssignedCivilIssues = async (req, res, next) => {
   try {
-    const query = { assignedTo: req.user._id };
-
-    if (req.query.district) {
-      query.district = req.query.district;
-    }
-
-    const issues = await CivilIssue.find(query)
-      .populate("reporterId", "name email")
-      .sort({ createdAt: -1 });
-
+    const issues = await civilIssueService.getIssuesAssignedTo(
+      req.user._id,
+      req.query.district,
+    );
     res.status(200).json({ success: true, data: issues });
   } catch (error) {
     next(error);
@@ -81,32 +57,17 @@ export const getAssignedCivilIssues = async (req, res, next) => {
 // Citizen or assigned authority views a single civil issue by ID.
 export const getCivilIssueById = async (req, res, next) => {
   try {
-    const issue = await CivilIssue.findById(req.params.id)
-      .populate("reporterId", "name email")
-      .populate("assignedTo", "name email");
-
-    if (!issue) {
-      return res.status(404).json({
-        success: false,
-        message: "Civil issue not found.",
-      });
-    }
-
-    const isReporter =
-      issue.reporterId._id.toString() === req.user._id.toString();
-    const isAssigned =
-      issue.assignedTo &&
-      issue.assignedTo._id.toString() === req.user._id.toString();
-
-    if (!isReporter && !isAssigned) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied.",
-      });
-    }
-
+    const issue = await civilIssueService.getIssueById({
+      issueId: req.params.id,
+      currentUserId: req.user._id,
+    });
     res.status(200).json({ success: true, data: issue });
   } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
@@ -115,43 +76,14 @@ export const getCivilIssueById = async (req, res, next) => {
 // Citizen updates their own issue's description or district (only while pending).
 export const updateCivilIssue = async (req, res, next) => {
   try {
-    const issue = await CivilIssue.findById(req.params.id);
-
-    if (!issue) {
-      return res.status(404).json({
-        success: false,
-        message: "Civil issue not found.",
-      });
-    }
-
-    if (issue.reporterId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied.",
-      });
-    }
-
-    if (issue.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Issue can only be edited while it is pending.",
-      });
-    }
-
     const { description, district } = req.body;
 
-    if (!description && !district) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Provide at least one field to update: description or district.",
-      });
-    }
-
-    if (description) issue.description = description;
-    if (district) issue.district = district;
-
-    await issue.save();
+    const issue = await civilIssueService.updateIssue({
+      issueId: req.params.id,
+      reporterId: req.user._id,
+      description,
+      district,
+    });
 
     res.status(200).json({
       success: true,
@@ -159,6 +91,11 @@ export const updateCivilIssue = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
@@ -167,29 +104,21 @@ export const updateCivilIssue = async (req, res, next) => {
 // Citizen cancels/deletes their own civil issue.
 export const deleteCivilIssue = async (req, res, next) => {
   try {
-    const issue = await CivilIssue.findById(req.params.id);
-
-    if (!issue) {
-      return res.status(404).json({
-        success: false,
-        message: "Civil issue not found.",
-      });
-    }
-
-    if (issue.reporterId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied.",
-      });
-    }
-
-    await issue.deleteOne();
+    await civilIssueService.deleteIssue({
+      issueId: req.params.id,
+      reporterId: req.user._id,
+    });
 
     res.status(200).json({
       success: true,
       message: "Civil issue deleted successfully.",
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
@@ -198,34 +127,11 @@ export const deleteCivilIssue = async (req, res, next) => {
 // Authority updates the status of a civil issue assigned to them.
 export const updateCivilIssueStatus = async (req, res, next) => {
   try {
-    const VALID_STATUSES = ["pending", "in_progress", "resolved"];
-    const { status } = req.body;
-
-    if (!status || !VALID_STATUSES.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: `Status must be one of: ${VALID_STATUSES.join(", ")}.`,
-      });
-    }
-
-    const issue = await CivilIssue.findById(req.params.id);
-
-    if (!issue) {
-      return res.status(404).json({
-        success: false,
-        message: "Civil issue not found.",
-      });
-    }
-
-    if (!issue.assignedTo || issue.assignedTo.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied. You are not assigned to this issue.",
-      });
-    }
-
-    issue.status = status;
-    await issue.save();
+    const issue = await civilIssueService.updateIssueStatus({
+      issueId: req.params.id,
+      authorityId: req.user._id,
+      status: req.body.status,
+    });
 
     res.status(200).json({
       success: true,
@@ -233,6 +139,11 @@ export const updateCivilIssueStatus = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
