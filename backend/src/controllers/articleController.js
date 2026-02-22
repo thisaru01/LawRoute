@@ -159,9 +159,110 @@ export const updateArticleStatus = async (req, res, next) => {
     }
 
     article.status = status;
+
+    // Track which admin published the article, and clear when not published
+    if (status === "published") {
+      article.publishedBy = req.user ? req.user._id : null;
+    } else {
+      article.publishedBy = null;
+    }
     await article.save();
 
     return res.status(200).json({ success: true, article });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
+// Delete article
+// - Pending status:
+//   * Admin can delete any pending article
+//   * Lawyer can delete only their own pending article
+// - Published status:
+//   * Only admin can delete, and only if they are NOT the admin who published it
+// - Other statuses:
+//   * Only admin can delete
+export const deleteArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const cleanId = String(id).replace(/[<>]/g, "");
+
+    if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid article id" });
+    }
+
+    if (!req.user || !req.user._id) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized" });
+    }
+
+    const article = await Article.findById(cleanId);
+    if (!article) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    }
+
+    const userId = String(req.user._id);
+    const isAdmin = req.user.role === "admin";
+    const isLawyer = req.user.role === "lawyer";
+
+    // Permission logic based on status
+    if (article.status === "pending") {
+      // Admin: can delete any pending article
+      // Lawyer: can delete only own pending article
+      if (isAdmin) {
+        // allowed
+      } else if (isLawyer && String(article.author) === userId) {
+        // allowed
+      } else {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Only admins or the article's lawyer author can delete pending articles",
+        });
+      }
+    } else if (article.status === "published") {
+      // Only admin, and not the same admin who published it
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Only admins can delete published articles",
+        });
+      }
+
+      if (
+        article.publishedBy &&
+        String(article.publishedBy) === userId
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "The admin who published this article cannot delete it",
+        });
+      }
+    } else {
+      // For rejected/archived or any other status: only admins can delete
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Only admins can delete articles with this status",
+        });
+      }
+    }
+
+    await article.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "Article deleted successfully",
+    });
   } catch (err) {
     if (typeof next === "function") return next(err);
     return res

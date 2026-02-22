@@ -3,6 +3,7 @@ import {
   createArticle,
   getAllArticles,
   updateArticleStatus,
+  deleteArticle,
 } from "../controllers/articleController.js";
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
@@ -21,6 +22,16 @@ router.patch(
   protect,
   authorizeRoles("admin"),
   updateArticleStatus,
+);
+
+// Delete article
+// - Pending: admin or owning lawyer (enforced in controller)
+// - Published: only admin who did NOT publish it (enforced in controller)
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("admin", "lawyer"),
+  deleteArticle,
 );
 
 export default router;

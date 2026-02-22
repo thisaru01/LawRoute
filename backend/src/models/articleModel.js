@@ -8,6 +8,8 @@ const ArticleSchema = new Schema({
   category: { type: String },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
   authorRole: { type: String, enum: ["admin", "lawyer"], required: true },
+  // Admin user who published the article (if status === "published")
+  publishedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   status: {
     type: String,
     enum: ["pending", "published", "rejected", "archived"],
