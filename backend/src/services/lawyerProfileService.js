@@ -2,7 +2,6 @@ import User from "../models/userModel.js";
 import LawyerProfile from "../models/lawyerProfileModel.js";
 
 const ALLOWED_BASIC_FIELDS = [
-  "profilePhoto",
   "professionalTitle",
   "contactInfo",
   "bio",
@@ -21,7 +20,6 @@ const ALLOWED_EDUCATION_FIELDS = [
 
 const LEGACY_BASIC_FIELD_MAP = {
   professionalTitle: "professionalTitle",
-  profilePhoto: "profilePhoto",
   languages: "languages",
   bio: "bio",
 };
@@ -192,6 +190,7 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
         name: lawyerProfile.user.name,
         email: lawyerProfile.user.email,
         role: lawyerProfile.user.role,
+        profilePhoto: lawyerProfile.user.profilePhoto,
       }
     : null,
   expertise: lawyerProfile.expertise,
@@ -207,7 +206,7 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
 
 export const findAllLawyerProfiles = async () => {
   const lawyerProfiles = await LawyerProfile.find({})
-    .populate("user", "name email role")
+    .populate("user", "name email role profilePhoto")
     .sort({ createdAt: -1 })
     .lean();
 
@@ -236,13 +235,13 @@ export const findLawyerProfileByUser = async (authUser) => {
   }
 
   let lawyerProfile = await LawyerProfile.findOne({ user: user._id })
-    .populate("user", "name email role")
+    .populate("user", "name email role profilePhoto")
     .lean();
 
   if (!lawyerProfile) {
     const createdProfile = await LawyerProfile.create({ user: user._id });
     lawyerProfile = await LawyerProfile.findById(createdProfile._id)
-      .populate("user", "name email role")
+      .populate("user", "name email role profilePhoto")
       .lean();
   }
 
