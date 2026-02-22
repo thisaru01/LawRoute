@@ -1,5 +1,5 @@
-import CivilIssue from "../models/civilIssues/civilIssueModel.js";
-import AuthorityProfile from "../models/authorityProfileModel.js";
+import CivilIssue from "../../models/civilIssues/civilIssueModel.js";
+import AuthorityProfile from "../../models/authorityProfileModel.js";
 
 // Create a new civil issue, auto-routing to the correct authority by category.
 export async function createIssue({ reporterId, category, district, description }) {

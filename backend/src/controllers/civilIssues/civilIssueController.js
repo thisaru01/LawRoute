@@ -1,4 +1,4 @@
-import * as civilIssueService from "../../services/civilIssueService.js";
+import * as civilIssueService from "../../services/civilIssues/civilIssueService.js";
 
 // POST /api/civil-issues
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
