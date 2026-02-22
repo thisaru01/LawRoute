@@ -34,7 +34,8 @@ export const createArticle = async (req, res, next) => {
         .json({ message: "Title and content are required" });
     }
 
-    const status = role === "admin" ? "published" : "pending";
+    // All articles start as "pending" now, even for admins
+    const status = "pending";
 
     const article = new Article({
       title,
@@ -48,10 +49,7 @@ export const createArticle = async (req, res, next) => {
     await article.save();
     console.log("article saved:", article._id, "status:", article.status);
 
-    const message =
-      role === "admin"
-        ? "Article published successfully."
-        : "Article submitted for admin review.";
+    const message = "Article submitted for admin review.";
 
     return res.status(201).json({ message, article });
   } catch (err) {
@@ -68,13 +66,17 @@ export const createArticle = async (req, res, next) => {
 export const getAllArticles = async (req, res, next) => {
   try {
     let isAdmin = false;
+    let adminId = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       try {
         const token = authHeader.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id).select("role");
-        if (user && user.role === "admin") isAdmin = true;
+        if (user && user.role === "admin") {
+          isAdmin = true;
+          adminId = decoded.id;
+        }
       } catch (e) {
         // Invalid token - ignore and treat as unauthenticated
       }
@@ -96,7 +98,21 @@ export const getAllArticles = async (req, res, next) => {
     if (req.query.category) filter.category = req.query.category;
     if (req.query.author) filter.author = req.query.author;
 
-    const articles = await Article.find(filter)
+    // For admins, never show articles they authored themselves
+    let queryFilter = { ...filter };
+    if (isAdmin && adminId) {
+      if (queryFilter.author && typeof queryFilter.author === "object") {
+        queryFilter.author = { ...queryFilter.author, $ne: adminId };
+      } else if (queryFilter.author) {
+        queryFilter.author = { $eq: queryFilter.author, $ne: adminId };
+      } else {
+        queryFilter.author = { $ne: adminId };
+      }
+    } else {
+      queryFilter = filter;
+    }
+
+    const articles = await Article.find(queryFilter)
       .populate("author", "name email")
       .sort({ createdAt: -1 });
 
