@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema(
     profilePhoto: {
       type: String,
       trim: true,
+      default:
+        "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png",
     },
   },
   { timestamps: true },
