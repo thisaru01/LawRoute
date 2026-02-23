@@ -158,7 +158,14 @@ export const updateArticleStatus = async (req, res, next) => {
         .json({ success: false, message: "Article not found" });
     }
 
-    article.status = status;
+    // If admin is rejecting a pending article, remove it from DB
+    if (status === "rejected" && article.status === "pending") {
+      await article.deleteOne();
+      return res.status(200).json({
+        success: true,
+        message: "Article rejected and removed from pending list",
+      });
+    }
 
     // Track which admin published the article, and clear when not published
     if (status === "published") {
@@ -166,6 +173,7 @@ export const updateArticleStatus = async (req, res, next) => {
     } else {
       article.publishedBy = null;
     }
+    article.status = status;
     await article.save();
 
     return res.status(200).json({ success: true, article });
