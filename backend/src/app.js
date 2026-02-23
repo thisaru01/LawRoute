@@ -8,6 +8,7 @@ import articleRoutes from "./routes/articleRoutes.js";
 import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.get("/", (req, res) => {
 
 // API auth Routes
 app.use("/api/auth", authRoutes);
+// API user Routes
+app.use("/api/users", userRoutes);
 // API articles Routes
 app.use("/api/articles", articleRoutes);
 // API lawyer request Routes (users describe their legal matters)

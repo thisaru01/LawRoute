@@ -7,7 +7,7 @@ import { cloudinary } from "../config/cloudinary.js";
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "peace-justice-app",
+    folder: "law-route",
     allowed_formats: ["jpg", "png", "jpeg", "pdf"],
   },
 });

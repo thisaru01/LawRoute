@@ -80,7 +80,6 @@ const LawyerProfileSchema = new Schema(
       default: false,
     },
     basicInfo: {
-      profilePhoto: { type: String, trim: true },
       professionalTitle: { type: String, trim: true, maxlength: 100 },
       contactInfo: { type: Schema.Types.Mixed, default: {} },
       bio: { type: String, trim: true, maxlength: 2000 },

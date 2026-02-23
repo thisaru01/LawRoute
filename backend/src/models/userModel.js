@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "lawyer", "authority"],
       default: "user",
     },
+    profilePhoto: {
+      type: String,
+      trim: true,
+      default:
+        "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png",
+    },
   },
   { timestamps: true },
 );
