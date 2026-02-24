@@ -35,6 +35,23 @@ const ensureLawyerProfileExists = async (userId) => {
   }
 };
 
+const mapUploadedFilesToMedia = (uploadedFiles) => {
+  if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+    return [];
+  }
+
+  return uploadedFiles
+    .filter((file) => file && file.path)
+    .map((file) => ({
+      url: file.path,
+      publicId: file.filename,
+      resourceType: file.resource_type || "auto",
+      format: file.format,
+      originalFilename: file.originalname,
+      bytes: file.size || 0,
+    }));
+};
+
 const parseCursorDate = (cursor) => {
   if (!cursor) {
     return null;
@@ -70,16 +87,21 @@ const buildPaginationQuery = (baseQuery, cursor) => {
   return query;
 };
 
-export const createPostByLawyer = async (authUser, payload) => {
+export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) => {
   const user = await ensureLawyerUser(authUser);
   await ensureLawyerProfileExists(user._id);
+
+  const media = mapUploadedFilesToMedia(uploadedFiles);
+  const content =
+    typeof payload.content === "string" ? payload.content.trim() : "";
 
   const post = await Post.create({
     author: user._id,
     postType: payload.postType,
-    content: payload.content,
+    content,
     visibility: payload.visibility || "public",
     tags: Array.isArray(payload.tags) ? payload.tags : [],
+    media,
   });
 
   const createdPost = await Post.findById(post._id)
@@ -183,16 +205,22 @@ const findOwnedPost = async (postId, userId) => {
   return post;
 };
 
-export const updatePostByLawyer = async (authUser, postId, payload) => {
+export const updatePostByLawyer = async (
+  authUser,
+  postId,
+  payload,
+  uploadedFiles = [],
+) => {
   const user = await ensureLawyerUser(authUser);
   const post = await findOwnedPost(postId, user._id);
+  const media = mapUploadedFilesToMedia(uploadedFiles);
 
   if (Object.prototype.hasOwnProperty.call(payload, "postType")) {
     post.postType = payload.postType;
   }
 
   if (Object.prototype.hasOwnProperty.call(payload, "content")) {
-    post.content = payload.content;
+    post.content = payload.content.trim();
   }
 
   if (Object.prototype.hasOwnProperty.call(payload, "visibility")) {
@@ -201,6 +229,10 @@ export const updatePostByLawyer = async (authUser, postId, payload) => {
 
   if (Object.prototype.hasOwnProperty.call(payload, "tags")) {
     post.tags = Array.isArray(payload.tags) ? payload.tags : [];
+  }
+
+  if (media.length > 0) {
+    post.media = [...(post.media || []), ...media];
   }
 
   await post.save();

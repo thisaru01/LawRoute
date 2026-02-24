@@ -1,6 +1,7 @@
 import express from "express";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import postUpload from "../../middleware/postUploadMiddleware.js";
 import {
   createPost,
   deletePost,
@@ -34,6 +35,7 @@ router.post(
   "/posts",
   protect,
   authorizeRoles("lawyer"),
+  postUpload.array("media", 5),
   validateCreatePost,
   createPost,
 );
@@ -43,6 +45,7 @@ router.put(
   "/posts/:id",
   protect,
   authorizeRoles("lawyer"),
+  postUpload.array("media", 5),
   validateUpdatePost,
   updatePost,
 );

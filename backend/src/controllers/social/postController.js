@@ -15,7 +15,7 @@ const readPagination = (req) => ({
 
 export const createPost = async (req, res, next) => {
   try {
-    const post = await createPostByLawyer(req.user, req.body);
+    const post = await createPostByLawyer(req.user, req.body, req.files);
 
     return res.status(201).json({
       success: true,
@@ -85,7 +85,12 @@ export const getLawyerPosts = async (req, res, next) => {
 
 export const updatePost = async (req, res, next) => {
   try {
-    const post = await updatePostByLawyer(req.user, req.params.id, req.body);
+    const post = await updatePostByLawyer(
+      req.user,
+      req.params.id,
+      req.body,
+      req.files,
+    );
 
     return res.status(200).json({
       success: true,

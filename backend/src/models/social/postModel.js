@@ -10,6 +10,39 @@ export const POST_TYPES = [
   "social_justice_work",
 ];
 
+const postMediaSchema = new Schema(
+  {
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    publicId: {
+      type: String,
+      trim: true,
+    },
+    resourceType: {
+      type: String,
+      trim: true,
+      default: "auto",
+    },
+    format: {
+      type: String,
+      trim: true,
+    },
+    originalFilename: {
+      type: String,
+      trim: true,
+    },
+    bytes: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+  },
+  { _id: false },
+);
+
 const postSchema = new Schema(
   {
     author: {
@@ -36,6 +69,10 @@ const postSchema = new Schema(
     },
     tags: {
       type: [String],
+      default: [],
+    },
+    media: {
+      type: [postMediaSchema],
       default: [],
     },
     stats: {
