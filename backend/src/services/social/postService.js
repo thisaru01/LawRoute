@@ -68,3 +68,21 @@ export const findPublicPosts = async ({ limit = 20, cursor } = {}) => {
 
   return posts;
 };
+
+export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
+  const user = await ensureLawyerUser(authUser);
+
+  const query = { author: user._id };
+
+  if (cursor) {
+    query.createdAt = { $lt: new Date(cursor) };
+  }
+
+  const posts = await Post.find(query)
+    .populate("author", "name email role profilePhoto")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return posts;
+};
