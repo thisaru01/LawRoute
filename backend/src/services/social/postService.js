@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
+import { cloudinary } from "../../config/cloudinary.js";
 import mongoose from "mongoose";
 
 const buildError = (message, statusCode) => {
@@ -50,6 +51,35 @@ const mapUploadedFilesToMedia = (uploadedFiles) => {
       originalFilename: file.originalname,
       bytes: file.size || 0,
     }));
+};
+
+const destroyMediaByPublicIds = async (publicIds) => {
+  if (!Array.isArray(publicIds) || publicIds.length === 0) {
+    return;
+  }
+
+  const uniqueIds = [...new Set(publicIds.filter(Boolean))];
+
+  await Promise.all(
+    uniqueIds.map(async (publicId) => {
+      const resourceTypes = ["image", "video", "raw"];
+
+      for (const resourceType of resourceTypes) {
+        try {
+          const result = await cloudinary.uploader.destroy(publicId, {
+            resource_type: resourceType,
+            invalidate: true,
+          });
+
+          if (result && result.result && result.result !== "not found") {
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }),
+  );
 };
 
 const parseCursorDate = (cursor) => {
@@ -214,6 +244,12 @@ export const updatePostByLawyer = async (
   const user = await ensureLawyerUser(authUser);
   const post = await findOwnedPost(postId, user._id);
   const media = mapUploadedFilesToMedia(uploadedFiles);
+  const hasReplaceMedia = payload.replaceMedia === true;
+  const removeMediaPublicIds = Array.isArray(payload.removeMediaPublicIds)
+    ? payload.removeMediaPublicIds
+    : [];
+  const existingMedia = Array.isArray(post.media) ? [...post.media] : [];
+  let nextMedia = existingMedia;
 
   if (Object.prototype.hasOwnProperty.call(payload, "postType")) {
     post.postType = payload.postType;
@@ -231,9 +267,32 @@ export const updatePostByLawyer = async (
     post.tags = Array.isArray(payload.tags) ? payload.tags : [];
   }
 
-  if (media.length > 0) {
-    post.media = [...(post.media || []), ...media];
+  if (hasReplaceMedia) {
+    const allExistingPublicIds = existingMedia
+      .map((item) => item && item.publicId)
+      .filter(Boolean);
+
+    await destroyMediaByPublicIds(allExistingPublicIds);
+    nextMedia = [];
+  } else if (removeMediaPublicIds.length > 0) {
+    const removeSet = new Set(removeMediaPublicIds);
+    const toRemove = existingMedia
+      .filter((item) => item && item.publicId && removeSet.has(item.publicId))
+      .map((item) => item.publicId)
+      .filter(Boolean);
+
+    await destroyMediaByPublicIds(toRemove);
+
+    nextMedia = existingMedia.filter(
+      (item) => !(item && item.publicId && removeSet.has(item.publicId)),
+    );
   }
+
+  if (media.length > 0) {
+    nextMedia = [...nextMedia, ...media];
+  }
+
+  post.media = nextMedia;
 
   await post.save();
 
@@ -247,6 +306,12 @@ export const updatePostByLawyer = async (
 export const deletePostByLawyer = async (authUser, postId) => {
   const user = await ensureLawyerUser(authUser);
   const post = await findOwnedPost(postId, user._id);
+
+  const existingMediaPublicIds = (post.media || [])
+    .map((item) => item && item.publicId)
+    .filter(Boolean);
+
+  await destroyMediaByPublicIds(existingMediaPublicIds);
 
   await post.deleteOne();
 };

@@ -8,16 +8,16 @@ const isObject = (value) =>
 const hasOnlyAllowedKeys = (obj, allowedFields) =>
   Object.keys(obj).every((key) => allowedFields.includes(key));
 
-const normalizeTags = (tagsValue) => {
-  if (Array.isArray(tagsValue)) {
-    return tagsValue;
+const normalizeStringArray = (arrayValue) => {
+  if (Array.isArray(arrayValue)) {
+    return arrayValue;
   }
 
-  if (typeof tagsValue !== "string") {
+  if (typeof arrayValue !== "string") {
     return null;
   }
 
-  const trimmedValue = tagsValue.trim();
+  const trimmedValue = arrayValue.trim();
 
   if (!trimmedValue) {
     return [];
@@ -32,11 +32,37 @@ const normalizeTags = (tagsValue) => {
   } catch (error) {
     return trimmedValue
       .split(",")
-      .map((tag) => tag.trim())
+      .map((value) => value.trim())
       .filter(Boolean);
   }
 
   return null;
+};
+
+const normalizeBoolean = (value) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const lowered = value.trim().toLowerCase();
+
+  if (lowered === "true") {
+    return true;
+  }
+
+  if (lowered === "false") {
+    return false;
+  }
+
+  return null;
+};
+
+const normalizeTags = (tagsValue) => {
+  return normalizeStringArray(tagsValue);
 };
 
 const normalizeBody = (body) => {
@@ -52,6 +78,26 @@ const normalizeBody = (body) => {
     normalized.tags = normalizedTags;
   }
 
+  if (Object.prototype.hasOwnProperty.call(normalized, "removeMediaPublicIds")) {
+    const normalizedIds = normalizeStringArray(normalized.removeMediaPublicIds);
+
+    if (normalizedIds === null) {
+      return null;
+    }
+
+    normalized.removeMediaPublicIds = normalizedIds;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalized, "replaceMedia")) {
+    const normalizedBoolean = normalizeBoolean(normalized.replaceMedia);
+
+    if (normalizedBoolean === null) {
+      return null;
+    }
+
+    normalized.replaceMedia = normalizedBoolean;
+  }
+
   return normalized;
 };
 
@@ -61,7 +107,8 @@ export const validateCreatePost = (req, res, next) => {
   if (!body) {
     return res.status(400).json({
       success: false,
-      message: "tags must be an array, JSON array string, or comma separated string",
+      message:
+        "Invalid body values. tags/removeMediaPublicIds must be arrays; replaceMedia must be true or false",
     });
   }
 
@@ -125,7 +172,8 @@ export const validateUpdatePost = (req, res, next) => {
   if (!body) {
     return res.status(400).json({
       success: false,
-      message: "tags must be an array, JSON array string, or comma separated string",
+      message:
+        "Invalid body values. tags/removeMediaPublicIds must be arrays; replaceMedia must be true or false",
     });
   }
 
@@ -138,7 +186,14 @@ export const validateUpdatePost = (req, res, next) => {
     });
   }
 
-  const allowedFields = ["postType", "content", "visibility", "tags"];
+  const allowedFields = [
+    "postType",
+    "content",
+    "visibility",
+    "tags",
+    "removeMediaPublicIds",
+    "replaceMedia",
+  ];
 
   if (!hasOnlyAllowedKeys(body, allowedFields)) {
     return res.status(400).json({
@@ -184,6 +239,26 @@ export const validateUpdatePost = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "tags must be an array",
+    });
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(body, "removeMediaPublicIds") &&
+    !Array.isArray(body.removeMediaPublicIds)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "removeMediaPublicIds must be an array",
+    });
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(body, "replaceMedia") &&
+    typeof body.replaceMedia !== "boolean"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "replaceMedia must be true or false",
     });
   }
 
