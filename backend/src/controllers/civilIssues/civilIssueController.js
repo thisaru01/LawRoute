@@ -6,11 +6,15 @@ export const submitCivilIssue = async (req, res, next) => {
   try {
     const { category, district, description } = req.body;
 
+    // Cloudinary automatically provides the secure URLs in the `path` property of each file
+    const attachments = req.files ? req.files.map((file) => file.path) : [];
+
     const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
       district,
       description,
+      attachments,
     });
 
     res.status(201).json({
