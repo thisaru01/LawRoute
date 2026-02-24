@@ -4,6 +4,8 @@ import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 import {
   createPost,
   deletePost,
+  getFeed,
+  getLawyerPosts,
   getMyPosts,
   getPublicFeed,
   updatePost,
@@ -17,6 +19,12 @@ const router = express.Router();
 
 // Public: read legal social feed
 router.get("/posts", getPublicFeed);
+
+// Public: read generic social feed endpoint
+router.get("/feed", getFeed);
+
+// Public: read public posts by lawyer
+router.get("/lawyers/:lawyerId/posts", getLawyerPosts);
 
 // Lawyer: read own posts (including private/followers)
 router.get("/posts/me", protect, authorizeRoles("lawyer"), getMyPosts);

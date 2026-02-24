@@ -35,6 +35,41 @@ const ensureLawyerProfileExists = async (userId) => {
   }
 };
 
+const parseCursorDate = (cursor) => {
+  if (!cursor) {
+    return null;
+  }
+
+  const parsedDate = new Date(cursor);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw buildError("Invalid cursor", 400);
+  }
+
+  return parsedDate;
+};
+
+const parseLimit = (limit) => {
+  const parsedLimit = Number(limit);
+
+  if (!Number.isInteger(parsedLimit) || parsedLimit <= 0) {
+    return 20;
+  }
+
+  return Math.min(parsedLimit, 50);
+};
+
+const buildPaginationQuery = (baseQuery, cursor) => {
+  const query = { ...baseQuery };
+  const cursorDate = parseCursorDate(cursor);
+
+  if (cursorDate) {
+    query.createdAt = { $lt: cursorDate };
+  }
+
+  return query;
+};
+
 export const createPostByLawyer = async (authUser, payload) => {
   const user = await ensureLawyerUser(authUser);
   await ensureLawyerProfileExists(user._id);
@@ -55,34 +90,72 @@ export const createPostByLawyer = async (authUser, payload) => {
 };
 
 export const findPublicPosts = async ({ limit = 20, cursor } = {}) => {
-  const query = { visibility: "public" };
-
-  if (cursor) {
-    query.createdAt = { $lt: new Date(cursor) };
-  }
+  const query = buildPaginationQuery({ visibility: "public" }, cursor);
+  const safeLimit = parseLimit(limit);
 
   const posts = await Post.find(query)
     .populate("author", "name email role profilePhoto")
     .sort({ createdAt: -1 })
-    .limit(limit)
+    .limit(safeLimit)
     .lean();
 
   return posts;
 };
 
+export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
+  return findPublicPosts({ limit, cursor });
+};
+
 export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
   const user = await ensureLawyerUser(authUser);
 
-  const query = { author: user._id };
-
-  if (cursor) {
-    query.createdAt = { $lt: new Date(cursor) };
-  }
+  const query = buildPaginationQuery({ author: user._id }, cursor);
+  const safeLimit = parseLimit(limit);
 
   const posts = await Post.find(query)
     .populate("author", "name email role profilePhoto")
     .sort({ createdAt: -1 })
-    .limit(limit)
+    .limit(safeLimit)
+    .lean();
+
+  return posts;
+};
+
+const ensureValidLawyerId = (lawyerId) => {
+  if (!mongoose.Types.ObjectId.isValid(lawyerId)) {
+    throw buildError("Invalid lawyer id", 400);
+  }
+};
+
+export const findPostsByLawyer = async (
+  lawyerId,
+  { limit = 20, cursor } = {},
+) => {
+  ensureValidLawyerId(lawyerId);
+
+  const lawyerUser = await User.findById(lawyerId);
+
+  if (!lawyerUser) {
+    throw buildError("Lawyer not found", 404);
+  }
+
+  if (lawyerUser.role !== "lawyer") {
+    throw buildError("Target user is not a lawyer", 400);
+  }
+
+  const query = buildPaginationQuery(
+    {
+      author: lawyerUser._id,
+      visibility: "public",
+    },
+    cursor,
+  );
+  const safeLimit = parseLimit(limit);
+
+  const posts = await Post.find(query)
+    .populate("author", "name email role profilePhoto")
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
     .lean();
 
   return posts;

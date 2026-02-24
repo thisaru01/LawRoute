@@ -1,10 +1,17 @@
 import {
   createPostByLawyer,
   deletePostByLawyer,
+  findFeedPosts,
   findMyPosts,
+  findPostsByLawyer,
   findPublicPosts,
   updatePostByLawyer,
 } from "../../services/social/postService.js";
+
+const readPagination = (req) => ({
+  limit: Number(req.query.limit) || 20,
+  cursor: req.query.cursor,
+});
 
 export const createPost = async (req, res, next) => {
   try {
@@ -22,10 +29,7 @@ export const createPost = async (req, res, next) => {
 
 export const getPublicFeed = async (req, res, next) => {
   try {
-    const limit = Number(req.query.limit) || 20;
-    const cursor = req.query.cursor;
-
-    const posts = await findPublicPosts({ limit, cursor });
+    const posts = await findPublicPosts(readPagination(req));
 
     return res.status(200).json({
       success: true,
@@ -39,10 +43,35 @@ export const getPublicFeed = async (req, res, next) => {
 
 export const getMyPosts = async (req, res, next) => {
   try {
-    const limit = Number(req.query.limit) || 20;
-    const cursor = req.query.cursor;
+    const posts = await findMyPosts(req.user, readPagination(req));
 
-    const posts = await findMyPosts(req.user, { limit, cursor });
+    return res.status(200).json({
+      success: true,
+      count: posts.length,
+      posts,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getFeed = async (req, res, next) => {
+  try {
+    const posts = await findFeedPosts(readPagination(req));
+
+    return res.status(200).json({
+      success: true,
+      count: posts.length,
+      posts,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getLawyerPosts = async (req, res, next) => {
+  try {
+    const posts = await findPostsByLawyer(req.params.lawyerId, readPagination(req));
 
     return res.status(200).json({
       success: true,
