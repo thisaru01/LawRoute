@@ -57,3 +57,63 @@ export const validateCreatePost = (req, res, next) => {
 
   return next();
 };
+
+export const validateUpdatePost = (req, res, next) => {
+  const { body } = req;
+
+  if (!isObject(body)) {
+    return res.status(400).json({
+      success: false,
+      message: "Request body must be a JSON object",
+    });
+  }
+
+  const allowedFields = ["postType", "content", "visibility", "tags"];
+
+  if (!hasOnlyAllowedKeys(body, allowedFields)) {
+    return res.status(400).json({
+      success: false,
+      message: "Request contains invalid fields",
+    });
+  }
+
+  if (Object.keys(body).length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "At least one field is required to update",
+    });
+  }
+
+  if (body.postType && !POST_TYPES.includes(body.postType)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid postType",
+    });
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(body, "content") &&
+    (typeof body.content !== "string" || !body.content.trim())
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "content must be a non-empty string",
+    });
+  }
+
+  if (body.visibility && !ALLOWED_VISIBILITY.includes(body.visibility)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid visibility",
+    });
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "tags") && !Array.isArray(body.tags)) {
+    return res.status(400).json({
+      success: false,
+      message: "tags must be an array",
+    });
+  }
+
+  return next();
+};

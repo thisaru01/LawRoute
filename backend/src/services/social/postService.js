@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
+import mongoose from "mongoose";
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -85,4 +86,62 @@ export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
     .lean();
 
   return posts;
+};
+
+const ensureValidPostId = (postId) => {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw buildError("Invalid post id", 400);
+  }
+};
+
+const findOwnedPost = async (postId, userId) => {
+  ensureValidPostId(postId);
+
+  const post = await Post.findById(postId);
+
+  if (!post) {
+    throw buildError("Post not found", 404);
+  }
+
+  if (post.author.toString() !== userId.toString()) {
+    throw buildError("Access denied. You can only manage your own posts", 403);
+  }
+
+  return post;
+};
+
+export const updatePostByLawyer = async (authUser, postId, payload) => {
+  const user = await ensureLawyerUser(authUser);
+  const post = await findOwnedPost(postId, user._id);
+
+  if (Object.prototype.hasOwnProperty.call(payload, "postType")) {
+    post.postType = payload.postType;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, "content")) {
+    post.content = payload.content;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, "visibility")) {
+    post.visibility = payload.visibility;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, "tags")) {
+    post.tags = Array.isArray(payload.tags) ? payload.tags : [];
+  }
+
+  await post.save();
+
+  const updatedPost = await Post.findById(post._id)
+    .populate("author", "name email role profilePhoto")
+    .lean();
+
+  return updatedPost;
+};
+
+export const deletePostByLawyer = async (authUser, postId) => {
+  const user = await ensureLawyerUser(authUser);
+  const post = await findOwnedPost(postId, user._id);
+
+  await post.deleteOne();
 };
