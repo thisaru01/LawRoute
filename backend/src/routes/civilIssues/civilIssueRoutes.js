@@ -18,7 +18,7 @@ import {
   validateUpdateCivilIssueStatus,
 } from "../../validations/civilIssueValidation.js";
 
-import upload from "../../middleware/uploadMiddleware.js";
+import civilIssueUpload from "../../middleware/civilIssues/civilIssueUpload.js";
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.post(
   "/",
   protect,
   authorizeRoles("user"),
-  upload.array("attachments", 5),
+  civilIssueUpload.array("attachments", 5),
   validateSubmitCivilIssue,
   submitCivilIssue
 );
