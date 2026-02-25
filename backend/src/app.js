@@ -9,6 +9,7 @@ import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import socialRoutes from "./routes/social/socialRoutes.js";
 
 const app = express();
 
@@ -39,6 +40,9 @@ app.use("/api/civil-issues", civilIssueRoutes);
 
 // API lawyer profile Routes
 app.use("/api/lawyer-profile", lawyerProfileRoutes);
+
+// API legal social feed Routes
+app.use("/api/social", socialRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);
