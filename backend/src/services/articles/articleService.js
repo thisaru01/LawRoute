@@ -141,6 +141,74 @@ export const updateArticleStatus = async ({ id, status, user }) => {
   return { deleted: false, article };
 };
 
+export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const role = user.role;
+  if (!["admin", "lawyer"].includes(role)) {
+    const err = new Error("Only admins or lawyers can update articles");
+    err.status = 403;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId);
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (article.status !== "pending") {
+    const err = new Error("Only pending articles can be updated");
+    err.status = 400;
+    throw err;
+  }
+
+  const userId = String(user._id);
+  const isAdmin = role === "admin";
+  const isLawyer = role === "lawyer";
+
+  // Both admins and lawyers may only update their own pending articles
+  if ((isAdmin || isLawyer) && String(article.author) !== userId) {
+    const err = new Error("Only the article's author can update this pending article");
+    err.status = 403;
+    throw err;
+  }
+
+  if (title !== undefined) article.title = title;
+  if (content !== undefined) article.content = content;
+  if (category !== undefined) article.category = category;
+
+  // Handle image replacement: if a new image is provided, remove the old one from Cloudinary
+  if (imagePublicId) {
+    if (article.imagePublicId && article.imagePublicId !== imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagePublicId);
+      } catch (e) {
+        console.error("Failed to delete previous article image from Cloudinary", e);
+      }
+    }
+
+    article.imageUrl = imageUrl || null;
+    article.imagePublicId = imagePublicId || null;
+  }
+
+  await article.save();
+  return article;
+};
+
 export const deleteArticle = async ({ id, user }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
@@ -214,5 +282,6 @@ export default {
   createArticle,
   getAllArticles,
   updateArticleStatus,
+  updateArticle,
   deleteArticle,
 };

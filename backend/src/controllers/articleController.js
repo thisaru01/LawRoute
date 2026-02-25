@@ -73,6 +73,36 @@ export const getAllArticles = async (req, res, next) => {
   }
 };
 
+// Update article content/metadata
+// - Only for articles with status 'pending'
+// - Admins: can update any pending article
+// - Lawyers: can update only their own pending articles
+export const updateArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, content, category } = req.body;
+    const imageUrl = req.file?.path || null;
+    const imagePublicId = req.file?.filename || null;
+
+    const article = await articleService.updateArticle({
+      id,
+      user: req.user,
+      title,
+      content,
+      category,
+      imageUrl,
+      imagePublicId,
+    });
+
+    return res.status(200).json({ success: true, article });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
 // export bottom of file (includes updateArticleStatus)
 
 // Update article status (admin only)

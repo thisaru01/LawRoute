@@ -2,6 +2,7 @@ import express from "express";
 import {
   createArticle,
   getAllArticles,
+  updateArticle,
   updateArticleStatus,
   deleteArticle,
 } from "../controllers/articleController.js";
@@ -16,6 +17,17 @@ router.get("/", getAllArticles);
 
 // Create article with optional image upload
 router.post("/", protect, upload.single("image"), createArticle);
+
+// Update article (only when status is 'pending')
+// - Admins: any pending article
+// - Lawyers: only their own pending articles
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("admin", "lawyer"),
+  upload.single("image"),
+  updateArticle,
+);
 
 // Admin-only: update article status (e.g. pending -> published)
 router.patch(
