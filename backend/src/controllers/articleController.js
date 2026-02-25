@@ -15,6 +15,9 @@ export const createArticle = async (req, res, next) => {
 
     const { title, content, category } = req.body;
 
+    const imageUrl = req.file?.path || null;
+    const imagePublicId = req.file?.filename || null;
+
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -35,7 +38,14 @@ export const createArticle = async (req, res, next) => {
     // All articles start as "pending" now, even for admins
     const status = "pending";
 
-      const article = await articleService.createArticle({ title, content, category, user: req.user });
+      const article = await articleService.createArticle({
+        title,
+        content,
+        category,
+        user: req.user,
+        imageUrl,
+        imagePublicId,
+      });
 
       console.log("article saved:", article._id, "status:", article.status);
       return res.status(201).json({ message: "Article submitted for admin review.", article });

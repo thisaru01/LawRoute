@@ -2,10 +2,18 @@ import Article from "../../models/articleModel.js";
 import jwt from "jsonwebtoken";
 import User from "../../models/userModel.js";
 import mongoose from "mongoose";
+import { cloudinary } from "../../config/cloudinary.js";
 
 const VALID_STATUSES = ["pending", "published", "rejected", "archived"];
 
-export const createArticle = async ({ title, content, category, user }) => {
+export const createArticle = async ({
+  title,
+  content,
+  category,
+  user,
+  imageUrl,
+  imagePublicId,
+}) => {
   if (!user || !user._id) {
     const err = new Error("Unauthorized");
     err.status = 401;
@@ -31,6 +39,8 @@ export const createArticle = async ({ title, content, category, user }) => {
     title,
     content,
     category,
+    imageUrl: imageUrl || null,
+    imagePublicId: imagePublicId || null,
     author: user._id,
     authorRole: role,
     status,
@@ -184,6 +194,15 @@ export const deleteArticle = async ({ id, user }) => {
       const err = new Error("Only admins can delete articles with this status");
       err.status = 403;
       throw err;
+    }
+  }
+
+  if (article.imagePublicId) {
+    try {
+      await cloudinary.uploader.destroy(article.imagePublicId);
+    } catch (e) {
+      // log and continue; failure to delete image should not block article deletion
+      console.error("Failed to delete article image from Cloudinary", e);
     }
   }
 
