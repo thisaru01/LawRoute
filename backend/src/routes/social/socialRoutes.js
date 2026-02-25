@@ -20,6 +20,12 @@ import {
   likePost,
   unlikePost,
 } from "../../controllers/social/postLikeController.js";
+import {
+  createComment,
+  deleteComment,
+  getPostComments,
+} from "../../controllers/social/postCommentController.js";
+import { validateCreateComment } from "../../validations/social/commentValidation.js";
 
 const router = express.Router();
 
@@ -66,5 +72,10 @@ router.post("/posts/:id/like", protect, likePost);
 
 // Authenticated users: unlike a post
 router.delete("/posts/:id/like", protect, unlikePost);
+
+// Post comments
+router.get("/posts/:id/comments", getPostComments);
+router.post("/posts/:id/comments", protect, validateCreateComment, createComment);
+router.delete("/comments/:commentId", protect, deleteComment);
 
 export default router;
