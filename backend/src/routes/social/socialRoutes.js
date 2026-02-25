@@ -6,6 +6,7 @@ import {
   createPost,
   deletePost,
   getFeed,
+  getFeedForLoggedUser,
   getLawyerPosts,
   getMyPosts,
   getPublicFeed,
@@ -15,6 +16,10 @@ import {
   validateCreatePost,
   validateUpdatePost,
 } from "../../validations/social/postValidation.js";
+import {
+  likePost,
+  unlikePost,
+} from "../../controllers/social/postLikeController.js";
 
 const router = express.Router();
 
@@ -23,6 +28,9 @@ router.get("/posts", getPublicFeed);
 
 // Public: read generic social feed endpoint
 router.get("/feed", getFeed);
+
+// Logged users: read feed
+router.get("/feed/me", protect, getFeedForLoggedUser);
 
 // Public: read public posts by lawyer
 router.get("/lawyers/:lawyerId/posts", getLawyerPosts);
@@ -52,5 +60,11 @@ router.put(
 
 // Lawyer: delete own post
 router.delete("/posts/:id", protect, authorizeRoles("lawyer"), deletePost);
+
+// Authenticated users: like a post
+router.post("/posts/:id/like", protect, likePost);
+
+// Authenticated users: unlike a post
+router.delete("/posts/:id/like", protect, unlikePost);
 
 export default router;

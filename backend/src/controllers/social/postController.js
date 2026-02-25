@@ -2,6 +2,7 @@ import {
   createPostByLawyer,
   deletePostByLawyer,
   findFeedPosts,
+  findFeedPostsForLoggedUser,
   findMyPosts,
   findPostsByLawyer,
   findPublicPosts,
@@ -58,6 +59,20 @@ export const getMyPosts = async (req, res, next) => {
 export const getFeed = async (req, res, next) => {
   try {
     const posts = await findFeedPosts(readPagination(req));
+
+    return res.status(200).json({
+      success: true,
+      count: posts.length,
+      posts,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getFeedForLoggedUser = async (req, res, next) => {
+  try {
+    const posts = await findFeedPostsForLoggedUser(req.user, readPagination(req));
 
     return res.status(200).json({
       success: true,
