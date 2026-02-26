@@ -1,4 +1,4 @@
-import Article from "../../models/articleModel.js";
+import Article from "../../models/articles/articleModel.js";
 import jwt from "jsonwebtoken";
 import User from "../../models/userModel.js";
 import mongoose from "mongoose";
