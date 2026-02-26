@@ -1,4 +1,4 @@
-import * as consultationRequestService from "../services/consultationRequestService.js";
+import * as consultationRequestService from "../../services/consultation/consultationRequestService.js";
 
 // Create a new consultation request (user describes their legal matter)
 export const createConsultationRequest = async (req, res, next) => {

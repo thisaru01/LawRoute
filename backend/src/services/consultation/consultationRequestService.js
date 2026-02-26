@@ -1,4 +1,4 @@
-import ConsultationRequest from "../models/consultationRequestModel.js";
+import ConsultationRequest from "../../models/consultation/consultationRequestModel.js";
 
 // Create a new consultation request
 export async function createConsultationRequest({ userId, summary, lawyerId }) {

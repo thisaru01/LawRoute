@@ -9,9 +9,9 @@ import {
   acceptConsultationRequest,
   rejectConsultationRequest,
   deleteConsultationRequest,
-} from "../controllers/consultationRequestController.js";
+} from "../../controllers/consultation/consultationRequestController.js";
 
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 
 const router = express.Router();
 

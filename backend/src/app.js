@@ -5,7 +5,7 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import articleRoutes from "./routes/articleRoutes.js";
-import consultationRequestRoutes from "./routes/consultationRequestRoutes.js";
+import consultationRequestRoutes from "./routes/consultation/consultationRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
