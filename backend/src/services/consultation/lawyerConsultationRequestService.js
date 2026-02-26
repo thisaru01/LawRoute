@@ -1,5 +1,5 @@
 import ConsultationRequest from "../../models/consultation/consultationRequestModel.js";
-import Case from "../../models/consultation/caseModel.js";
+import Case from "../../models/case/caseModel.js";
 
 // Lawyer: Get consultation requests assigned to a specific lawyer
 export async function getConsultationRequestsForLawyer(lawyerId) {

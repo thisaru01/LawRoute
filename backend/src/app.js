@@ -11,6 +11,7 @@ import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import documentRoutes from "./routes/documents/documentRoutes.js";
 import socialRoutes from "./routes/social/socialRoutes.js";
+import caseRoutes from "./routes/case/caseRoutes.js";
 
 const app = express();
 
@@ -35,6 +36,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/articles", articleRoutes);
 // API documents Routes (PDF uploads by admins, downloads by users)
 app.use("/api/documents", documentRoutes);
+
+// API cases Routes (opened when consultation requests are accepted)
+app.use("/api/cases", caseRoutes);
 
 // API consultation request Routes (users describe their legal matters)
 app.use("/api/consultation-requests", consultationRequestRoutes);
