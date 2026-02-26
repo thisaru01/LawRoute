@@ -41,7 +41,6 @@ export async function acceptConsultationRequest({ requestId, lawyerId }) {
     consultationRequest: request._id,
     user: request.user,
     lawyer: request.lawyer,
-    summary: request.summary,
   });
 
   return request;

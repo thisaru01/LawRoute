@@ -26,6 +26,7 @@ const router = express.Router();
 router.post(
   "/",
   protect,
+  authorizeRoles("user"),
   validateCreateConsultationRequest,
   createConsultationRequest,
 );
