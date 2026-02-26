@@ -15,11 +15,20 @@ import {
 } from "../../controllers/consultation/lawyerConsultationRequestController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import {
+  validateCreateConsultationRequest,
+  validateUpdateConsultationRequest,
+} from "../../validations/consultationRequestValidation.js";
 
 const router = express.Router();
 
 // Create a new consultation request
-router.post("/", protect, createConsultationRequest);
+router.post(
+  "/",
+  protect,
+  validateCreateConsultationRequest,
+  createConsultationRequest,
+);
 
 // Get consultation requests created by the current user
 router.get("/me", protect, getMyConsultationRequests);
@@ -36,7 +45,12 @@ router.get(
 router.get("/:id", protect, getConsultationRequestById);
 
 // Update a consultation request (only the creator and only if pending)
-router.put("/:id", protect, updateConsultationRequest);
+router.put(
+  "/:id",
+  protect,
+  validateUpdateConsultationRequest,
+  updateConsultationRequest,
+);
 
 // Delete a consultation request (only the creator and only if pending)
 router.delete("/:id", protect, deleteConsultationRequest);
