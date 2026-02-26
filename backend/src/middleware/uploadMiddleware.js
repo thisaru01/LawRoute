@@ -16,7 +16,10 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// Create Multer instance using Cloudinary storage
-const upload = multer({ storage });
+// Create Multer instance using Cloudinary storage with size limit
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
+});
 
 export default upload;

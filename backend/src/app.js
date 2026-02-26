@@ -5,11 +5,12 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import articleRoutes from "./routes/articles/articleRoutes.js";
-import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
+import consultationRequestRoutes from "./routes/consultationRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import documentRoutes from "./routes/documents/documentRoutes.js";
+import socialRoutes from "./routes/social/socialRoutes.js";
 
 const app = express();
 
@@ -35,13 +36,18 @@ app.use("/api/articles", articleRoutes);
 // API documents Routes (PDF uploads by admins, downloads by users)
 app.use("/api/documents", documentRoutes);
 // API lawyer request Routes (users describe their legal matters)
-app.use("/api/lawyer-requests", lawyerRequestRoutes);
+//app.use("/api/lawyer-requests", lawyerRequestRoutes);
+// API consultation request Routes (users describe their legal matters)
+app.use("/api/consultation-requests", consultationRequestRoutes);
 
 // API civil issues Routes (citizens report civil issues, auto-routed to authority)
 app.use("/api/civil-issues", civilIssueRoutes);
 
 // API lawyer profile Routes
 app.use("/api/lawyer-profile", lawyerProfileRoutes);
+
+// API legal social feed Routes
+app.use("/api/social", socialRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);
