@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import LawyerProfile from "../models/lawyerProfileModel.js";
+import LawyerProfile from "../models/lawyerProfiles/lawyerProfileModel.js";
 import AuthorityProfile from "../models/authorityProfileModel.js";
 import jwt from "jsonwebtoken";
 

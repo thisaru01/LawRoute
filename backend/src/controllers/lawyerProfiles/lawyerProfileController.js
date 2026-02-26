@@ -2,7 +2,7 @@ import {
   findAllLawyerProfiles,
   findLawyerProfileByUser,
   updateLawyerProfileByUser,
-} from "../services/lawyerProfileService.js";
+} from "../../services/lawyerProfiles/lawyerProfileService.js";
 
 export const getAllLawyerProfiles = async (req, res, next) => {
   try {

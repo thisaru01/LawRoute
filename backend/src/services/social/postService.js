@@ -1,5 +1,5 @@
 import User from "../../models/userModel.js";
-import LawyerProfile from "../../models/lawyerProfileModel.js";
+import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
 import Follow from "../../models/social/followModel.js";
 import { cloudinary } from "../../config/cloudinary.js";

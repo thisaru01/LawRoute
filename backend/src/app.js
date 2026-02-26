@@ -7,7 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import articleRoutes from "./routes/articleRoutes.js";
 import consultationRequestRoutes from "./routes/consultation/consultationRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
-import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
+import lawyerProfileRoutes from "./routes/lawyerProfiles/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import socialRoutes from "./routes/social/socialRoutes.js";

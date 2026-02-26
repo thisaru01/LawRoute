@@ -1,5 +1,5 @@
-import User from "../models/userModel.js";
-import LawyerProfile from "../models/lawyerProfileModel.js";
+import User from "../../models/userModel.js";
+import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
 
 const ALLOWED_BASIC_FIELDS = [
   "professionalTitle",
