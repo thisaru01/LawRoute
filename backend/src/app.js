@@ -5,7 +5,7 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import articleRoutes from "./routes/articleRoutes.js";
-import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
+import consultationRequestRoutes from "./routes/consultationRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -32,8 +32,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 // API articles Routes
 app.use("/api/articles", articleRoutes);
-// API lawyer request Routes (users describe their legal matters)
-app.use("/api/lawyer-requests", lawyerRequestRoutes);
+// API consultation request Routes (users describe their legal matters)
+app.use("/api/consultation-requests", consultationRequestRoutes);
 
 // API civil issues Routes (citizens report civil issues, auto-routed to authority)
 app.use("/api/civil-issues", civilIssueRoutes);

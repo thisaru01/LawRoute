@@ -1,11 +1,11 @@
-import * as lawyerRequestService from "../services/lawyerRequestService.js";
+import * as consultationRequestService from "../services/consultationRequestService.js";
 
-// Create a new lawyer request (user describes their legal matter)
-export const createLawyerRequest = async (req, res, next) => {
+// Create a new consultation request (user describes their legal matter)
+export const createConsultationRequest = async (req, res, next) => {
   try {
     const { summary, lawyerId } = req.body;
 
-    const request = await lawyerRequestService.createLawyerRequest({
+    const request = await consultationRequestService.createConsultationRequest({
       userId: req.user._id,
       summary,
       lawyerId,
@@ -26,12 +26,13 @@ export const createLawyerRequest = async (req, res, next) => {
   }
 };
 
-// Get requests created by the logged-in user
-export const getMyLawyerRequests = async (req, res, next) => {
+// Get consultation requests created by the logged-in user
+export const getMyConsultationRequests = async (req, res, next) => {
   try {
-    const requests = await lawyerRequestService.getLawyerRequestsForUser(
-      req.user._id,
-    );
+    const requests =
+      await consultationRequestService.getConsultationRequestsForUser(
+        req.user._id,
+      );
 
     res.status(200).json({
       success: true,
@@ -42,12 +43,17 @@ export const getMyLawyerRequests = async (req, res, next) => {
   }
 };
 
-// Get requests assigned to the logged-in lawyer
-export const getAssignedRequestsForLawyer = async (req, res, next) => {
+// Get consultation requests assigned to the logged-in lawyer
+export const getAssignedConsultationRequestsForLawyer = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const requests = await lawyerRequestService.getLawyerRequestsForLawyer(
-      req.user._id,
-    );
+    const requests =
+      await consultationRequestService.getConsultationRequestsForLawyer(
+        req.user._id,
+      );
 
     res.status(200).json({
       success: true,
@@ -58,15 +64,16 @@ export const getAssignedRequestsForLawyer = async (req, res, next) => {
   }
 };
 
-// Get a single lawyer request (only by involved user or assigned lawyer)
-export const getLawyerRequestById = async (req, res, next) => {
+// Get a single consultation request (only by involved user or assigned lawyer)
+export const getConsultationRequestById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const request = await lawyerRequestService.getLawyerRequestByIdForUser({
-      requestId: id,
-      currentUserId: req.user._id,
-    });
+    const request =
+      await consultationRequestService.getConsultationRequestByIdForUser({
+        requestId: id,
+        currentUserId: req.user._id,
+      });
 
     res.status(200).json({
       success: true,
@@ -83,12 +90,12 @@ export const getLawyerRequestById = async (req, res, next) => {
   }
 };
 
-// Accept a lawyer request (only the assigned lawyer)
-export const acceptLawyerRequest = async (req, res, next) => {
+// Accept a consultation request (only the assigned lawyer)
+export const acceptConsultationRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const request = await lawyerRequestService.acceptLawyerRequest({
+    const request = await consultationRequestService.acceptConsultationRequest({
       requestId: id,
       lawyerId: req.user._id,
     });
@@ -108,12 +115,12 @@ export const acceptLawyerRequest = async (req, res, next) => {
   }
 };
 
-// Reject a lawyer request (only the assigned lawyer)
-export const rejectLawyerRequest = async (req, res, next) => {
+// Reject a consultation request (only the assigned lawyer)
+export const rejectConsultationRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const request = await lawyerRequestService.rejectLawyerRequest({
+    const request = await consultationRequestService.rejectConsultationRequest({
       requestId: id,
       lawyerId: req.user._id,
     });

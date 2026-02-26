@@ -1,7 +1,7 @@
-import LawyerRequest from "../models/lawyerRequestModel.js";
+import ConsultationRequest from "../models/consultationRequestModel.js";
 
-// Create a new lawyer request
-export async function createLawyerRequest({ userId, summary, lawyerId }) {
+// Create a new consultation request
+export async function createConsultationRequest({ userId, summary, lawyerId }) {
   if (!summary || !summary.trim()) {
     const error = new Error("Summary is required");
     error.statusCode = 400;
@@ -14,7 +14,7 @@ export async function createLawyerRequest({ userId, summary, lawyerId }) {
     throw error;
   }
 
-  const request = await LawyerRequest.create({
+  const request = await ConsultationRequest.create({
     user: userId,
     lawyer: lawyerId,
     summary: summary.trim(),
@@ -23,30 +23,30 @@ export async function createLawyerRequest({ userId, summary, lawyerId }) {
   return request;
 }
 
-// Get requests created by a specific user
-export async function getLawyerRequestsForUser(userId) {
-  const requests = await LawyerRequest.find({ user: userId })
+// Get consultation requests created by a specific user
+export async function getConsultationRequestsForUser(userId) {
+  const requests = await ConsultationRequest.find({ user: userId })
     .populate("lawyer", "name email role expertise")
     .sort({ createdAt: -1 });
 
   return requests;
 }
 
-// Get requests assigned to a specific lawyer
-export async function getLawyerRequestsForLawyer(lawyerId) {
-  const requests = await LawyerRequest.find({ lawyer: lawyerId })
+// Get consultation requests assigned to a specific lawyer
+export async function getConsultationRequestsForLawyer(lawyerId) {
+  const requests = await ConsultationRequest.find({ lawyer: lawyerId })
     .populate("user", "name email")
     .sort({ createdAt: -1 });
 
   return requests;
 }
 
-// Get a single request ensuring the requester has access
-export async function getLawyerRequestByIdForUser({
+// Get a single consultation request ensuring the requester has access
+export async function getConsultationRequestByIdForUser({
   requestId,
   currentUserId,
 }) {
-  const request = await LawyerRequest.findById(requestId)
+  const request = await ConsultationRequest.findById(requestId)
     .populate("user", "name email")
     .populate("lawyer", "name email role expertise");
 
@@ -71,9 +71,9 @@ export async function getLawyerRequestByIdForUser({
   return request;
 }
 
-// Accept a request as the assigned lawyer
-export async function acceptLawyerRequest({ requestId, lawyerId }) {
-  const request = await LawyerRequest.findById(requestId);
+// Accept a consultation request as the assigned lawyer
+export async function acceptConsultationRequest({ requestId, lawyerId }) {
+  const request = await ConsultationRequest.findById(requestId);
 
   if (!request) {
     const error = new Error("Request not found");
@@ -84,7 +84,9 @@ export async function acceptLawyerRequest({ requestId, lawyerId }) {
   const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
 
   if (!isAssignedLawyer) {
-    const error = new Error("Only the assigned lawyer can accept this request");
+    const error = new Error(
+      "Only the assigned lawyer can accept this request",
+    );
     error.statusCode = 403;
     throw error;
   }
@@ -101,9 +103,9 @@ export async function acceptLawyerRequest({ requestId, lawyerId }) {
   return request;
 }
 
-// Reject a request as the assigned lawyer
-export async function rejectLawyerRequest({ requestId, lawyerId }) {
-  const request = await LawyerRequest.findById(requestId);
+// Reject a consultation request as the assigned lawyer
+export async function rejectConsultationRequest({ requestId, lawyerId }) {
+  const request = await ConsultationRequest.findById(requestId);
 
   if (!request) {
     const error = new Error("Request not found");
@@ -114,7 +116,9 @@ export async function rejectLawyerRequest({ requestId, lawyerId }) {
   const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
 
   if (!isAssignedLawyer) {
-    const error = new Error("Only the assigned lawyer can reject this request");
+    const error = new Error(
+      "Only the assigned lawyer can reject this request",
+    );
     error.statusCode = 403;
     throw error;
   }
