@@ -36,6 +36,10 @@ const civilIssueSchema = new Schema(
       enum: ["pending", "in_progress", "resolved"],
       default: "pending",
     },
+    attachments: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );

@@ -1,4 +1,5 @@
 import * as civilIssueService from "../../services/civilIssues/civilIssueService.js";
+import { cloudinary } from "../../config/cloudinary.js";
 
 // POST /api/civil-issues
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
@@ -6,11 +7,15 @@ export const submitCivilIssue = async (req, res, next) => {
   try {
     const { category, district, description } = req.body;
 
+    // Cloudinary automatically provides the secure URLs in the `path` property of each file
+    const attachments = req.files ? req.files.map((file) => file.path) : [];
+
     const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
       district,
       description,
+      attachments,
     });
 
     res.status(201).json({
@@ -19,6 +24,13 @@ export const submitCivilIssue = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    // Clean up any files already uploaded to Cloudinary to prevent orphaned assets
+    if (req.files?.length > 0) {
+      await Promise.allSettled(
+        req.files.map((file) => cloudinary.uploader.destroy(file.filename))
+      );
+    }
+
     if (error.statusCode) {
       return res
         .status(error.statusCode)
