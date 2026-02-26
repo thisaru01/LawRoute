@@ -20,11 +20,6 @@ const CaseSchema = new Schema(
       ref: "User",
       required: true,
     },
-    summary: {
-      type: String,
-      trim: true,
-      maxlength: 2000,
-    },
     status: {
       type: String,
       enum: ["open", "closed"],
