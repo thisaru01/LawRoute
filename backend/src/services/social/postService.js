@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
+import Follow from "../../models/social/followModel.js";
 import { cloudinary } from "../../config/cloudinary.js";
 import mongoose from "mongoose";
 
@@ -166,7 +167,32 @@ export const findFeedPostsForLoggedUser = async (
     throw buildError("Unauthorized", 401);
   }
 
-  return findPublicPosts({ limit, cursor });
+  const safeLimit = parseLimit(limit);
+  const followedLawyers = await Follow.distinct("followee", {
+    follower: authUser._id,
+  });
+
+  const visibilityQuery = [
+    { visibility: "public" },
+    {
+      author: { $in: followedLawyers },
+      visibility: "followers",
+    },
+    {
+      author: authUser._id,
+      visibility: { $in: ["public", "followers", "private"] },
+    },
+  ];
+
+  const query = buildPaginationQuery({ $or: visibilityQuery }, cursor);
+
+  const posts = await Post.find(query)
+    .populate("author", "name email role profilePhoto")
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
+    .lean();
+
+  return posts;
 };
 
 export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
