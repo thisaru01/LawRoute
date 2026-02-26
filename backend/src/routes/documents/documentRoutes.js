@@ -1,13 +1,13 @@
 import express from "express";
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
-import upload from "../middleware/uploadMiddleware.js";
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import upload from "../../middleware/uploadMiddleware.js";
 import {
   createDocument,
   getAllDocuments,
   getDocument,
   downloadDocument,
   deleteDocument,
-} from "../controllers/documentController.js";
+} from "../../controllers/documents/documentController.js";
 
 const router = express.Router();
 

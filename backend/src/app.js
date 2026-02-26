@@ -4,12 +4,12 @@ import morgan from "morgan";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 
 import authRoutes from "./routes/authRoutes.js";
-import articleRoutes from "./routes/articleRoutes.js";
+import articleRoutes from "./routes/articles/articleRoutes.js";
 import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import documentRoutes from "./routes/documentRoutes.js";
+import documentRoutes from "./routes/documents/documentRoutes.js";
 
 const app = express();
 

@@ -1,4 +1,4 @@
-import * as documentService from "../services/documents/documentService.js";
+import * as documentService from "../../services/documents/documentService.js";
 
 // Admin: upload PDF document
 export const createDocument = async (req, res, next) => {
