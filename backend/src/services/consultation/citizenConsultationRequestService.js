@@ -1,6 +1,6 @@
-import ConsultationRequest from "../models/consultationRequestModel.js";
+import ConsultationRequest from "../../models/consultation/consultationRequestModel.js";
 
-// Create a new consultation request
+// Citizen: Create a new consultation request
 export async function createConsultationRequest({ userId, summary, lawyerId }) {
   if (!summary || !summary.trim()) {
     const error = new Error("Summary is required");
@@ -23,7 +23,7 @@ export async function createConsultationRequest({ userId, summary, lawyerId }) {
   return request;
 }
 
-// Update a consultation request (only by the creating user and while pending)
+// Citizen: Update a consultation request (only by the creating user and while pending)
 export async function updateConsultationRequest({
   requestId,
   currentUserId,
@@ -66,7 +66,7 @@ export async function updateConsultationRequest({
   return request;
 }
 
-// Delete a consultation request (only by the creating user and while pending)
+// Citizen: Delete a consultation request (only by the creating user and while pending)
 export async function deleteConsultationRequest({ requestId, currentUserId }) {
   const request = await ConsultationRequest.findById(requestId);
 
@@ -98,7 +98,7 @@ export async function deleteConsultationRequest({ requestId, currentUserId }) {
   return { success: true };
 }
 
-// Get consultation requests created by a specific user
+// Citizen: Get consultation requests created by a specific user
 export async function getConsultationRequestsForUser(userId) {
   const requests = await ConsultationRequest.find({ user: userId })
     .populate("lawyer", "name email role expertise")
@@ -107,16 +107,7 @@ export async function getConsultationRequestsForUser(userId) {
   return requests;
 }
 
-// Get consultation requests assigned to a specific lawyer
-export async function getConsultationRequestsForLawyer(lawyerId) {
-  const requests = await ConsultationRequest.find({ lawyer: lawyerId })
-    .populate("user", "name email")
-    .sort({ createdAt: -1 });
-
-  return requests;
-}
-
-// Get a single consultation request ensuring the requester has access
+// Shared: Get a single consultation request ensuring the requester has access
 export async function getConsultationRequestByIdForUser({
   requestId,
   currentUserId,
@@ -142,66 +133,6 @@ export async function getConsultationRequestByIdForUser({
     error.statusCode = 403;
     throw error;
   }
-
-  return request;
-}
-
-// Accept a consultation request as the assigned lawyer
-export async function acceptConsultationRequest({ requestId, lawyerId }) {
-  const request = await ConsultationRequest.findById(requestId);
-
-  if (!request) {
-    const error = new Error("Request not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
-
-  if (!isAssignedLawyer) {
-    const error = new Error("Only the assigned lawyer can accept this request");
-    error.statusCode = 403;
-    throw error;
-  }
-
-  if (request.status !== "pending") {
-    const error = new Error("This request has already been responded to");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  request.status = "accepted";
-  await request.save();
-
-  return request;
-}
-
-// Reject a consultation request as the assigned lawyer
-export async function rejectConsultationRequest({ requestId, lawyerId }) {
-  const request = await ConsultationRequest.findById(requestId);
-
-  if (!request) {
-    const error = new Error("Request not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
-
-  if (!isAssignedLawyer) {
-    const error = new Error("Only the assigned lawyer can reject this request");
-    error.statusCode = 403;
-    throw error;
-  }
-
-  if (request.status !== "pending") {
-    const error = new Error("This request has already been responded to");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  request.status = "rejected";
-  await request.save();
 
   return request;
 }

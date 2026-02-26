@@ -3,20 +3,32 @@ import express from "express";
 import {
   createConsultationRequest,
   getMyConsultationRequests,
-  getAssignedConsultationRequestsForLawyer,
   getConsultationRequestById,
   updateConsultationRequest,
+  deleteConsultationRequest,
+} from "../../controllers/consultation/citizenConsultationRequestController.js";
+
+import {
+  getAssignedConsultationRequestsForLawyer,
   acceptConsultationRequest,
   rejectConsultationRequest,
-  deleteConsultationRequest,
-} from "../controllers/consultationRequestController.js";
+} from "../../controllers/consultation/lawyerConsultationRequestController.js";
 
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import {
+  validateCreateConsultationRequest,
+  validateUpdateConsultationRequest,
+} from "../../validations/consultationRequestValidation.js";
 
 const router = express.Router();
 
 // Create a new consultation request
-router.post("/", protect, createConsultationRequest);
+router.post(
+  "/",
+  protect,
+  validateCreateConsultationRequest,
+  createConsultationRequest,
+);
 
 // Get consultation requests created by the current user
 router.get("/me", protect, getMyConsultationRequests);
@@ -29,16 +41,21 @@ router.get(
   getAssignedConsultationRequestsForLawyer,
 );
 
-// Get a single consultation request (only the involved user, lawyer, or admin)
+// Get a single consultation request (only the involved user, lawyer)
 router.get("/:id", protect, getConsultationRequestById);
 
 // Update a consultation request (only the creator and only if pending)
-router.put("/:id", protect, updateConsultationRequest);
+router.put(
+  "/:id",
+  protect,
+  validateUpdateConsultationRequest,
+  updateConsultationRequest,
+);
 
 // Delete a consultation request (only the creator and only if pending)
 router.delete("/:id", protect, deleteConsultationRequest);
 
-// Accept a consultation request (only the assigned lawyer or admin)
+// Accept a consultation request (only the assigned lawyer)
 router.patch(
   "/:id/accept",
   protect,
@@ -46,7 +63,7 @@ router.patch(
   acceptConsultationRequest,
 );
 
-// Reject a consultation request (only the assigned lawyer or admin)
+// Reject a consultation request (only the assigned lawyer)
 router.patch(
   "/:id/reject",
   protect,
