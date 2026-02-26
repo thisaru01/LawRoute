@@ -1,6 +1,6 @@
-import * as consultationRequestService from "../../services/consultation/consultationRequestService.js";
+import * as consultationRequestService from "../../services/consultation/citizenConsultationRequestService.js";
 
-// Create a new consultation request (user describes their legal matter)
+// Citizen: Create a new consultation request (user describes their legal matter)
 export const createConsultationRequest = async (req, res, next) => {
   try {
     const { summary, lawyerId } = req.body;
@@ -26,7 +26,7 @@ export const createConsultationRequest = async (req, res, next) => {
   }
 };
 
-// Get consultation requests created by the logged-in user
+// Citizen: Get consultation requests created by the logged-in user
 export const getMyConsultationRequests = async (req, res, next) => {
   try {
     const requests =
@@ -43,28 +43,7 @@ export const getMyConsultationRequests = async (req, res, next) => {
   }
 };
 
-// Get consultation requests assigned to the logged-in lawyer
-export const getAssignedConsultationRequestsForLawyer = async (
-  req,
-  res,
-  next,
-) => {
-  try {
-    const requests =
-      await consultationRequestService.getConsultationRequestsForLawyer(
-        req.user._id,
-      );
-
-    res.status(200).json({
-      success: true,
-      data: requests,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get a single consultation request (only by involved user or assigned lawyer)
+// Shared access: Get a single consultation request (only by involved user or assigned lawyer)
 export const getConsultationRequestById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -90,7 +69,7 @@ export const getConsultationRequestById = async (req, res, next) => {
   }
 };
 
-// Update a consultation request summary (only by creator while pending)
+// Citizen: Update a consultation request summary (only by creator while pending)
 export const updateConsultationRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -128,7 +107,7 @@ export const updateConsultationRequest = async (req, res, next) => {
   }
 };
 
-// Delete a consultation request (only by creator while pending)
+// Citizen: Delete a consultation request (only by creator while pending)
 export const deleteConsultationRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -141,56 +120,6 @@ export const deleteConsultationRequest = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Consultation request deleted successfully",
-    });
-  } catch (error) {
-    if (error.statusCode) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-      });
-    }
-    next(error);
-  }
-};
-
-// Accept a consultation request (only the assigned lawyer)
-export const acceptConsultationRequest = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const request = await consultationRequestService.acceptConsultationRequest({
-      requestId: id,
-      lawyerId: req.user._id,
-    });
-
-    res.status(200).json({
-      success: true,
-      data: request,
-    });
-  } catch (error) {
-    if (error.statusCode) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-      });
-    }
-    next(error);
-  }
-};
-
-// Reject a consultation request (only the assigned lawyer)
-export const rejectConsultationRequest = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const request = await consultationRequestService.rejectConsultationRequest({
-      requestId: id,
-      lawyerId: req.user._id,
-    });
-
-    res.status(200).json({
-      success: true,
-      data: request,
     });
   } catch (error) {
     if (error.statusCode) {
