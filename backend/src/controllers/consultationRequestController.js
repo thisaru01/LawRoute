@@ -90,6 +90,44 @@ export const getConsultationRequestById = async (req, res, next) => {
   }
 };
 
+// Update a consultation request summary (only by creator while pending)
+export const updateConsultationRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { summary } = req.body;
+
+    if (
+      Object.prototype.hasOwnProperty.call(req.body, "lawyer") ||
+      Object.prototype.hasOwnProperty.call(req.body, "lawyerId")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "You are not allowed to change the assigned lawyer for this request",
+      });
+    }
+
+    const request = await consultationRequestService.updateConsultationRequest({
+      requestId: id,
+      currentUserId: req.user._id,
+      summary,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: request,
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    next(error);
+  }
+};
+
 // Accept a consultation request (only the assigned lawyer)
 export const acceptConsultationRequest = async (req, res, next) => {
   try {

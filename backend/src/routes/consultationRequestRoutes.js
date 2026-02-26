@@ -5,6 +5,7 @@ import {
   getMyConsultationRequests,
   getAssignedConsultationRequestsForLawyer,
   getConsultationRequestById,
+  updateConsultationRequest,
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "../controllers/consultationRequestController.js";
@@ -29,6 +30,9 @@ router.get(
 
 // Get a single consultation request (only the involved user, lawyer, or admin)
 router.get("/:id", protect, getConsultationRequestById);
+
+// Update a consultation request (only the creator and only if pending)
+router.put("/:id", protect, updateConsultationRequest);
 
 // Accept a consultation request (only the assigned lawyer or admin)
 router.patch(

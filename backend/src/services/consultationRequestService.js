@@ -23,6 +23,49 @@ export async function createConsultationRequest({ userId, summary, lawyerId }) {
   return request;
 }
 
+// Update a consultation request (only by the creating user and while pending)
+export async function updateConsultationRequest({
+  requestId,
+  currentUserId,
+  summary,
+}) {
+  if (!summary || !summary.trim()) {
+    const error = new Error("Summary is required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const request = await ConsultationRequest.findById(requestId);
+
+  if (!request) {
+    const error = new Error("Request not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isCreator =
+    request.user && request.user.toString() === currentUserId.toString();
+
+  if (!isCreator) {
+    const error = new Error(
+      "Only the user who created this request can update it",
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (request.status !== "pending") {
+    const error = new Error("Only pending requests can be updated");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  request.summary = summary.trim();
+  await request.save();
+
+  return request;
+}
+
 // Get consultation requests created by a specific user
 export async function getConsultationRequestsForUser(userId) {
   const requests = await ConsultationRequest.find({ user: userId })
@@ -84,9 +127,7 @@ export async function acceptConsultationRequest({ requestId, lawyerId }) {
   const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
 
   if (!isAssignedLawyer) {
-    const error = new Error(
-      "Only the assigned lawyer can accept this request",
-    );
+    const error = new Error("Only the assigned lawyer can accept this request");
     error.statusCode = 403;
     throw error;
   }
@@ -116,9 +157,7 @@ export async function rejectConsultationRequest({ requestId, lawyerId }) {
   const isAssignedLawyer = request.lawyer.toString() === lawyerId.toString();
 
   if (!isAssignedLawyer) {
-    const error = new Error(
-      "Only the assigned lawyer can reject this request",
-    );
+    const error = new Error("Only the assigned lawyer can reject this request");
     error.statusCode = 403;
     throw error;
   }
