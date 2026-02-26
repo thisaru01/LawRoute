@@ -33,6 +33,7 @@ export const acceptConsultationRequest = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      message: "Consultation request accepted and case opened successfully",
       data: request,
     });
   } catch (error) {
