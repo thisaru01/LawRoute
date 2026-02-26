@@ -158,6 +158,17 @@ export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
   return findPublicPosts({ limit, cursor });
 };
 
+export const findFeedPostsForLoggedUser = async (
+  authUser,
+  { limit = 20, cursor } = {},
+) => {
+  if (!authUser || !authUser._id) {
+    throw buildError("Unauthorized", 401);
+  }
+
+  return findPublicPosts({ limit, cursor });
+};
+
 export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
   const user = await ensureLawyerUser(authUser);
 
