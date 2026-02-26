@@ -35,8 +35,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/articles", articleRoutes);
 // API documents Routes (PDF uploads by admins, downloads by users)
 app.use("/api/documents", documentRoutes);
-// API lawyer request Routes (users describe their legal matters)
-app.use("/api/lawyer-requests", lawyerRequestRoutes);
+
 // API consultation request Routes (users describe their legal matters)
 app.use("/api/consultation-requests", consultationRequestRoutes);
 
