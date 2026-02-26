@@ -8,6 +8,7 @@ import {
   updateConsultationRequest,
   acceptConsultationRequest,
   rejectConsultationRequest,
+  deleteConsultationRequest,
 } from "../controllers/consultationRequestController.js";
 
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
@@ -33,6 +34,9 @@ router.get("/:id", protect, getConsultationRequestById);
 
 // Update a consultation request (only the creator and only if pending)
 router.put("/:id", protect, updateConsultationRequest);
+
+// Delete a consultation request (only the creator and only if pending)
+router.delete("/:id", protect, deleteConsultationRequest);
 
 // Accept a consultation request (only the assigned lawyer or admin)
 router.patch(

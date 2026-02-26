@@ -128,6 +128,31 @@ export const updateConsultationRequest = async (req, res, next) => {
   }
 };
 
+// Delete a consultation request (only by creator while pending)
+export const deleteConsultationRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    await consultationRequestService.deleteConsultationRequest({
+      requestId: id,
+      currentUserId: req.user._id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Consultation request deleted successfully",
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    next(error);
+  }
+};
+
 // Accept a consultation request (only the assigned lawyer)
 export const acceptConsultationRequest = async (req, res, next) => {
   try {

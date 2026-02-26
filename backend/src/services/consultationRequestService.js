@@ -66,6 +66,38 @@ export async function updateConsultationRequest({
   return request;
 }
 
+// Delete a consultation request (only by the creating user and while pending)
+export async function deleteConsultationRequest({ requestId, currentUserId }) {
+  const request = await ConsultationRequest.findById(requestId);
+
+  if (!request) {
+    const error = new Error("Request not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isCreator =
+    request.user && request.user.toString() === currentUserId.toString();
+
+  if (!isCreator) {
+    const error = new Error(
+      "Only the user who created this request can delete it",
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (request.status !== "pending") {
+    const error = new Error("Only pending requests can be deleted");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await request.deleteOne();
+
+  return { success: true };
+}
+
 // Get consultation requests created by a specific user
 export async function getConsultationRequestsForUser(userId) {
   const requests = await ConsultationRequest.find({ user: userId })
