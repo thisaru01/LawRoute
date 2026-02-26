@@ -9,6 +9,7 @@ import lawyerRequestRoutes from "./routes/lawyerRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
 
 const app = express();
 
@@ -31,6 +32,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 // API articles Routes
 app.use("/api/articles", articleRoutes);
+// API documents Routes (PDF uploads by admins, downloads by users)
+app.use("/api/documents", documentRoutes);
 // API lawyer request Routes (users describe their legal matters)
 app.use("/api/lawyer-requests", lawyerRequestRoutes);
 

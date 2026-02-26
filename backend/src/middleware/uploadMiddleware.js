@@ -6,9 +6,13 @@ import { cloudinary } from "../config/cloudinary.js";
 // Configure Cloudinary storage for Multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: "law-route",
-    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+  params: (req, file) => {
+    const isPdf = file.mimetype === "application/pdf";
+    return {
+      folder: "law-route",
+      resource_type: isPdf ? "raw" : "image",
+      allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+    };
   },
 });
 
