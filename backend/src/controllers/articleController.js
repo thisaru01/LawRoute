@@ -1,7 +1,5 @@
-import Article from "../models/articleModel.js";
-import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
-import mongoose from "mongoose";
+import * as articleService from "../services/articles/articleService.js";
+
 
 // Create article
 // - Admins: article is immediately published
@@ -16,6 +14,9 @@ export const createArticle = async (req, res, next) => {
     );
 
     const { title, content, category } = req.body;
+
+    const imageUrl = req.file?.path || null;
+    const imagePublicId = req.file?.filename || null;
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -34,26 +35,20 @@ export const createArticle = async (req, res, next) => {
         .json({ message: "Title and content are required" });
     }
 
-    const status = role === "admin" ? "published" : "pending";
+    // All articles start as "pending" now, even for admins
+    const status = "pending";
 
-    const article = new Article({
-      title,
-      content,
-      category,
-      author: req.user._id,
-      authorRole: role,
-      status,
-    });
+      const article = await articleService.createArticle({
+        title,
+        content,
+        category,
+        user: req.user,
+        imageUrl,
+        imagePublicId,
+      });
 
-    await article.save();
-    console.log("article saved:", article._id, "status:", article.status);
-
-    const message =
-      role === "admin"
-        ? "Article published successfully."
-        : "Article submitted for admin review.";
-
-    return res.status(201).json({ message, article });
+      console.log("article saved:", article._id, "status:", article.status);
+      return res.status(201).json({ message: "Article submitted for admin review.", article });
   } catch (err) {
     if (typeof next === "function") return next(err);
     return res
@@ -67,42 +62,39 @@ export const createArticle = async (req, res, next) => {
 // - Admin (with valid Bearer token): returns all articles
 export const getAllArticles = async (req, res, next) => {
   try {
-    let isAdmin = false;
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        const token = authHeader.split(" ")[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("role");
-        if (user && user.role === "admin") isAdmin = true;
-      } catch (e) {
-        // Invalid token - ignore and treat as unauthenticated
-      }
-    }
+    const articles = await articleService.getAllArticles({ authHeader: req.headers.authorization, query: req.query });
 
-    const filter = {};
-    // Status handling: allow admins to request any status via ?status=...
-    if (req.query.status) {
-      if (req.query.status !== "published" && !isAdmin) {
-        return res
-          .status(403)
-          .json({ success: false, message: "Access denied" });
-      }
-      filter.status = req.query.status;
-    } else if (!isAdmin) {
-      filter.status = "published";
-    }
-
-    if (req.query.category) filter.category = req.query.category;
-    if (req.query.author) filter.author = req.query.author;
-
-    const articles = await Article.find(filter)
-      .populate("author", "name email")
-      .sort({ createdAt: -1 });
-
+    return res.status(200).json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
     return res
-      .status(200)
-      .json({ success: true, count: articles.length, articles });
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
+// Update article content/metadata
+// - Only for articles with status 'pending'
+// - Admins: can update any pending article
+// - Lawyers: can update only their own pending articles
+export const updateArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, content, category } = req.body;
+    const imageUrl = req.file?.path || null;
+    const imagePublicId = req.file?.filename || null;
+
+    const article = await articleService.updateArticle({
+      id,
+      user: req.user,
+      title,
+      content,
+      category,
+      imageUrl,
+      imagePublicId,
+    });
+
+    return res.status(200).json({ success: true, article });
   } catch (err) {
     if (typeof next === "function") return next(err);
     return res
@@ -119,33 +111,33 @@ export const updateArticleStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    // strip angle brackets if client included them (e.g. <id>)
-    const cleanId = String(id).replace(/[<>]/g, "");
-
-    // validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(cleanId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid article id" });
+    const result = await articleService.updateArticleStatus({ id, status, user: req.user });
+    if (result.deleted) {
+      return res.status(200).json({ success: true, message: result.message });
     }
 
-    if (!["pending", "published", "rejected", "archived"].includes(status)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid status" });
-    }
+    return res.status(200).json({ success: true, article: result.article });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
 
-    const article = await Article.findById(cleanId);
-    if (!article) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Article not found" });
-    }
-
-    article.status = status;
-    await article.save();
-
-    return res.status(200).json({ success: true, article });
+// Delete article
+// - Pending status:
+//   * Admin can delete any pending article
+//   * Lawyer can delete only their own pending article
+// - Published status:
+//   * Only admin can delete, and only if they are NOT the admin who published it
+// - Other statuses:
+//   * Only admin can delete
+export const deleteArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await articleService.deleteArticle({ id, user: req.user });
+    return res.status(200).json({ success: true, message: result.message });
   } catch (err) {
     if (typeof next === "function") return next(err);
     return res
