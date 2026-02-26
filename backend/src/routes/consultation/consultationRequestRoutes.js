@@ -9,7 +9,6 @@ import {
 } from "../../controllers/consultation/citizenConsultationRequestController.js";
 
 import {
-  getAssignedConsultationRequestsForLawyer,
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "../../controllers/consultation/lawyerConsultationRequestController.js";
@@ -30,16 +29,8 @@ router.post(
   createConsultationRequest,
 );
 
-// Get consultation requests created by the current user
+// Get consultation requests related to the current user (citizen or lawyer)
 router.get("/me", protect, getMyConsultationRequests);
-
-// Get consultation requests assigned to the current lawyer
-router.get(
-  "/lawyer/me",
-  protect,
-  authorizeRoles("lawyer"),
-  getAssignedConsultationRequestsForLawyer,
-);
 
 // Get a single consultation request (only the involved user, lawyer)
 router.get("/:id", protect, getConsultationRequestById);
