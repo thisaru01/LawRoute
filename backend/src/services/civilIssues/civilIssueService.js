@@ -2,7 +2,7 @@ import CivilIssue from "../../models/civilIssues/civilIssueModel.js";
 import AuthorityProfile from "../../models/authorityProfileModel.js";
 
 // Create a new civil issue, auto-routing to the correct authority by category.
-export async function createIssue({ reporterId, category, district, description }) {
+export async function createIssue({ reporterId, category, district, description, attachments = [] }) {
     const authorityProfile = await AuthorityProfile.findOne({
         managedCategory: category,
     });
@@ -18,6 +18,7 @@ export async function createIssue({ reporterId, category, district, description 
         category,
         district,
         description,
+        attachments,
         assignedTo: authorityProfile.user,
     });
 

@@ -18,10 +18,19 @@ import {
   validateUpdateCivilIssueStatus,
 } from "../../validations/civilIssueValidation.js";
 
+import civilIssueUpload from "../../middleware/civilIssues/civilIssueUpload.js";
+
 const router = express.Router();
 
 // Citizen: submit a new civil issue (auto-routed to correct authority by category)
-router.post("/", protect, authorizeRoles("user"), validateSubmitCivilIssue, submitCivilIssue);
+router.post(
+  "/",
+  protect,
+  authorizeRoles("user"),
+  civilIssueUpload.array("attachments", 5),
+  validateSubmitCivilIssue,
+  submitCivilIssue
+);
 
 // Citizen: view own submitted civil issues
 router.get("/my", protect, authorizeRoles("user"), getMyCivilIssues);
