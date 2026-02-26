@@ -4,8 +4,8 @@ import morgan from "morgan";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 
 import authRoutes from "./routes/authRoutes.js";
+import consultationRequestRoutes from "./routes/consultation/consultationRequestRoutes.js";
 import articleRoutes from "./routes/articles/articleRoutes.js";
-import consultationRequestRoutes from "./routes/consultationRequestRoutes.js";
 import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
 import lawyerProfileRoutes from "./routes/lawyerProfileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -35,8 +35,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/articles", articleRoutes);
 // API documents Routes (PDF uploads by admins, downloads by users)
 app.use("/api/documents", documentRoutes);
-// API lawyer request Routes (users describe their legal matters)
-//app.use("/api/lawyer-requests", lawyerRequestRoutes);
+
 // API consultation request Routes (users describe their legal matters)
 app.use("/api/consultation-requests", consultationRequestRoutes);
 
