@@ -1,4 +1,5 @@
 import ConsultationRequest from "../../models/consultation/consultationRequestModel.js";
+import User from "../../models/userModel.js";
 
 // Citizen: Create a new consultation request
 export async function createConsultationRequest({ userId, summary, lawyerId }) {
@@ -10,6 +11,15 @@ export async function createConsultationRequest({ userId, summary, lawyerId }) {
 
   if (!lawyerId) {
     const error = new Error("A lawyer must be selected");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Ensure the selected account exists and is a lawyer
+  const lawyer = await User.findById(lawyerId).select("role");
+
+  if (!lawyer || lawyer.role !== "lawyer") {
+    const error = new Error("Selected user is not a lawyer");
     error.statusCode = 400;
     throw error;
   }
