@@ -4,9 +4,9 @@ import {
   getAllLawyerProfiles,
   getMyLawyerProfile,
   updateLawyerProfile,
-} from "../controllers/lawyerProfileController.js";
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
-import { validateUpdateLawyerProfile } from "../validations/lawyerProfileValidation.js";
+} from "../../controllers/lawyerProfiles/lawyerProfileController.js";
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import { validateUpdateLawyerProfile } from "../../validations/lawyerProfiles/lawyerProfileValidation.js";
 
 const router = express.Router();
 

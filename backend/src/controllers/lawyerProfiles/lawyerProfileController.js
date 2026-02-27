@@ -2,8 +2,9 @@ import {
   findAllLawyerProfiles,
   findLawyerProfileByUser,
   updateLawyerProfileByUser,
-} from "../services/lawyerProfileService.js";
+} from "../../services/lawyerProfiles/lawyerProfileService.js";
 
+// Get all lawyer profiles for public browsing.
 export const getAllLawyerProfiles = async (req, res, next) => {
   try {
     const lawyerProfiles = await findAllLawyerProfiles();
@@ -18,6 +19,7 @@ export const getAllLawyerProfiles = async (req, res, next) => {
   }
 };
 
+// Update the authenticated lawyer profile details.
 export const updateLawyerProfile = async (req, res, next) => {
   try {
     const lawyerProfile = await updateLawyerProfileByUser(req.user, req.body);
@@ -32,6 +34,7 @@ export const updateLawyerProfile = async (req, res, next) => {
   }
 };
 
+// Get the authenticated lawyer's own profile.
 export const getMyLawyerProfile = async (req, res, next) => {
   try {
     const lawyerProfile = await findLawyerProfileByUser(req.user);

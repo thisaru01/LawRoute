@@ -9,7 +9,6 @@ import {
   getFeedForLoggedUser,
   getLawyerPosts,
   getMyPosts,
-  getPublicFeed,
   updatePost,
 } from "../../controllers/social/postController.js";
 import {
@@ -26,11 +25,13 @@ import {
   getPostComments,
 } from "../../controllers/social/postCommentController.js";
 import { validateCreateComment } from "../../validations/social/commentValidation.js";
+import {
+  followLawyer,
+  unfollowLawyer,
+} from "../../controllers/social/followController.js";
+import { validateLawyerIdParam } from "../../validations/social/followValidation.js";
 
 const router = express.Router();
-
-// Public: read legal social feed
-router.get("/posts", getPublicFeed);
 
 // Public: read generic social feed endpoint
 router.get("/feed", getFeed);
@@ -77,5 +78,19 @@ router.delete("/posts/:id/like", protect, unlikePost);
 router.get("/posts/:id/comments", getPostComments);
 router.post("/posts/:id/comments", protect, validateCreateComment, createComment);
 router.delete("/comments/:commentId", protect, deleteComment);
+
+// Follow lawyer
+router.post(
+  "/lawyers/:lawyerId/follow",
+  protect,
+  validateLawyerIdParam,
+  followLawyer,
+);
+router.delete(
+  "/lawyers/:lawyerId/follow",
+  protect,
+  validateLawyerIdParam,
+  unfollowLawyer,
+);
 
 export default router;

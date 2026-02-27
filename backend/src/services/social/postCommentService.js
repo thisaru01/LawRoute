@@ -3,12 +3,14 @@ import mongoose from "mongoose";
 import Post from "../../models/social/postModel.js";
 import Comment from "../../models/social/commentModel.js";
 
+// Create a standardized error object with an HTTP status code. 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Ensure request includes an authenticated user. 
 const ensureAuthenticatedUser = (authUser) => {
   if (!authUser || !authUser._id) {
     throw buildError("Unauthorized", 401);
@@ -17,12 +19,14 @@ const ensureAuthenticatedUser = (authUser) => {
   return authUser;
 };
 
+// Validate that an id parameter is a valid Mongo ObjectId. 
 const ensureValidObjectId = (id, fieldName) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw buildError(`Invalid ${fieldName} id`, 400);
   }
 };
 
+// Ensure the referenced post exists before comment actions. 
 const ensurePostExists = async (postId) => {
   const post = await Post.findById(postId).select("_id");
 
@@ -31,6 +35,7 @@ const ensurePostExists = async (postId) => {
   }
 };
 
+// Create a comment (or reply) on a post and increment comment count. 
 export const createCommentByUser = async (authUser, postId, payload) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidObjectId(postId, "post");
@@ -70,6 +75,7 @@ export const createCommentByUser = async (authUser, postId, payload) => {
   return createdComment;
 };
 
+// List comments for a post with cursor pagination support. 
 export const findCommentsByPost = async (postId, { limit = 20, cursor } = {}) => {
   ensureValidObjectId(postId, "post");
   await ensurePostExists(postId);
@@ -99,6 +105,7 @@ export const findCommentsByPost = async (postId, { limit = 20, cursor } = {}) =>
   return comments;
 };
 
+// Delete only the authenticated user's own comment and decrement count. 
 export const deleteCommentByUser = async (authUser, commentId) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidObjectId(commentId, "comment");
