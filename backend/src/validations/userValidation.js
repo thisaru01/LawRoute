@@ -39,6 +39,18 @@ export const validateUserRegister = (req, res, next) => {
     });
   }
 
+  const hasLetter = /[A-Za-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  if (!hasLetter || !hasNumber || !hasSpecial) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "password must contain at least one letter, one number, and one special character.",
+    });
+  }
+
   if (role !== undefined) {
     if (typeof role !== "string" || !ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({
