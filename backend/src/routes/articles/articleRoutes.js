@@ -5,9 +5,9 @@ import {
   updateArticle,
   updateArticleStatus,
   deleteArticle,
-} from "../controllers/articleController.js";
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
-import upload from "../middleware/uploadMiddleware.js";
+} from "../../controllers/articles/articleController.js";
+import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
+import upload from "../../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 

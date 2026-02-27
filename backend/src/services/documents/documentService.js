@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
-import Document from "../../models/documentModel.js";
+import Document from "../../models/documents/documentModel.js";
 
 export const createDocument = async ({ title, description, user, fileUrl, filePublicId }) => {
   if (!user || !user._id) {

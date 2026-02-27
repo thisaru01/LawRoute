@@ -1,4 +1,4 @@
-import * as articleService from "../services/articles/articleService.js";
+import * as articleService from "../../services/articles/articleService.js";
 
 
 // Create article
