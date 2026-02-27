@@ -50,6 +50,7 @@ router.get(
 router.put(
   "/:id",
   protect,
+  authorizeRoles("user"),
   validateUpdateConsultationRequest,
   updateConsultationRequest,
 );
