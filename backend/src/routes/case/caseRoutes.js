@@ -8,6 +8,15 @@ import {
   uploadCaseDocument,
   getCaseDocuments,
 } from "../../controllers/case/caseDocumentController.js";
+import {
+  scheduleCaseMeeting,
+  getCaseMeetings,
+  updateCaseMeeting,
+} from "../../controllers/case/caseMeetingController.js";
+import {
+  validateCreateCaseMeeting,
+  validateUpdateCaseMeeting,
+} from "../../validations/caseMeetingValidation.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 import upload from "../../middleware/uploadMiddleware.js";
 
@@ -18,6 +27,32 @@ router.get("/my", protect, authorizeRoles("user", "lawyer"), getMyCases);
 
 // Get case details by id
 router.get("/:id", protect, authorizeRoles("user", "lawyer"), getCaseById);
+
+// Schedule a meeting for a case (lawyer only)
+router.post(
+  "/:id/meetings",
+  protect,
+  authorizeRoles("lawyer"),
+  validateCreateCaseMeeting,
+  scheduleCaseMeeting,
+);
+
+// Get all meetings for a case
+router.get(
+  "/:id/meetings",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  getCaseMeetings,
+);
+
+// Update a meeting (lawyer only)
+router.patch(
+  "/meetings/:id",
+  protect,
+  authorizeRoles("lawyer"),
+  validateUpdateCaseMeeting,
+  updateCaseMeeting,
+);
 
 // Upload a document for a case
 router.post(
