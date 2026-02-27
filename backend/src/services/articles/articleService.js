@@ -267,31 +267,16 @@ export const deleteArticle = async ({ id, user }) => {
 
   const userId = String(user._id);
   const isAdmin = user.role === "admin";
-  const isLawyer = user.role === "lawyer";
 
-  if (article.status === "pending") {
-    if (isAdmin) {
-      // allowed
-    } else if (isLawyer && String(article.author) === userId) {
-      // allowed
-    } else {
-      const err = new Error("Only admins or the article's lawyer author can delete pending articles");
-      err.status = 403;
-      throw err;
-    }
-  } else if (article.status === "published") {
-    if (!isAdmin) {
-      const err = new Error("Only admins can delete published articles");
-      err.status = 403;
-      throw err;
-    }
-
-    if (article.publishedBy && String(article.publishedBy) === userId) {
-      const err = new Error("The admin who published this article cannot delete it");
+  // Only the article owner (author) can delete when status is pending or published
+  if (article.status === "pending" || article.status === "published") {
+    if (String(article.author) !== userId) {
+      const err = new Error("Only the article owner can delete this article");
       err.status = 403;
       throw err;
     }
   } else {
+    // For other statuses (e.g., rejected, archived), keep existing admin-only behavior
     if (!isAdmin) {
       const err = new Error("Only admins can delete articles with this status");
       err.status = 403;
