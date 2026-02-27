@@ -1,4 +1,5 @@
 import * as consultationRequestService from "../../services/consultation/citizenConsultationRequestService.js";
+import * as lawyerConsultationRequestService from "../../services/consultation/lawyerConsultationRequestService.js";
 
 // Citizen: Create a new consultation request (user describes their legal matter)
 export const createConsultationRequest = async (req, res, next) => {
@@ -26,13 +27,22 @@ export const createConsultationRequest = async (req, res, next) => {
   }
 };
 
-// Citizen: Get consultation requests created by the logged-in user
+// Citizen/Lawyer: Get consultation requests related to the logged-in user
 export const getMyConsultationRequests = async (req, res, next) => {
   try {
-    const requests =
-      await consultationRequestService.getConsultationRequestsForUser(
-        req.user._id,
-      );
+    let requests;
+
+    if (req.user.role === "lawyer") {
+      requests =
+        await lawyerConsultationRequestService.getConsultationRequestsForLawyer(
+          req.user._id,
+        );
+    } else {
+      requests =
+        await consultationRequestService.getConsultationRequestsForUser(
+          req.user._id,
+        );
+    }
 
     res.status(200).json({
       success: true,

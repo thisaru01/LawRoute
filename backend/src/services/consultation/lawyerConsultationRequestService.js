@@ -1,4 +1,5 @@
 import ConsultationRequest from "../../models/consultation/consultationRequestModel.js";
+import Case from "../../models/case/caseModel.js";
 
 // Lawyer: Get consultation requests assigned to a specific lawyer
 export async function getConsultationRequestsForLawyer(lawyerId) {
@@ -35,6 +36,12 @@ export async function acceptConsultationRequest({ requestId, lawyerId }) {
 
   request.status = "accepted";
   await request.save();
+
+  await Case.create({
+    consultationRequest: request._id,
+    user: request.user,
+    lawyer: request.lawyer,
+  });
 
   return request;
 }

@@ -9,7 +9,6 @@ import {
 } from "../../controllers/consultation/citizenConsultationRequestController.js";
 
 import {
-  getAssignedConsultationRequestsForLawyer,
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "../../controllers/consultation/lawyerConsultationRequestController.js";
@@ -26,34 +25,43 @@ const router = express.Router();
 router.post(
   "/",
   protect,
+  authorizeRoles("user"),
   validateCreateConsultationRequest,
   createConsultationRequest,
 );
 
-// Get consultation requests created by the current user
-router.get("/me", protect, getMyConsultationRequests);
-
-// Get consultation requests assigned to the current lawyer
+// Get consultation requests related to the current user (citizen or lawyer)
 router.get(
-  "/lawyer/me",
+  "/me",
   protect,
-  authorizeRoles("lawyer"),
-  getAssignedConsultationRequestsForLawyer,
+  authorizeRoles("user", "lawyer"),
+  getMyConsultationRequests,
 );
 
 // Get a single consultation request (only the involved user, lawyer)
-router.get("/:id", protect, getConsultationRequestById);
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  getConsultationRequestById,
+);
 
 // Update a consultation request (only the creator and only if pending)
 router.put(
   "/:id",
   protect,
+  authorizeRoles("user"),
   validateUpdateConsultationRequest,
   updateConsultationRequest,
 );
 
-// Delete a consultation request (only the creator and only if pending)
-router.delete("/:id", protect, deleteConsultationRequest);
+// Delete a consultation request (only the creator)
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("user"),
+  deleteConsultationRequest,
+);
 
 // Accept a consultation request (only the assigned lawyer)
 router.patch(
