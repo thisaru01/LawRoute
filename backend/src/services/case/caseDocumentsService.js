@@ -8,11 +8,17 @@ export async function uploadCaseDocument({
   fileUrl,
   fileType,
 }) {
-  const caseDoc = await Case.findById(caseId).select("user lawyer");
+  const caseDoc = await Case.findById(caseId).select("user lawyer status");
 
   if (!caseDoc) {
     const error = new Error("Case not found");
     error.statusCode = 404;
+    throw error;
+  }
+
+  if (caseDoc.status === "closed") {
+    const error = new Error("Cannot upload documents for a closed case");
+    error.statusCode = 400;
     throw error;
   }
 

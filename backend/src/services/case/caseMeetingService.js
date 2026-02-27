@@ -11,11 +11,17 @@ export async function scheduleCaseMeeting({
   meetingLink,
   location,
 }) {
-  const caseDoc = await Case.findById(caseId).select("lawyer user");
+  const caseDoc = await Case.findById(caseId).select("lawyer user status");
 
   if (!caseDoc) {
     const error = new Error("Case not found");
     error.statusCode = 404;
+    throw error;
+  }
+
+  if (caseDoc.status === "closed") {
+    const error = new Error("Cannot schedule a meeting for a closed case");
+    error.statusCode = 400;
     throw error;
   }
 
