@@ -18,7 +18,7 @@ import {
   validateUpdateCivilIssueStatus,
 } from "../../validations/civilIssueValidation.js";
 
-import civilIssueUpload from "../../middleware/civilIssues/civilIssueUpload.js";
+import civilIssueUpload from "../../middleware/upload/civilIssueUpload.js";
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ router.post(
   authorizeRoles("user"),
   civilIssueUpload.array("attachments", 5),
   validateSubmitCivilIssue,
-  submitCivilIssue
+  submitCivilIssue,
 );
 
 // Citizen: view own submitted civil issues
@@ -61,7 +61,13 @@ router.patch(
 );
 
 // Citizen: update own issue description/district (only while pending)
-router.patch("/:id", protect, authorizeRoles("user"), validateUpdateCivilIssue, updateCivilIssue);
+router.patch(
+  "/:id",
+  protect,
+  authorizeRoles("user"),
+  validateUpdateCivilIssue,
+  updateCivilIssue,
+);
 
 // Citizen: delete own civil issue
 router.delete("/:id", protect, authorizeRoles("user"), deleteCivilIssue);

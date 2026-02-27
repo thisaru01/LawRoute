@@ -1,6 +1,6 @@
 import express from "express";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
-import upload from "../../middleware/uploadMiddleware.js";
+import libraryDocumentUpload from "../../middleware/upload/libraryDocumentUpload.js";
 import {
   createDocument,
   getAllDocuments,
@@ -21,15 +21,10 @@ router.post(
   "/",
   protect,
   authorizeRoles("admin"),
-  upload.single("file"),
+  libraryDocumentUpload.single("file"),
   createDocument,
 );
 
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles("admin"),
-  deleteDocument,
-);
+router.delete("/:id", protect, authorizeRoles("admin"), deleteDocument);
 
 export default router;

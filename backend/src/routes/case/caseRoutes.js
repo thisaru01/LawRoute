@@ -18,7 +18,7 @@ import {
   validateUpdateCaseMeeting,
 } from "../../validations/caseMeetingValidation.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
-import upload from "../../middleware/uploadMiddleware.js";
+import { caseDocumentUpload } from "../../middleware/upload/caseDocumentUpload.js";
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ router.post(
   "/:id/documents",
   protect,
   authorizeRoles("user", "lawyer"),
-  upload.single("file"),
+  caseDocumentUpload.single("file"),
   uploadCaseDocument,
 );
 

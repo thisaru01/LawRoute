@@ -1,25 +1,34 @@
-// config/cloudinaryMulter.js
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 import { cloudinary } from "../config/cloudinary.js";
 
-// Configure Cloudinary storage for Multer
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: (req, file) => {
-    const isPdf = file.mimetype === "application/pdf";
-    return {
-      folder: "law-route",
-      resource_type: isPdf ? "raw" : "image",
-      allowed_formats: ["jpg", "png", "jpeg", "pdf"],
-    };
-  },
-});
+export const createUpload = ({
+  folder,
+  allowedFormats,
+  maxFiles = 1,
+  maxFileSize = 5 * 1024 * 1024,
+} = {}) => {
+  const storage = new CloudinaryStorage({
+    cloudinary,
+    params: async () => ({
+      folder: folder ? `law-route/${folder}` : "law-route",
+      resource_type: "auto",
+      allowed_formats: allowedFormats,
+    }),
+  });
 
-// Create Multer instance using Cloudinary storage with size limit
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
+  return multer({
+    storage,
+    limits: {
+      files: maxFiles,
+      fileSize: maxFileSize,
+    },
+  });
+};
+
+// Default uploader to keep existing imports working
+const upload = createUpload({
+  allowedFormats: ["jpg", "png", "jpeg", "pdf"],
 });
 
 export default upload;

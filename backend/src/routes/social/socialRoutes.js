@@ -1,7 +1,7 @@
 import express from "express";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
-import postUpload from "../../middleware/postUploadMiddleware.js";
+import lawyerPostUpload from "../../middleware/upload/postUpload.js";
 import {
   createPost,
   deletePost,
@@ -50,7 +50,7 @@ router.post(
   "/posts",
   protect,
   authorizeRoles("lawyer"),
-  postUpload.array("media", 5),
+  lawyerPostUpload.array("media", 5),
   validateCreatePost,
   createPost,
 );
@@ -60,7 +60,7 @@ router.put(
   "/posts/:id",
   protect,
   authorizeRoles("lawyer"),
-  postUpload.array("media", 5),
+  lawyerPostUpload.array("media", 5),
   validateUpdatePost,
   updatePost,
 );
@@ -76,7 +76,12 @@ router.delete("/posts/:id/like", protect, unlikePost);
 
 // Post comments
 router.get("/posts/:id/comments", getPostComments);
-router.post("/posts/:id/comments", protect, validateCreateComment, createComment);
+router.post(
+  "/posts/:id/comments",
+  protect,
+  validateCreateComment,
+  createComment,
+);
 router.delete("/comments/:commentId", protect, deleteComment);
 
 // Follow lawyer
