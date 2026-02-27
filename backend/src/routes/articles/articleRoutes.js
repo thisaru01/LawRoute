@@ -8,7 +8,7 @@ import {
   deleteArticle,
 } from "../../controllers/articles/articleController.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
-import upload from "../../middleware/uploadMiddleware.js";
+import articleUpload from "../../middleware/upload/articleUpload.js";
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.get("/", getAllArticles);
 router.get("/me", protect, authorizeRoles("admin", "lawyer"), getMyArticles);
 
 // Create article with optional image upload
-router.post("/", protect, upload.single("image"), createArticle);
+router.post("/", protect, articleUpload.single("image"), createArticle);
 
 // Update article (only when status is 'pending')
 // - Admins: any pending article
@@ -30,7 +30,7 @@ router.put(
   "/:id",
   protect,
   authorizeRoles("admin", "lawyer"),
-  upload.single("image"),
+  articleUpload.single("image"),
   updateArticle,
 );
 
