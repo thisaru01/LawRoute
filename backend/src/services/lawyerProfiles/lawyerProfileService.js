@@ -26,6 +26,7 @@ const LEGACY_BASIC_FIELD_MAP = {
 
 const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 
+// Ensure editable nested profile sections
 const ensureProfileSections = (lawyerProfile) => {
   if (!lawyerProfile.basicInfo) {
     lawyerProfile.basicInfo = {};
@@ -40,6 +41,7 @@ const ensureProfileSections = (lawyerProfile) => {
   }
 };
 
+// Copy allowed fields from a source section into a target object. 
 const applySectionFields = (source, allowedFields, target) => {
   if (!source || typeof source !== "object") {
     return false;
@@ -57,6 +59,7 @@ const applySectionFields = (source, allowedFields, target) => {
   return applied;
 };
 
+// Apply modern structured payload fields into the lawyer profile model.
 const applyStructuredPayload = (lawyerProfile, body) => {
   const { basicInfo, experience, educationQualifications } = body;
 
@@ -105,6 +108,7 @@ const applyStructuredPayload = (lawyerProfile, body) => {
   return applied;
 };
 
+// Apply legacy phone/location fields into basicInfo.contactInfo. 
 const applyLegacyContactInfo = (lawyerProfile, body) => {
   if (
     !hasOwn(body, "phone") &&
@@ -132,6 +136,7 @@ const applyLegacyContactInfo = (lawyerProfile, body) => {
   return true;
 };
 
+// Apply backward-compatible legacy payload fields. 
 const applyLegacyPayload = (lawyerProfile, body) => {
   let applied = false;
 
@@ -167,6 +172,7 @@ const applyLegacyPayload = (lawyerProfile, body) => {
   return applied;
 };
 
+// Compute whether minimum profile details are complete. 
 const computeProfileCompleted = (lawyerProfile) => {
   const basic = lawyerProfile.basicInfo || {};
   const exp = lawyerProfile.experience || {};
@@ -182,6 +188,7 @@ const computeProfileCompleted = (lawyerProfile) => {
   );
 };
 
+// Map internal profile document to API response shape. 
 const mapLawyerProfileResponse = (lawyerProfile) => ({
   id: lawyerProfile._id,
   user: lawyerProfile.user
@@ -204,6 +211,7 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
   updatedAt: lawyerProfile.updatedAt,
 });
 
+// Return all lawyer profiles for public listing.
 export const findAllLawyerProfiles = async () => {
   const lawyerProfiles = await LawyerProfile.find({})
     .populate("user", "name email role profilePhoto")
@@ -213,6 +221,7 @@ export const findAllLawyerProfiles = async () => {
   return lawyerProfiles.map(mapLawyerProfileResponse);
 };
 
+// Return or auto-create the authenticated lawyer profile.
 export const findLawyerProfileByUser = async (authUser) => {
   if (!authUser || !authUser._id) {
     const error = new Error("Unauthorized");
@@ -248,6 +257,7 @@ export const findLawyerProfileByUser = async (authUser) => {
   return mapLawyerProfileResponse(lawyerProfile);
 };
 
+// Update authenticated lawyer profile with structured or legacy payload.
 export const updateLawyerProfileByUser = async (authUser, body) => {
   if (!authUser || !authUser._id) {
     const error = new Error("Unauthorized");
