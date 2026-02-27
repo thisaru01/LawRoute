@@ -1,12 +1,4 @@
-const VALID_CATEGORIES = [
-    "land",
-    "police",
-    "harassment",
-    "public_services",
-    "other",
-];
-
-const VALID_STATUSES = ["pending", "in_progress", "resolved"];
+import { CIVIL_ISSUE_CATEGORIES, CIVIL_ISSUE_STATUSES } from "../constants/civilIssueConstants.js";
 
 // POST /api/civil-issues
 // Validates the request body when a citizen submits a new civil issue.
@@ -20,10 +12,10 @@ export const validateSubmitCivilIssue = (req, res, next) => {
         });
     }
 
-    if (!VALID_CATEGORIES.includes(category)) {
+    if (!CIVIL_ISSUE_CATEGORIES.includes(category)) {
         return res.status(400).json({
             success: false,
-            message: `category must be one of: ${VALID_CATEGORIES.join(", ")}.`,
+            message: `category must be one of: ${CIVIL_ISSUE_CATEGORIES.join(", ")}.`,
         });
     }
 
@@ -115,10 +107,10 @@ export const validateUpdateCivilIssueStatus = (req, res, next) => {
         });
     }
 
-    if (!VALID_STATUSES.includes(status)) {
+    if (!CIVIL_ISSUE_STATUSES.includes(status)) {
         return res.status(400).json({
             success: false,
-            message: `status must be one of: ${VALID_STATUSES.join(", ")}.`,
+            message: `status must be one of: ${CIVIL_ISSUE_STATUSES.join(", ")}.`,
         });
     }
 

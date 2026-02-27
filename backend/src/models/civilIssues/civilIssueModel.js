@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
+import { CIVIL_ISSUE_CATEGORIES, CIVIL_ISSUE_STATUSES } from "../../constants/civilIssueConstants.js";
 
 const { Schema } = mongoose;
-
-const CATEGORIES = ["land", "police", "harassment", "public_services", "other"];
 
 const civilIssueSchema = new Schema(
   {
@@ -13,7 +12,7 @@ const civilIssueSchema = new Schema(
     },
     category: {
       type: String,
-      enum: CATEGORIES,
+      enum: CIVIL_ISSUE_CATEGORIES,
       required: true,
     },
     district: {
@@ -33,7 +32,7 @@ const civilIssueSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "resolved"],
+      enum: CIVIL_ISSUE_STATUSES,
       default: "pending",
     },
     attachments: {
