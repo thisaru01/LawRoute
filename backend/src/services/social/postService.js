@@ -142,7 +142,7 @@ export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) 
   return createdPost;
 };
 
-export const findPublicPosts = async ({ limit = 20, cursor } = {}) => {
+export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
   const query = buildPaginationQuery({ visibility: "public" }, cursor);
   const safeLimit = parseLimit(limit);
 
@@ -153,10 +153,6 @@ export const findPublicPosts = async ({ limit = 20, cursor } = {}) => {
     .lean();
 
   return posts;
-};
-
-export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
-  return findPublicPosts({ limit, cursor });
 };
 
 export const findFeedPostsForLoggedUser = async (

@@ -5,7 +5,6 @@ import {
   findFeedPostsForLoggedUser,
   findMyPosts,
   findPostsByLawyer,
-  findPublicPosts,
   updatePostByLawyer,
 } from "../../services/social/postService.js";
 
@@ -22,20 +21,6 @@ export const createPost = async (req, res, next) => {
       success: true,
       message: "Post created successfully",
       post,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getPublicFeed = async (req, res, next) => {
-  try {
-    const posts = await findPublicPosts(readPagination(req));
-
-    return res.status(200).json({
-      success: true,
-      count: posts.length,
-      posts,
     });
   } catch (error) {
     return next(error);

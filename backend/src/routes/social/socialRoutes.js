@@ -9,7 +9,6 @@ import {
   getFeedForLoggedUser,
   getLawyerPosts,
   getMyPosts,
-  getPublicFeed,
   updatePost,
 } from "../../controllers/social/postController.js";
 import {
@@ -33,9 +32,6 @@ import {
 import { validateLawyerIdParam } from "../../validations/social/followValidation.js";
 
 const router = express.Router();
-
-// Public: read legal social feed
-router.get("/posts", getPublicFeed);
 
 // Public: read generic social feed endpoint
 router.get("/feed", getFeed);
