@@ -1,7 +1,17 @@
-const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
-const errorMiddleware = require("./middleware/errorMiddleware");
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import errorMiddleware from "./middleware/errorMiddleware.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import consultationRequestRoutes from "./routes/consultation/consultationRequestRoutes.js";
+import articleRoutes from "./routes/articles/articleRoutes.js";
+import civilIssueRoutes from "./routes/civilIssues/civilIssueRoutes.js";
+import lawyerProfileRoutes from "./routes/lawyerProfiles/lawyerProfileRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import documentRoutes from "./routes/documents/documentRoutes.js";
+import socialRoutes from "./routes/social/socialRoutes.js";
+import caseRoutes from "./routes/case/caseRoutes.js";
 
 const app = express();
 
@@ -19,13 +29,30 @@ app.get("/", (req, res) => {
 });
 
 // API auth Routes
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", authRoutes);
+// API user Routes
+app.use("/api/users", userRoutes);
 // API articles Routes
-app.use("/api/articles", require("./routes/articleRoutes"));
-// API lawyer request Routes (users describe their legal matters)
-app.use("/api/lawyer-requests", require("./routes/lawyerRequestRoutes"));
+app.use("/api/articles", articleRoutes);
+// API documents Routes (PDF uploads by admins, downloads by users)
+app.use("/api/documents", documentRoutes);
+
+// API cases Routes (opened when consultation requests are accepted)
+app.use("/api/cases", caseRoutes);
+
+// API consultation request Routes (users describe their legal matters)
+app.use("/api/consultation-requests", consultationRequestRoutes);
+
+// API civil issues Routes (citizens report civil issues, auto-routed to authority)
+app.use("/api/civil-issues", civilIssueRoutes);
+
+// API lawyer profile Routes
+app.use("/api/lawyer-profile", lawyerProfileRoutes);
+
+// API legal social feed Routes
+app.use("/api/social", socialRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);
 
-module.exports = app;
+export default app;

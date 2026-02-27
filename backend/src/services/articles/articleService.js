@@ -1,0 +1,321 @@
+import Article from "../../models/articles/articleModel.js";
+import jwt from "jsonwebtoken";
+import User from "../../models/userModel.js";
+import mongoose from "mongoose";
+import { cloudinary } from "../../config/cloudinary.js";
+
+const VALID_STATUSES = ["pending", "published", "rejected", "archived"];
+
+export const createArticle = async ({
+  title,
+  content,
+  category,
+  user,
+  imageUrl,
+  imagePublicId,
+}) => {
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const role = user.role;
+  if (!["admin", "lawyer"].includes(role)) {
+    const err = new Error("Only admins or lawyers can create articles");
+    err.status = 403;
+    throw err;
+  }
+
+  if (!title || !content) {
+    const err = new Error("Title and content are required");
+    err.status = 400;
+    throw err;
+  }
+
+  const status = "pending";
+
+  const article = new Article({
+    title,
+    content,
+    category,
+    imageUrl: imageUrl || null,
+    imagePublicId: imagePublicId || null,
+    author: user._id,
+    authorRole: role,
+    status,
+  });
+
+  await article.save();
+  return article;
+};
+
+export const getAllArticles = async ({ authHeader, query }) => {
+  let isAdmin = false;
+  let adminId = null;
+  let requesterId = null;
+  let requesterRole = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select("role");
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+        if (user.role === "admin") {
+          isAdmin = true;
+          adminId = decoded.id;
+        }
+      }
+    } catch (e) {
+      // ignore invalid token
+    }
+  }
+
+  const isOwnRequest =
+    query.author && requesterId && String(query.author) === String(requesterId);
+
+  // If a specific author is requested, only that user (same id as token)
+  // is allowed to fetch their articles via this filter.
+  if (query.author && !isOwnRequest) {
+    const err = new Error("Access denied");
+    err.status = 403;
+    throw err;
+  }
+
+  const filter = {};
+  if (query.status) {
+    // Non-admins can only request non-published statuses for their own articles
+    if (query.status !== "published" && !isAdmin && !isOwnRequest) {
+      const err = new Error("Access denied");
+      err.status = 403;
+      throw err;
+    }
+    filter.status = query.status;
+  } else if (!isAdmin && !isOwnRequest) {
+    // Public and other users only see published articles by default
+    filter.status = "published";
+  }
+
+  if (query.category) filter.category = query.category;
+  if (query.author) filter.author = query.author;
+
+  // When an admin lists articles without specifying an author, exclude their own
+  // articles from the general list. If an author is specified (including the
+  // admin themselves), do not exclude.
+  let queryFilter = { ...filter };
+  if (isAdmin && adminId && !query.author) {
+    queryFilter.author = { $ne: adminId };
+  } else {
+    queryFilter = filter;
+  }
+
+  const articles = await Article.find(queryFilter)
+    .populate("author", "name email")
+    .sort({ createdAt: -1 });
+
+  return articles;
+};
+
+export const updateArticleStatus = async ({ id, status, user }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!VALID_STATUSES.includes(status)) {
+    const err = new Error("Invalid status");
+    err.status = 400;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId);
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Allow publishing/rejecting only when the current status is "pending"
+  if (article.status !== "pending" && ["published", "rejected"].includes(status)) {
+    const err = new Error("Only pending articles can be published or rejected");
+    err.status = 400;
+    throw err;
+  }
+
+  // Guard: status changes are admin-only at the route level, but
+  // we still enforce presence of a valid user object here.
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  // Business rule for publishing/rejecting:
+  // - An admin may publish or reject only OTHER users' articles.
+  // - An admin must NOT publish or reject their own article.
+  //   (e.g., admin1 can publish/reject articles of admin2/3/4 and lawyers,
+  //    but not articles authored by admin1.)
+
+  if (["published", "rejected"].includes(status)) {
+    const actingAdminId = String(user._id);
+    const authorId = String(article.author);
+
+    // Disallow an admin publishing/rejecting their own article
+    if (actingAdminId === authorId) {
+      const err = new Error(
+        "Admins cannot publish or reject their own articles. Ask another admin to review and take action.",
+      );
+      err.status = 403;
+      throw err;
+    }
+
+    // For published status, record which admin published it
+    if (status === "published") {
+      article.publishedBy = user._id;
+    } else {
+      article.publishedBy = null;
+    }
+  } else {
+    article.publishedBy = null;
+  }
+
+  article.status = status;
+  await article.save();
+  return { deleted: false, article };
+};
+
+export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const role = user.role;
+  if (!["admin", "lawyer"].includes(role)) {
+    const err = new Error("Only admins or lawyers can update articles");
+    err.status = 403;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId);
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (article.status !== "pending") {
+    const err = new Error("Only pending articles can be updated");
+    err.status = 400;
+    throw err;
+  }
+
+  const userId = String(user._id);
+  const isAdmin = role === "admin";
+  const isLawyer = role === "lawyer";
+
+  // Both admins and lawyers may only update their own pending articles
+  if ((isAdmin || isLawyer) && String(article.author) !== userId) {
+    const err = new Error("Only the article's author can update this pending article");
+    err.status = 403;
+    throw err;
+  }
+
+  if (title !== undefined) article.title = title;
+  if (content !== undefined) article.content = content;
+  if (category !== undefined) article.category = category;
+
+  // Handle image replacement: if a new image is provided, remove the old one from Cloudinary
+  if (imagePublicId) {
+    if (article.imagePublicId && article.imagePublicId !== imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagePublicId);
+      } catch (e) {
+        console.error("Failed to delete previous article image from Cloudinary", e);
+      }
+    }
+
+    article.imageUrl = imageUrl || null;
+    article.imagePublicId = imagePublicId || null;
+  }
+
+  await article.save();
+  return article;
+};
+
+export const deleteArticle = async ({ id, user }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId);
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const userId = String(user._id);
+  const isAdmin = user.role === "admin";
+
+  // Only the article owner (author) can delete when status is pending or published
+  if (article.status === "pending" || article.status === "published") {
+    if (String(article.author) !== userId) {
+      const err = new Error("Only the article owner can delete this article");
+      err.status = 403;
+      throw err;
+    }
+  } else {
+    // For other statuses (e.g., rejected, archived), keep existing admin-only behavior
+    if (!isAdmin) {
+      const err = new Error("Only admins can delete articles with this status");
+      err.status = 403;
+      throw err;
+    }
+  }
+
+  if (article.imagePublicId) {
+    try {
+      await cloudinary.uploader.destroy(article.imagePublicId);
+    } catch (e) {
+      // log and continue; failure to delete image should not block article deletion
+      console.error("Failed to delete article image from Cloudinary", e);
+    }
+  }
+
+  await article.deleteOne();
+  return { success: true, message: "Article deleted successfully" };
+};
+
+export default {
+  createArticle,
+  getAllArticles,
+  updateArticleStatus,
+  updateArticle,
+  deleteArticle,
+};

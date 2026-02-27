@@ -1,9 +1,11 @@
-const express = require("express");
-const router = express.Router();
-const authController = require("../controllers/authController");
-const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+import express from "express";
+import * as authController from "../controllers/authController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+import { validateUserRegister } from "../validations/userValidation.js";
 
-router.post("/register", authController.register);
+const router = express.Router();
+
+router.post("/register", validateUserRegister, authController.register);
 router.post("/login", authController.login);
 
 // Example protected route for testing
@@ -14,4 +16,4 @@ router.get("/admin-only", protect, authorizeRoles("admin"), (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
