@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { CIVIL_ISSUE_CATEGORIES } from "../constants/civilIssueConstants.js";
 
 const { Schema } = mongoose;
 
@@ -12,7 +13,7 @@ const authorityProfileSchema = new Schema(
     },
     managedCategory: {
       type: String,
-      enum: ["land", "police", "harassment", "public_services", "other"],
+      enum: CIVIL_ISSUE_CATEGORIES,
       required: true,
     },
   },
