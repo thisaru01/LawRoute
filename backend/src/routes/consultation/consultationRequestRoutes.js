@@ -31,10 +31,20 @@ router.post(
 );
 
 // Get consultation requests related to the current user (citizen or lawyer)
-router.get("/me", protect, getMyConsultationRequests);
+router.get(
+  "/me",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  getMyConsultationRequests,
+);
 
 // Get a single consultation request (only the involved user, lawyer)
-router.get("/:id", protect, getConsultationRequestById);
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  getConsultationRequestById,
+);
 
 // Update a consultation request (only the creator and only if pending)
 router.put(
@@ -44,8 +54,13 @@ router.put(
   updateConsultationRequest,
 );
 
-// Delete a consultation request (only the creator and only if pending)
-router.delete("/:id", protect, deleteConsultationRequest);
+// Delete a consultation request (only the creator)
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("user"),
+  deleteConsultationRequest,
+);
 
 // Accept a consultation request (only the assigned lawyer)
 router.patch(
