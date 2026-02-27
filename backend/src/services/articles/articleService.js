@@ -53,44 +53,53 @@ export const createArticle = async ({
 export const getAllArticles = async ({ authHeader, query }) => {
   let isAdmin = false;
   let adminId = null;
+  let requesterId = null;
+  let requesterRole = null;
+
   if (authHeader && authHeader.startsWith("Bearer ")) {
     try {
       const token = authHeader.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.id).select("role");
-      if (user && user.role === "admin") {
-        isAdmin = true;
-        adminId = decoded.id;
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+        if (user.role === "admin") {
+          isAdmin = true;
+          adminId = decoded.id;
+        }
       }
     } catch (e) {
       // ignore invalid token
     }
   }
 
+  const isOwnRequest =
+    query.author && requesterId && String(query.author) === String(requesterId);
+
   const filter = {};
   if (query.status) {
-    if (query.status !== "published" && !isAdmin) {
+    // Non-admins can only request non-published statuses for their own articles
+    if (query.status !== "published" && !isAdmin && !isOwnRequest) {
       const err = new Error("Access denied");
       err.status = 403;
       throw err;
     }
     filter.status = query.status;
-  } else if (!isAdmin) {
+  } else if (!isAdmin && !isOwnRequest) {
+    // Public and other users only see published articles by default
     filter.status = "published";
   }
 
   if (query.category) filter.category = query.category;
   if (query.author) filter.author = query.author;
 
+  // When an admin lists articles without specifying an author, exclude their own
+  // articles from the general list. If an author is specified (including the
+  // admin themselves), do not exclude.
   let queryFilter = { ...filter };
-  if (isAdmin && adminId) {
-    if (queryFilter.author && typeof queryFilter.author === "object") {
-      queryFilter.author = { ...queryFilter.author, $ne: adminId };
-    } else if (queryFilter.author) {
-      queryFilter.author = { $eq: queryFilter.author, $ne: adminId };
-    } else {
-      queryFilter.author = { $ne: adminId };
-    }
+  if (isAdmin && adminId && !query.author) {
+    queryFilter.author = { $ne: adminId };
   } else {
     queryFilter = filter;
   }
