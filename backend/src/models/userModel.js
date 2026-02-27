@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,13 +16,19 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: 8,
       select: false,
     },
     role: {
       type: String,
       enum: ["user", "admin", "lawyer", "authority"],
       default: "user",
+    },
+    profilePhoto: {
+      type: String,
+      trim: true,
+      default:
+        "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png",
     },
   },
   { timestamps: true },
@@ -42,4 +48,4 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);
