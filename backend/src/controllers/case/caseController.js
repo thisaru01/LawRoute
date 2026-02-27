@@ -49,3 +49,29 @@ export const getCaseById = async (req, res, next) => {
     return next(error);
   }
 };
+
+// Close a case (assigned lawyer)
+export const closeCase = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { id } = req.params;
+
+    const caseDoc = await caseService.closeCase({
+      caseId: id,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: caseDoc,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

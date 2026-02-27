@@ -47,3 +47,38 @@ export async function getCaseById({ caseId, currentUserId }) {
 
   return caseDoc;
 }
+
+// Close a case (assigned lawyer)
+export async function closeCase({ caseId, currentUserId }) {
+  const caseDoc = await Case.findById(caseId)
+    .populate("user", "name email role")
+    .populate("lawyer", "name email role")
+    .populate("consultationRequest", "summary status createdAt");
+
+  if (!caseDoc) {
+    const error = new Error("Case not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isAssignedLawyer =
+    caseDoc.lawyer &&
+    caseDoc.lawyer._id.toString() === currentUserId.toString();
+
+  if (!isAssignedLawyer) {
+    const error = new Error("Only the assigned lawyer can close this case");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (caseDoc.status === "closed") {
+    const error = new Error("Case is already closed");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  caseDoc.status = "closed";
+  await caseDoc.save();
+
+  return caseDoc;
+}
