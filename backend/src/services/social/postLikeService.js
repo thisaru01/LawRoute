@@ -3,12 +3,14 @@ import mongoose from "mongoose";
 import Post from "../../models/social/postModel.js";
 import PostLike from "../../models/social/postLikeModel.js";
 
+// Create a standardized error object with an HTTP status code. 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Ensure request includes an authenticated user. 
 const ensureAuthenticatedUser = (authUser) => {
   if (!authUser || !authUser._id) {
     throw buildError("Unauthorized", 401);
@@ -17,12 +19,14 @@ const ensureAuthenticatedUser = (authUser) => {
   return authUser;
 };
 
+// Validate that postId is a valid Mongo ObjectId. 
 const ensureValidPostId = (postId) => {
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw buildError("Invalid post id", 400);
   }
 };
 
+// Ensure the target post exists before mutating likes. 
 const findPostOrThrow = async (postId) => {
   const post = await Post.findById(postId).select("stats.likeCount");
 
@@ -33,6 +37,7 @@ const findPostOrThrow = async (postId) => {
   return post;
 };
 
+// Like a post idempotently and keep likeCount in sync. 
 export const likePostByUser = async (authUser, postId) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidPostId(postId);
@@ -67,6 +72,7 @@ export const likePostByUser = async (authUser, postId) => {
   };
 };
 
+// Unlike a post idempotently and keep likeCount in sync. 
 export const unlikePostByUser = async (authUser, postId) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidPostId(postId);

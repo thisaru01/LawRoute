@@ -6,6 +6,7 @@ const buildError = (message, statusCode) => {
   return error;
 };
 
+// Validate lawyerId path parameter for follow/unfollow actions. 
 export const validateLawyerIdParam = (req, res, next) => {
   const { lawyerId } = req.params;
 

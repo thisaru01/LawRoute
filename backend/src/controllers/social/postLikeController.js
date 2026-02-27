@@ -3,6 +3,7 @@ import {
   unlikePostByUser,
 } from "../../services/social/postLikeService.js";
 
+// Handle like action for an authenticated user on a post. 
 export const likePost = async (req, res, next) => {
   try {
     const result = await likePostByUser(req.user, req.params.id);
@@ -17,6 +18,7 @@ export const likePost = async (req, res, next) => {
   }
 };
 
+// Handle unlike action for an authenticated user on a post. 
 export const unlikePost = async (req, res, next) => {
   try {
     const result = await unlikePostByUser(req.user, req.params.id);

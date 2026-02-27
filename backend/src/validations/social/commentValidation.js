@@ -6,6 +6,7 @@ const isObject = (value) =>
 const hasOnlyAllowedKeys = (obj, allowedFields) =>
   Object.keys(obj).every((key) => allowedFields.includes(key));
 
+// Validate payload for creating a post comment or reply comment. 
 export const validateCreateComment = (req, res, next) => {
   const { body } = req;
 

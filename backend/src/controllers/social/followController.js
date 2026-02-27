@@ -3,6 +3,7 @@ import {
   unfollowLawyerByUser,
 } from "../../services/social/followService.js";
 
+// Follow a lawyer for the authenticated user.
 export const followLawyer = async (req, res, next) => {
   try {
     const result = await followLawyerByUser(req.user, req.params.lawyerId);
@@ -19,6 +20,7 @@ export const followLawyer = async (req, res, next) => {
   }
 };
 
+// Unfollow a lawyer for the authenticated user. 
 export const unfollowLawyer = async (req, res, next) => {
   try {
     const result = await unfollowLawyerByUser(req.user, req.params.lawyerId);

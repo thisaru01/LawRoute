@@ -4,11 +4,13 @@ import {
   findCommentsByPost,
 } from "../../services/social/postCommentService.js";
 
+// Read pagination query values with safe defaults. 
 const readPagination = (req) => ({
   limit: Number(req.query.limit) || 20,
   cursor: req.query.cursor,
 });
 
+// Create a new comment for the target post. 
 export const createComment = async (req, res, next) => {
   try {
     const comment = await createCommentByUser(req.user, req.params.id, req.body);
@@ -23,6 +25,7 @@ export const createComment = async (req, res, next) => {
   }
 };
 
+// Return comments for a given post with pagination support. 
 export const getPostComments = async (req, res, next) => {
   try {
     const comments = await findCommentsByPost(req.params.id, readPagination(req));
@@ -37,6 +40,7 @@ export const getPostComments = async (req, res, next) => {
   }
 };
 
+// Delete a comment owned by the authenticated user. 
 export const deleteComment = async (req, res, next) => {
   try {
     await deleteCommentByUser(req.user, req.params.commentId);

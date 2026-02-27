@@ -3,12 +3,14 @@ import mongoose from "mongoose";
 import User from "../../models/userModel.js";
 import Follow from "../../models/social/followModel.js";
 
+// Create a standardized error object with an HTTP status code. 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Ensure request includes an authenticated user. 
 const ensureAuthenticatedUser = (authUser) => {
   if (!authUser || !authUser._id) {
     throw buildError("Unauthorized", 401);
@@ -17,12 +19,14 @@ const ensureAuthenticatedUser = (authUser) => {
   return authUser;
 };
 
+// Validate that lawyerId is a valid Mongo ObjectId. 
 const ensureValidLawyerId = (lawyerId) => {
   if (!mongoose.Types.ObjectId.isValid(lawyerId)) {
     throw buildError("Invalid lawyer id", 400);
   }
 };
 
+// Load and validate that the target user exists and is a lawyer. 
 const findLawyerOrThrow = async (lawyerId) => {
   const lawyer = await User.findById(lawyerId).select("_id role");
 
@@ -37,10 +41,12 @@ const findLawyerOrThrow = async (lawyerId) => {
   return lawyer;
 };
 
+// Count followers for the provided lawyer id. 
 const countFollowersByLawyerId = async (lawyerId) => {
   return Follow.countDocuments({ followee: lawyerId });
 };
 
+// Follow a lawyer idempotently for the authenticated user. 
 export const followLawyerByUser = async (authUser, lawyerId) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidLawyerId(lawyerId);
@@ -77,6 +83,7 @@ export const followLawyerByUser = async (authUser, lawyerId) => {
   };
 };
 
+// Unfollow a lawyer idempotently for the authenticated user. 
 export const unfollowLawyerByUser = async (authUser, lawyerId) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidLawyerId(lawyerId);
