@@ -77,6 +77,14 @@ export const getAllArticles = async ({ authHeader, query }) => {
   const isOwnRequest =
     query.author && requesterId && String(query.author) === String(requesterId);
 
+  // If a specific author is requested, only that user (same id as token)
+  // is allowed to fetch their articles via this filter.
+  if (query.author && !isOwnRequest) {
+    const err = new Error("Access denied");
+    err.status = 403;
+    throw err;
+  }
+
   const filter = {};
   if (query.status) {
     // Non-admins can only request non-published statuses for their own articles
@@ -133,6 +141,13 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
+  // Allow publishing/rejecting only when the current status is "pending"
+  if (article.status !== "pending" && ["published", "rejected"].includes(status)) {
+    const err = new Error("Only pending articles can be published or rejected");
+    err.status = 400;
+    throw err;
+  }
+
   // Guard: status changes are admin-only at the route level, but
   // we still enforce presence of a valid user object here.
   if (!user || !user._id) {
@@ -141,31 +156,31 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
-  // Business rule for publishing:
-  // - An admin may publish only OTHER admins' and lawyers' articles.
-  // - An admin must NOT publish their own article.
-  //   (e.g., admin1 can publish articles of admin2/3/4 and lawyers,
+  // Business rule for publishing/rejecting:
+  // - An admin may publish or reject only OTHER users' articles.
+  // - An admin must NOT publish or reject their own article.
+  //   (e.g., admin1 can publish/reject articles of admin2/3/4 and lawyers,
   //    but not articles authored by admin1.)
 
-  // If admin is rejecting a pending article, remove it
-  if (status === "rejected" && article.status === "pending") {
-    await article.deleteOne();
-    return { deleted: true, message: "Article rejected and removed from pending list" };
-  }
-
-  if (status === "published") {
-    const publisherId = String(user._id);
+  if (["published", "rejected"].includes(status)) {
+    const actingAdminId = String(user._id);
     const authorId = String(article.author);
 
-    // Disallow an admin publishing their own article
-    if (publisherId === authorId) {
-      const err = new Error("Admins cannot publish their own articles. Ask another admin to review and publish.");
+    // Disallow an admin publishing/rejecting their own article
+    if (actingAdminId === authorId) {
+      const err = new Error(
+        "Admins cannot publish or reject their own articles. Ask another admin to review and take action.",
+      );
       err.status = 403;
       throw err;
     }
 
-    // At this point, the article's author is either another admin or a lawyer.
-    article.publishedBy = user._id;
+    // For published status, record which admin published it
+    if (status === "published") {
+      article.publishedBy = user._id;
+    } else {
+      article.publishedBy = null;
+    }
   } else {
     article.publishedBy = null;
   }
