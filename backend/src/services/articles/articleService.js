@@ -124,6 +124,20 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
+  // Guard: status changes are admin-only at the route level, but
+  // we still enforce presence of a valid user object here.
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  // Business rule for publishing:
+  // - An admin may publish only OTHER admins' and lawyers' articles.
+  // - An admin must NOT publish their own article.
+  //   (e.g., admin1 can publish articles of admin2/3/4 and lawyers,
+  //    but not articles authored by admin1.)
+
   // If admin is rejecting a pending article, remove it
   if (status === "rejected" && article.status === "pending") {
     await article.deleteOne();
@@ -131,7 +145,18 @@ export const updateArticleStatus = async ({ id, status, user }) => {
   }
 
   if (status === "published") {
-    article.publishedBy = user ? user._id : null;
+    const publisherId = String(user._id);
+    const authorId = String(article.author);
+
+    // Disallow an admin publishing their own article
+    if (publisherId === authorId) {
+      const err = new Error("Admins cannot publish their own articles. Ask another admin to review and publish.");
+      err.status = 403;
+      throw err;
+    }
+
+    // At this point, the article's author is either another admin or a lawyer.
+    article.publishedBy = user._id;
   } else {
     article.publishedBy = null;
   }
