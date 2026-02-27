@@ -5,12 +5,14 @@ import Follow from "../../models/social/followModel.js";
 import { cloudinary } from "../../config/cloudinary.js";
 import mongoose from "mongoose";
 
+// Create a standardized error object with an HTTP status code. 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Ensure the authenticated user exists and has the lawyer role. 
 const ensureLawyerUser = async (authUser) => {
   if (!authUser || !authUser._id) {
     throw buildError("Unauthorized", 401);
@@ -29,6 +31,7 @@ const ensureLawyerUser = async (authUser) => {
   return user;
 };
 
+// Ensure a lawyer profile exists for the given lawyer user id. 
 const ensureLawyerProfileExists = async (userId) => {
   const profile = await LawyerProfile.findOne({ user: userId });
 
@@ -37,6 +40,7 @@ const ensureLawyerProfileExists = async (userId) => {
   }
 };
 
+// Convert uploaded Cloudinary files into the Post.media structure. 
 const mapUploadedFilesToMedia = (uploadedFiles) => {
   if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
     return [];
@@ -54,6 +58,7 @@ const mapUploadedFilesToMedia = (uploadedFiles) => {
     }));
 };
 
+// Delete media assets in Cloudinary by public ids (image/video/raw safe attempts). 
 const destroyMediaByPublicIds = async (publicIds) => {
   if (!Array.isArray(publicIds) || publicIds.length === 0) {
     return;
@@ -83,6 +88,7 @@ const destroyMediaByPublicIds = async (publicIds) => {
   );
 };
 
+// Parse cursor query parameter into a valid Date for pagination. 
 const parseCursorDate = (cursor) => {
   if (!cursor) {
     return null;
@@ -97,6 +103,7 @@ const parseCursorDate = (cursor) => {
   return parsedDate;
 };
 
+// Parse and clamp pagination limit to a safe range. 
 const parseLimit = (limit) => {
   const parsedLimit = Number(limit);
 
@@ -107,6 +114,7 @@ const parseLimit = (limit) => {
   return Math.min(parsedLimit, 50);
 };
 
+// Build a query object with optional cursor-based createdAt condition. 
 const buildPaginationQuery = (baseQuery, cursor) => {
   const query = { ...baseQuery };
   const cursorDate = parseCursorDate(cursor);
@@ -118,6 +126,7 @@ const buildPaginationQuery = (baseQuery, cursor) => {
   return query;
 };
 
+// Create a new post as a lawyer user. 
 export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) => {
   const user = await ensureLawyerUser(authUser);
   await ensureLawyerProfileExists(user._id);
@@ -142,6 +151,7 @@ export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) 
   return createdPost;
 };
 
+// Return public feed posts with cursor pagination. 
 export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
   const query = buildPaginationQuery({ visibility: "public" }, cursor);
   const safeLimit = parseLimit(limit);
@@ -155,6 +165,7 @@ export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
   return posts;
 };
 
+// Return personalized feed for logged users (public + followed lawyers + own posts). 
 export const findFeedPostsForLoggedUser = async (
   authUser,
   { limit = 20, cursor } = {},
@@ -191,6 +202,7 @@ export const findFeedPostsForLoggedUser = async (
   return posts;
 };
 
+// Return only posts authored by the authenticated lawyer. 
 export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
   const user = await ensureLawyerUser(authUser);
 
@@ -206,12 +218,14 @@ export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
   return posts;
 };
 
+// Validate that a route param is a valid lawyer ObjectId. 
 const ensureValidLawyerId = (lawyerId) => {
   if (!mongoose.Types.ObjectId.isValid(lawyerId)) {
     throw buildError("Invalid lawyer id", 400);
   }
 };
 
+// Return public posts for a specific lawyer profile page. 
 export const findPostsByLawyer = async (
   lawyerId,
   { limit = 20, cursor } = {},
@@ -246,12 +260,14 @@ export const findPostsByLawyer = async (
   return posts;
 };
 
+// Validate that a route param is a valid post ObjectId. 
 const ensureValidPostId = (postId) => {
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw buildError("Invalid post id", 400);
   }
 };
 
+// Find a post and verify the authenticated lawyer owns it. 
 const findOwnedPost = async (postId, userId) => {
   ensureValidPostId(postId);
 
@@ -268,6 +284,7 @@ const findOwnedPost = async (postId, userId) => {
   return post;
 };
 
+// Update a lawyer-owned post and optionally replace/remove/append media. 
 export const updatePostByLawyer = async (
   authUser,
   postId,
@@ -336,6 +353,7 @@ export const updatePostByLawyer = async (
   return updatedPost;
 };
 
+// Delete a lawyer-owned post and cleanup linked media from Cloudinary. 
 export const deletePostByLawyer = async (authUser, postId) => {
   const user = await ensureLawyerUser(authUser);
   const post = await findOwnedPost(postId, user._id);

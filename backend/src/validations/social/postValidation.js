@@ -101,6 +101,7 @@ const normalizeBody = (body) => {
   return normalized;
 };
 
+// Validate payload for creating a post (JSON or multipart with files).
 export const validateCreatePost = (req, res, next) => {
   const body = normalizeBody(req.body);
 
@@ -166,6 +167,7 @@ export const validateCreatePost = (req, res, next) => {
   return next();
 };
 
+// Validate payload for updating an existing post. 
 export const validateUpdatePost = (req, res, next) => {
   const body = normalizeBody(req.body);
 
