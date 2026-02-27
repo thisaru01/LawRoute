@@ -53,44 +53,61 @@ export const createArticle = async ({
 export const getAllArticles = async ({ authHeader, query }) => {
   let isAdmin = false;
   let adminId = null;
+  let requesterId = null;
+  let requesterRole = null;
+
   if (authHeader && authHeader.startsWith("Bearer ")) {
     try {
       const token = authHeader.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.id).select("role");
-      if (user && user.role === "admin") {
-        isAdmin = true;
-        adminId = decoded.id;
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+        if (user.role === "admin") {
+          isAdmin = true;
+          adminId = decoded.id;
+        }
       }
     } catch (e) {
       // ignore invalid token
     }
   }
 
+  const isOwnRequest =
+    query.author && requesterId && String(query.author) === String(requesterId);
+
+  // If a specific author is requested, only that user (same id as token)
+  // is allowed to fetch their articles via this filter.
+  if (query.author && !isOwnRequest) {
+    const err = new Error("Access denied");
+    err.status = 403;
+    throw err;
+  }
+
   const filter = {};
   if (query.status) {
-    if (query.status !== "published" && !isAdmin) {
+    // Non-admins can only request non-published statuses for their own articles
+    if (query.status !== "published" && !isAdmin && !isOwnRequest) {
       const err = new Error("Access denied");
       err.status = 403;
       throw err;
     }
     filter.status = query.status;
-  } else if (!isAdmin) {
+  } else if (!isAdmin && !isOwnRequest) {
+    // Public and other users only see published articles by default
     filter.status = "published";
   }
 
   if (query.category) filter.category = query.category;
   if (query.author) filter.author = query.author;
 
+  // When an admin lists articles without specifying an author, exclude their own
+  // articles from the general list. If an author is specified (including the
+  // admin themselves), do not exclude.
   let queryFilter = { ...filter };
-  if (isAdmin && adminId) {
-    if (queryFilter.author && typeof queryFilter.author === "object") {
-      queryFilter.author = { ...queryFilter.author, $ne: adminId };
-    } else if (queryFilter.author) {
-      queryFilter.author = { $eq: queryFilter.author, $ne: adminId };
-    } else {
-      queryFilter.author = { $ne: adminId };
-    }
+  if (isAdmin && adminId && !query.author) {
+    queryFilter.author = { $ne: adminId };
   } else {
     queryFilter = filter;
   }
@@ -124,14 +141,46 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
-  // If admin is rejecting a pending article, remove it
-  if (status === "rejected" && article.status === "pending") {
-    await article.deleteOne();
-    return { deleted: true, message: "Article rejected and removed from pending list" };
+  // Allow publishing/rejecting only when the current status is "pending"
+  if (article.status !== "pending" && ["published", "rejected"].includes(status)) {
+    const err = new Error("Only pending articles can be published or rejected");
+    err.status = 400;
+    throw err;
   }
 
-  if (status === "published") {
-    article.publishedBy = user ? user._id : null;
+  // Guard: status changes are admin-only at the route level, but
+  // we still enforce presence of a valid user object here.
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  // Business rule for publishing/rejecting:
+  // - An admin may publish or reject only OTHER users' articles.
+  // - An admin must NOT publish or reject their own article.
+  //   (e.g., admin1 can publish/reject articles of admin2/3/4 and lawyers,
+  //    but not articles authored by admin1.)
+
+  if (["published", "rejected"].includes(status)) {
+    const actingAdminId = String(user._id);
+    const authorId = String(article.author);
+
+    // Disallow an admin publishing/rejecting their own article
+    if (actingAdminId === authorId) {
+      const err = new Error(
+        "Admins cannot publish or reject their own articles. Ask another admin to review and take action.",
+      );
+      err.status = 403;
+      throw err;
+    }
+
+    // For published status, record which admin published it
+    if (status === "published") {
+      article.publishedBy = user._id;
+    } else {
+      article.publishedBy = null;
+    }
   } else {
     article.publishedBy = null;
   }
@@ -233,31 +282,16 @@ export const deleteArticle = async ({ id, user }) => {
 
   const userId = String(user._id);
   const isAdmin = user.role === "admin";
-  const isLawyer = user.role === "lawyer";
 
-  if (article.status === "pending") {
-    if (isAdmin) {
-      // allowed
-    } else if (isLawyer && String(article.author) === userId) {
-      // allowed
-    } else {
-      const err = new Error("Only admins or the article's lawyer author can delete pending articles");
-      err.status = 403;
-      throw err;
-    }
-  } else if (article.status === "published") {
-    if (!isAdmin) {
-      const err = new Error("Only admins can delete published articles");
-      err.status = 403;
-      throw err;
-    }
-
-    if (article.publishedBy && String(article.publishedBy) === userId) {
-      const err = new Error("The admin who published this article cannot delete it");
+  // Only the article owner (author) can delete when status is pending or published
+  if (article.status === "pending" || article.status === "published") {
+    if (String(article.author) !== userId) {
+      const err = new Error("Only the article owner can delete this article");
       err.status = 403;
       throw err;
     }
   } else {
+    // For other statuses (e.g., rejected, archived), keep existing admin-only behavior
     if (!isAdmin) {
       const err = new Error("Only admins can delete articles with this status");
       err.status = 403;

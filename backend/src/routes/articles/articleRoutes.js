@@ -2,6 +2,7 @@ import express from "express";
 import {
   createArticle,
   getAllArticles,
+  getMyArticles,
   updateArticle,
   updateArticleStatus,
   deleteArticle,
@@ -14,6 +15,10 @@ const router = express.Router();
 // Create article (admins publish immediately; lawyers create pending articles)
 // Get all articles (public: only published; admin with token: all)
 router.get("/", getAllArticles);
+
+// Get only the authenticated user's articles (owner), using token only
+// - Returns all statuses (pending, published, rejected, etc.) for that user
+router.get("/me", protect, authorizeRoles("admin", "lawyer"), getMyArticles);
 
 // Create article with optional image upload
 router.post("/", protect, upload.single("image"), createArticle);

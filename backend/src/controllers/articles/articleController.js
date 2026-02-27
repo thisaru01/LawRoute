@@ -73,6 +73,31 @@ export const getAllArticles = async (req, res, next) => {
   }
 };
 
+// Get articles of the currently authenticated user (owner only)
+// - Uses JWT to identify the user; no user id in query
+// - Returns all statuses (pending, published, rejected, etc.) for that owner
+export const getMyArticles = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const articles = await articleService.getAllArticles({
+      authHeader: req.headers.authorization,
+      query: { author: String(req.user._id) },
+    });
+
+    return res
+      .status(200)
+      .json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
 // Update article content/metadata
 // - Only for articles with status 'pending'
 // - Admins: can update any pending article
