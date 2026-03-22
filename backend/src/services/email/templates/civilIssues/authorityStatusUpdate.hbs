@@ -1,0 +1,30 @@
+<h2 style="color: #111827; margin-top: 0; font-size: 20px;">Civil Issue Update</h2>
+<p style="color: #4b5563;">Your reported civil issue has been reviewed and updated by the assigned authority.</p>
+
+<table class="responsive-table" style="width: 100%; border-collapse: collapse; margin: 24px 0;">
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500; width: 35%;">Category</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 600;">{{formatText category}}</td>
+  </tr>
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">District</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 600;">{{formatText district}}</td>
+  </tr>
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Previous Status</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #4b5563; text-transform: capitalize;">{{formatText oldStatus}}</td>
+  </tr>
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">New Status</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb;">
+      <span style="background-color: {{color}}; color: #fff; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; text-transform: capitalize;">
+        {{formatText newStatus}}
+      </span>
+    </td>
+  </tr>
+</table>
+
+<p style="color: #4b5563; font-size: 14px; margin-bottom: 0;">
+  You can log in to LawRoute to view the full details of your issue.<br/>
+  If you have any concerns, please contact the relevant authority directly through the platform.
+</p>

@@ -1,7 +1,8 @@
 import CivilIssue from "../../models/civilIssues/civilIssueModel.js";
 import AuthorityProfile from "../../models/authorityProfileModel.js";
+import User from "../../models/userModel.js";
 import { sendEmail } from "../email/emailService.js";
-import { statusUpdateTemplate, issueUpdatedCitizenTemplate } from "../email/civilIssueEmailTemplates.js";
+import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
 
 // Create a new civil issue, auto-routing to the correct authority by category.
 export async function createIssue({ reporterId, category, district, description, attachments = [] }) {
@@ -23,6 +24,15 @@ export async function createIssue({ reporterId, category, district, description,
         attachments,
         assignedTo: authorityProfile.user,
     });
+
+    // Send acknowledgement email to the citizen on successful submission.
+    const reporter = await User.findById(reporterId, "email").lean();
+    if (reporter?.email) {
+        const { subject, html } = issueSubmittedTemplate({ category, district, description });
+        sendEmail({ to: reporter.email, subject, html }).catch((err) =>
+            console.error("[Email] Failed to send submission acknowledgement:", err.message)
+        );
+    }
 
     return issue;
 }
