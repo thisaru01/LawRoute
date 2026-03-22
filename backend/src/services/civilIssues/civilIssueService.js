@@ -1,7 +1,7 @@
 import CivilIssue from "../../models/civilIssues/civilIssueModel.js";
 import AuthorityProfile from "../../models/authorityProfileModel.js";
 import { sendEmail } from "../email/emailService.js";
-import { statusUpdateTemplate } from "../email/civilIssueEmailTemplates.js";
+import { statusUpdateTemplate, issueUpdatedCitizenTemplate } from "../email/civilIssueEmailTemplates.js";
 
 // Create a new civil issue, auto-routing to the correct authority by category.
 export async function createIssue({ reporterId, category, district, description, attachments = [] }) {
@@ -80,7 +80,8 @@ export async function getIssueById({ issueId, currentUserId }) {
 
 // Update a civil issue's description or district (reporter only, pending status only).
 export async function updateIssue({ issueId, reporterId, description, district }) {
-    const issue = await CivilIssue.findById(issueId);
+    const issue = await CivilIssue.findById(issueId)
+        .populate("reporterId", "name email");
 
     if (!issue) {
         const error = new Error("Civil issue not found.");
@@ -88,7 +89,7 @@ export async function updateIssue({ issueId, reporterId, description, district }
         throw error;
     }
 
-    if (issue.reporterId.toString() !== reporterId.toString()) {
+    if (issue.reporterId._id.toString() !== reporterId.toString()) {
         const error = new Error("Access denied.");
         error.statusCode = 403;
         throw error;
@@ -104,6 +105,19 @@ export async function updateIssue({ issueId, reporterId, description, district }
     if (district) issue.district = district;
 
     await issue.save();
+
+    // Notify the reporter that their issue was updated successfully.
+    if (issue.reporterId?.email) {
+        const { subject, html } = issueUpdatedCitizenTemplate({
+            category: issue.category,
+            district: issue.district,
+            description: issue.description,
+        });
+
+        sendEmail({ to: issue.reporterId.email, subject, html }).catch((err) =>
+            console.error("[Email] Failed to send issue update confirmation:", err.message)
+        );
+    }
 
     return issue;
 }

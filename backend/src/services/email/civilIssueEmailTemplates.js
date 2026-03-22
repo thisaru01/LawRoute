@@ -1,6 +1,42 @@
 // Email templates for Civil Issue events.
-// Open/Closed principle: add new template functions here for new events
-// without modifying emailService.js or civilIssueService.js.
+
+/**
+ * Builds the confirmation email sent to a citizen after they update their civil issue.
+ */
+export function issueUpdatedCitizenTemplate({ category, district, description }) {
+  return {
+    subject: `Your Civil Issue Has Been Updated — LawRoute`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <h2 style="color: #1e3a5f;">LawRoute — Issue Update Confirmed</h2>
+        <p>Your civil issue has been updated successfully. Here are the current details:</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 8px; background: #f3f4f6; font-weight: bold; width: 40%;">Category</td>
+            <td style="padding: 8px;">${category}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; background: #f3f4f6; font-weight: bold;">District</td>
+            <td style="padding: 8px;">${district}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; background: #f3f4f6; font-weight: bold;">Description</td>
+            <td style="padding: 8px;">${description}</td>
+          </tr>
+        </table>
+
+        <p style="color: #6b7280; font-size: 13px;">
+          If you did not make this change, please contact support immediately.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #9ca3af; font-size: 12px;">This is an automated message from LawRoute. Please do not reply to this email.</p>
+      </div>
+    `,
+  };
+}
+
 
 // Template sent to the citizen when an authority updates their issue's status.
 export function statusUpdateTemplate({ category, district, oldStatus, newStatus }) {
