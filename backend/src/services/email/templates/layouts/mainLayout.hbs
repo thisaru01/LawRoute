@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Base Resets */
+    body, table, td, p, a, li, blockquote {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    table, td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+    
+    /* Mobile-Specific Styles */
+    @media only screen and (max-width: 600px) {
+      .responsive-table {
+        width: 100% !important;
+      }
+      .responsive-td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+      .mobile-padding {
+        padding: 20px 16px !important;
+      }
+      /* Remove side borders on mobile for a cleaner look */
+      .responsive-row {
+        display: block;
+        margin-bottom: 12px;
+      }
+      .responsive-label {
+        padding-bottom: 2px !important;
+        border-bottom: none !important;
+        font-size: 13px !important;
+      }
+      .responsive-value {
+        padding-top: 0 !important;
+        font-size: 15px !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <div style="background-color: #f9fafb; padding: 40px 0; color: #374151; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
+      
+      <!-- Header -->
+      <div style="background-color: #1e3a8a; padding: 24px; text-align: center;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">LawRoute</h1>
+      </div>
+
+      <!-- Body Content -->
+      <div class="mobile-padding" style="padding: 32px 24px;">
+        {{{body}}}
+      </div>
+
+      <!-- Footer -->
+      <div class="mobile-padding" style="background-color: #f3f4f6; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+        <p style="margin: 0; font-size: 13px; color: #6b7280;">
+          &copy; {{currentYear}} LawRoute. All rights reserved.
+        </p>
+        <p style="margin: 8px 0 0; font-size: 12px; color: #9ca3af;">
+          This is an automated message. Please do not reply directly to this email.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
