@@ -12,6 +12,10 @@ import LawyerDashboard from "./lawyer/pages/LawyerDashboard.jsx";
 import LawyerProfile from "./lawyer/pages/LawyerProfile.jsx";
 import LawyerConsultationRequests from "./lawyer/pages/LawyerConsultationRequests.jsx";
 import LawyerCases from "./lawyer/pages/LawyerCases.jsx";
+import AuthorityRouteLayout from "./authority/AuthorityRouteLayout.jsx";
+import AuthorityDashboard from "./authority/pages/AuthorityDashboard.jsx";
+import AuthorityProfile from "./authority/pages/AuthorityProfile.jsx";
+import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 import PublicLayout from "@/public/PublicLayout.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 
@@ -46,6 +50,16 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<LawyerCases />} />
+          </Route>
+          <Route path="*" element={<Navigate to="." replace />} />
+        </Route>
+
+        <Route path="/authority" element={<AuthorityRouteLayout />}>
+          <Route index element={<AuthorityDashboard />} />
+          <Route path="profile" element={<AuthorityProfile />} />
+          <Route path="civil-issues">
+            <Route index element={<Navigate to="pending" replace />} />
+            <Route path=":status" element={<AuthorityCivilIssues />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
         </Route>
