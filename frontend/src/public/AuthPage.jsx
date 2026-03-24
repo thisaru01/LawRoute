@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { apiFetch } from "@/lib/api";
+import { loginUser, registerUser } from "@/api/services/authService";
 
 import SignInForm from "@/public/auth/SignInForm.jsx";
 import SignUpForm from "@/public/auth/SignUpForm.jsx";
@@ -34,16 +34,13 @@ export default function AuthPage() {
     setBusy(true);
 
     try {
-      const result = await apiFetch("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
+      const response = await loginUser({
+        email: values.email,
+        password: values.password,
       });
 
-      if (result && result.token) {
-        localStorage.setItem("auth_token", result.token);
+      if (response?.data?.token) {
+        localStorage.setItem("auth_token", response.data.token);
       }
     } catch (err) {
       setError(err?.message || "Sign in failed");
@@ -64,13 +61,10 @@ export default function AuthPage() {
         role: values.role,
       };
 
-      const result = await apiFetch("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const response = await registerUser(payload);
 
-      if (result && result.token) {
-        localStorage.setItem("auth_token", result.token);
+      if (response?.data?.token) {
+        localStorage.setItem("auth_token", response.data.token);
       }
     } catch (err) {
       setError(err?.message || "Sign up failed");
