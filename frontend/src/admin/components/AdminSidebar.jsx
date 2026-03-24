@@ -1,12 +1,14 @@
 import {
   BookOpen,
   Briefcase,
+  ChevronRight,
+  CircleUser,
   FileText,
   LayoutDashboard,
-  MessageSquare,
   Scale,
   Users,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   Sidebar,
@@ -16,17 +18,50 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
 const defaultItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Profile", href: "/admin/profile", icon: CircleUser },
   { title: "Users", href: "/admin/users", icon: Users },
-  { title: "Cases", href: "/admin/cases", icon: Briefcase },
-  { title: "Articles", href: "/admin/articles", icon: BookOpen },
-  { title: "Civil Issues", href: "/admin/civil-issues", icon: Scale },
+  {
+    title: "Cases",
+    icon: Briefcase,
+    children: [
+      { title: "Open", href: "/admin/cases/open" },
+      { title: "Closed", href: "/admin/cases/closed" },
+    ],
+  },
+  {
+    title: "Civil Issues",
+    icon: Scale,
+    children: [
+      { title: "Pending", href: "/admin/civil-issues/pending" },
+      { title: "In Progress", href: "/admin/civil-issues/in_progress" },
+      { title: "Resolved", href: "/admin/civil-issues/resolved" },
+    ],
+  },
+  {
+    title: "Articles",
+    icon: BookOpen,
+    children: [
+      { title: "Pending", href: "/admin/articles/pending" },
+      { title: "Published", href: "/admin/articles/published" },
+      { title: "Rejected", href: "/admin/articles/rejected" },
+      { title: "Archived", href: "/admin/articles/archived" },
+    ],
+  },
   { title: "Documents", href: "/admin/documents", icon: FileText },
-  { title: "Consultations", href: "/admin/consultations", icon: MessageSquare },
 ];
 
 export function AdminSidebar({ items = defaultItems, activeHref }) {
@@ -40,7 +75,7 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
-              <a href="/">
+              <Link to="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Scale className="size-4" aria-hidden="true" />
                 </div>
@@ -50,7 +85,7 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
                     Admin
                   </span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -60,6 +95,56 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
         <SidebarMenu>
           {items.map((item) => {
             const Icon = item.icon;
+            if (item.children?.length) {
+              const isGroupActive = item.children.some(
+                (child) => child.href === currentPath,
+              );
+              const shouldOpen =
+                isGroupActive ||
+                item.children.some((child) =>
+                  currentPath.startsWith(child.href),
+                );
+
+              return (
+                <Collapsible
+                  key={item.title}
+                  defaultOpen={shouldOpen}
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        isActive={isGroupActive}
+                        tooltip={item.title}
+                      >
+                        <Icon aria-hidden="true" />
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.children.map((child) => {
+                          const isActive = currentPath === child.href;
+
+                          return (
+                            <SidebarMenuSubItem key={child.href}>
+                              <SidebarMenuSubButton asChild isActive={isActive}>
+                                <Link to={child.href}>
+                                  <span>{child.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              );
+            }
+
             const isActive = currentPath === item.href;
 
             return (
@@ -69,10 +154,10 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
                   isActive={isActive}
                   tooltip={item.title}
                 >
-                  <a href={item.href}>
+                  <Link to={item.href}>
                     <Icon aria-hidden="true" />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
