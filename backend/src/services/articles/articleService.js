@@ -102,15 +102,9 @@ export const getAllArticles = async ({ authHeader, query }) => {
   if (query.category) filter.category = query.category;
   if (query.author) filter.author = query.author;
 
-  // When an admin lists articles without specifying an author, exclude their own
-  // articles from the general list. If an author is specified (including the
-  // admin themselves), do not exclude.
-  let queryFilter = { ...filter };
-  if (isAdmin && adminId && !query.author) {
-    queryFilter.author = { $ne: adminId };
-  } else {
-    queryFilter = filter;
-  }
+  // Build final query filter. Do NOT exclude admins' own articles from the
+  // general list — admins should be able to see their published articles.
+  const queryFilter = { ...filter };
 
   const articles = await Article.find(queryFilter)
     .populate("author", "name email")
