@@ -4,8 +4,10 @@ import { loginUser, registerUser } from "@/api/services/authService";
 
 import SignInForm from "@/public/auth/SignInForm.jsx";
 import SignUpForm from "@/public/auth/SignUpForm.jsx";
+import { useAuth } from "@/context/auth/useAuth";
 
 export default function AuthPage() {
+  const { setToken } = useAuth();
   const [mode, setMode] = useState("signin");
   const isSignUp = mode === "signup";
 
@@ -40,7 +42,7 @@ export default function AuthPage() {
       });
 
       if (response?.data?.token) {
-        localStorage.setItem("auth_token", response.data.token);
+        setToken(response.data.token);
       }
     } catch (err) {
       setError(err?.message || "Sign in failed");
@@ -64,7 +66,7 @@ export default function AuthPage() {
       const response = await registerUser(payload);
 
       if (response?.data?.token) {
-        localStorage.setItem("auth_token", response.data.token);
+        setToken(response.data.token);
       }
     } catch (err) {
       setError(err?.message || "Sign up failed");
@@ -145,14 +147,17 @@ export default function AuthPage() {
                       today
                     </h2>
                     <p className="text-sm text-primary-foreground/80">
-                      Find the right help, track your progress, and stay informed — all in one place.
+                      Find the right help, track your progress, and stay
+                      informed — all in one place.
                     </p>
                   </div>
 
                   <div className="rounded-2xl bg-primary-foreground/10 p-6 backdrop-blur">
                     <div className="space-y-2">
                       <div className="text-sm font-medium">Built for</div>
-                      <div className="text-3xl font-semibold">Citizens & Lawyers</div>
+                      <div className="text-3xl font-semibold">
+                        Citizens & Lawyers
+                      </div>
                       <div className="text-sm text-primary-foreground/80">
                         Get started in minutes
                       </div>

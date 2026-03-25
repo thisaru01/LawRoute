@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { getAuthToken, setAuthToken } from "@/context/auth/authStorage";
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
   timeout: 5000,
@@ -66,7 +68,7 @@ const normalizeApiError = (error) => {
 // Request Interceptor (Attach token)
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -90,7 +92,7 @@ axiosInstance.interceptors.response.use(
     if (error?.response) {
       // Example: Unauthorized
       if (error.response.status === 401) {
-        localStorage.removeItem("auth_token");
+        setAuthToken(null);
       }
     }
 
