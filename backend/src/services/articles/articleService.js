@@ -174,33 +174,54 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
-  // Allow publishing/rejecting only when the current status is "pending"
-  if (article.status !== "pending" && ["published", "rejected"].includes(status)) {
-    const err = new Error("Only pending articles can be published or rejected");
+  // Prevent reverting a published article back to pending
+  if (String(article.status) === "published" && status === "pending") {
+    const err = new Error("Published articles cannot be changed back to pending");
     err.status = 400;
     throw err;
   }
 
-  // Guard: status changes are admin-only at the route level, but
-  // we still enforce presence of a valid user object here.
+  // Guard: require authenticated user
   if (!user || !user._id) {
     const err = new Error("Unauthorized");
     err.status = 401;
     throw err;
   }
 
-  // Business rule for publishing/rejecting:
-  // - An admin may publish or reject only OTHER users' articles.
-  // - An admin must NOT publish or reject their own article.
-  //   (e.g., admin1 can publish/reject articles of admin2/3/4 and lawyers,
-  //    but not articles authored by admin1.)
+  const actingUserId = String(user._id);
+  const authorId = String(article.author);
+  const actingRole = user.role;
 
+  // ARCHIVE: only the article's author may archive the article, any status
+  if (status === "archived") {
+    if (actingUserId !== authorId) {
+      const err = new Error("Only the article author can archive this article");
+      err.status = 403;
+      throw err;
+    }
+
+    article.status = "archived";
+    article.publishedBy = null;
+    await article.save();
+    return { deleted: false, article };
+  }
+
+  // PUBLISH / REJECT: only admins may perform these, and only from pending
   if (["published", "rejected"].includes(status)) {
-    const actingAdminId = String(user._id);
-    const authorId = String(article.author);
+    if (actingRole !== "admin") {
+      const err = new Error("Only admins can publish or reject articles");
+      err.status = 403;
+      throw err;
+    }
+
+    if (article.status !== "pending") {
+      const err = new Error("Only pending articles can be published or rejected");
+      err.status = 400;
+      throw err;
+    }
 
     // Disallow an admin publishing/rejecting their own article
-    if (actingAdminId === authorId) {
+    if (actingUserId === authorId) {
       const err = new Error(
         "Admins cannot publish or reject their own articles. Ask another admin to review and take action.",
       );
@@ -208,16 +229,20 @@ export const updateArticleStatus = async ({ id, status, user }) => {
       throw err;
     }
 
-    // For published status, record which admin published it
     if (status === "published") {
       article.publishedBy = user._id;
     } else {
       article.publishedBy = null;
     }
-  } else {
-    article.publishedBy = null;
+
+    article.status = status;
+    await article.save();
+    return { deleted: false, article };
   }
 
+  // For any other status changes (none expected beyond VALID_STATUSES),
+  // fall back to previous behavior: clear publishedBy and set status.
+  article.publishedBy = null;
   article.status = status;
   await article.save();
   return { deleted: false, article };

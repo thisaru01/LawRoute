@@ -43,7 +43,10 @@ router.put(
 router.patch(
   "/:id/status",
   protect,
-  authorizeRoles("admin"),
+  // Allow both admins and lawyers to call the status endpoint; the
+  // service enforces which roles may set which statuses (e.g., only
+  // admins can publish/reject; only the author can archive).
+  authorizeRoles("admin", "lawyer"),
   updateArticleStatus,
 );
 
