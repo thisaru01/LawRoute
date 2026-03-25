@@ -3,6 +3,7 @@ import {
   createArticle,
   getAllArticles,
   getPublishedArticles,
+  getPendingOthersArticles,
   getMyArticles,
   updateArticle,
   updateArticleStatus,
@@ -44,6 +45,14 @@ router.patch(
   protect,
   authorizeRoles("admin"),
   updateArticleStatus,
+);
+
+// Admin-only: list pending articles authored by others (includes lawyers' pending articles)
+router.get(
+  "/pending/others",
+  protect,
+  authorizeRoles("admin"),
+  getPendingOthersArticles,
 );
 
 // Delete article

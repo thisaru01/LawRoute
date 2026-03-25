@@ -73,6 +73,26 @@ export const getAllArticles = async (req, res, next) => {
   }
 };
 
+// Admin-only: get pending articles authored by others (exclude requester's own)
+export const getPendingOthersArticles = async (req, res, next) => {
+  try {
+    const extraQuery = {};
+    if (req.query.category) extraQuery.category = req.query.category;
+
+    const articles = await articleService.getPendingOthersArticles({
+      authHeader: req.headers.authorization,
+      extraQuery,
+    });
+
+    return res.status(200).json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
 // Public: get only published articles. Preserves other query params (category, author, etc.).
 export const getPublishedArticles = async (req, res, next) => {
   try {

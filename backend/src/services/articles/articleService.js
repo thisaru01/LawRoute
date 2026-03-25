@@ -113,6 +113,45 @@ export const getAllArticles = async ({ authHeader, query }) => {
   return articles;
 };
 
+// Return pending articles authored by others (exclude the requester).
+// Only admins are allowed to call this via controller-level protection.
+export const getPendingOthersArticles = async ({ authHeader, extraQuery = {} }) => {
+  let requesterId = null;
+  let requesterRole = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select("role");
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+      }
+    } catch (e) {
+      // ignore invalid token
+    }
+  }
+
+  // Require a valid requester id
+  if (!requesterId) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const filter = { status: "pending", ...extraQuery };
+
+  // Exclude the requester's own articles
+  filter.author = { $ne: requesterId };
+
+  const articles = await Article.find(filter)
+    .populate("author", "name email role")
+    .sort({ createdAt: -1 });
+
+  return articles;
+};
+
 export const updateArticleStatus = async ({ id, status, user }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
