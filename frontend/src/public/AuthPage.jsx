@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { loginUser, registerUser } from "@/api/services/authService";
 
 import SignInForm from "@/public/auth/SignInForm.jsx";
 import SignUpForm from "@/public/auth/SignUpForm.jsx";
 import { useAuth } from "@/context/auth/useAuth";
+import { getDashboardPathForRole } from "@/context/auth/authRouting";
 
 export default function AuthPage() {
-  const { setToken } = useAuth();
+  const navigate = useNavigate();
+  const { token, role, setToken } = useAuth();
   const [mode, setMode] = useState("signin");
   const isSignUp = mode === "signup";
+
+  useEffect(() => {
+    if (!token) return;
+    navigate(getDashboardPathForRole(role), { replace: true });
+  }, [token, role, navigate]);
 
   const [signInValues, setSignInValues] = useState({
     email: "",
