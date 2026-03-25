@@ -32,14 +32,14 @@ import AuthorityProfile from "./authority/pages/AuthorityProfile.jsx";
 import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 
 // Public
-import PublicLayout from "@/public/PublicLayout.jsx";
+import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<PublicLayout />} />
+        <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
