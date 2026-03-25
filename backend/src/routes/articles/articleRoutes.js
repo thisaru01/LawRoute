@@ -2,6 +2,7 @@ import express from "express";
 import {
   createArticle,
   getAllArticles,
+  getPublishedArticles,
   getMyArticles,
   updateArticle,
   updateArticleStatus,
@@ -15,6 +16,9 @@ const router = express.Router();
 // Create article (admins publish immediately; lawyers create pending articles)
 // Get all articles (public: only published; admin with token: all)
 router.get("/", getAllArticles);
+
+// Public: get only published articles
+router.get("/published", getPublishedArticles);
 
 // Get only the authenticated user's articles (owner), using token only
 // - Returns all statuses (pending, published, rejected, etc.) for that user
