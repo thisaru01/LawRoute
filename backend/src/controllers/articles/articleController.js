@@ -15,8 +15,15 @@ export const createArticle = async (req, res, next) => {
 
     const { title, content, category } = req.body;
 
-    const imageUrl = req.file?.path || null;
-    const imagePublicId = req.file?.filename || null;
+    // Files come from multer.fields; each key is an array
+    const imageFile = req.files?.image?.[0];
+    const imagecardFile = req.files?.imagecard?.[0];
+
+    const imageUrl = imageFile?.path || null;
+    const imagePublicId = imageFile?.filename || null;
+
+    const imagecardUrl = imagecardFile?.path || null;
+    const imagecardPublicId = imagecardFile?.filename || null;
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -29,10 +36,8 @@ export const createArticle = async (req, res, next) => {
         .json({ message: "Only admins or lawyers can create articles" });
     }
 
-    if (!title || !content) {
-      return res
-        .status(400)
-        .json({ message: "Title and content are required" });
+    if (!title || !content || !category || !imagecardUrl || !imageUrl) {
+      return res.status(400).json({ message: "Title, content, category, image, and imagecard files are required" });
     }
 
     // All articles start as "pending" now, even for admins
@@ -45,6 +50,8 @@ export const createArticle = async (req, res, next) => {
         user: req.user,
         imageUrl,
         imagePublicId,
+        imagecardUrl,
+        imagecardPublicId,
       });
 
       console.log("article saved:", article._id, "status:", article.status);
@@ -141,8 +148,14 @@ export const updateArticle = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { title, content, category } = req.body;
-    const imageUrl = req.file?.path || null;
-    const imagePublicId = req.file?.filename || null;
+    const imageFile = req.files?.image?.[0];
+    const imagecardFile = req.files?.imagecard?.[0];
+
+    const imageUrl = imageFile?.path || null;
+    const imagePublicId = imageFile?.filename || null;
+
+    const imagecardUrl = imagecardFile?.path || null;
+    const imagecardPublicId = imagecardFile?.filename || null;
 
     const article = await articleService.updateArticle({
       id,
@@ -152,6 +165,8 @@ export const updateArticle = async (req, res, next) => {
       category,
       imageUrl,
       imagePublicId,
+      imagecardUrl,
+      imagecardPublicId,
     });
 
     return res.status(200).json({ success: true, article });

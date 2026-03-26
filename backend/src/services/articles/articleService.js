@@ -13,6 +13,8 @@ export const createArticle = async ({
   user,
   imageUrl,
   imagePublicId,
+  imagecardUrl,
+  imagecardPublicId,
 }) => {
   if (!user || !user._id) {
     const err = new Error("Unauthorized");
@@ -27,8 +29,8 @@ export const createArticle = async ({
     throw err;
   }
 
-  if (!title || !content) {
-    const err = new Error("Title and content are required");
+  if (!title || !content || !category || !imagecardUrl || !imageUrl) {
+    const err = new Error("Title, content, category, image, and imagecard files are required");
     err.status = 400;
     throw err;
   }
@@ -39,6 +41,8 @@ export const createArticle = async ({
     title,
     content,
     category,
+    imagecardUrl: imagecardUrl || null,
+    imagecardPublicId: imagecardPublicId || null,
     imageUrl: imageUrl || null,
     imagePublicId: imagePublicId || null,
     author: user._id,
@@ -248,7 +252,7 @@ export const updateArticleStatus = async ({ id, status, user }) => {
   return { deleted: false, article };
 };
 
-export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId }) => {
+export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId, imagecardUrl, imagecardPublicId }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
   if (!mongoose.Types.ObjectId.isValid(cleanId)) {
@@ -312,6 +316,20 @@ export const updateArticle = async ({ id, user, title, content, category, imageU
     article.imagePublicId = imagePublicId || null;
   }
 
+  // Handle imagecard replacement: if a new imagecard is provided, remove the old one from Cloudinary
+  if (imagecardPublicId) {
+    if (article.imagecardPublicId && article.imagecardPublicId !== imagecardPublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagecardPublicId);
+      } catch (e) {
+        console.error("Failed to delete previous article imagecard from Cloudinary", e);
+      }
+    }
+
+    article.imagecardUrl = imagecardUrl || null;
+    article.imagecardPublicId = imagecardPublicId || null;
+  }
+
   await article.save();
   return article;
 };
@@ -363,6 +381,14 @@ export const deleteArticle = async ({ id, user }) => {
     } catch (e) {
       // log and continue; failure to delete image should not block article deletion
       console.error("Failed to delete article image from Cloudinary", e);
+    }
+  }
+
+  if (article.imagecardPublicId) {
+    try {
+      await cloudinary.uploader.destroy(article.imagecardPublicId);
+    } catch (e) {
+      console.error("Failed to delete article imagecard from Cloudinary", e);
     }
   }
 

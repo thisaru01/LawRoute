@@ -26,7 +26,16 @@ router.get("/published", getPublishedArticles);
 router.get("/me", protect, authorizeRoles("admin", "lawyer"), getMyArticles);
 
 // Create article with optional image upload
-router.post("/", protect, articleUpload.single("image"), createArticle);
+// Accept both the main `image` and the `imagecard` upload fields
+router.post(
+  "/",
+  protect,
+  articleUpload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "imagecard", maxCount: 1 },
+  ]),
+  createArticle,
+);
 
 // Update article (only when status is 'pending')
 // - Admins: any pending article
@@ -35,7 +44,10 @@ router.put(
   "/:id",
   protect,
   authorizeRoles("admin", "lawyer"),
-  articleUpload.single("image"),
+  articleUpload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "imagecard", maxCount: 1 },
+  ]),
   updateArticle,
 );
 
