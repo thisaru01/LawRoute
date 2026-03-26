@@ -1,12 +1,16 @@
 import {
+  BookOpen,
   Briefcase,
   ChevronRight,
   CircleUser,
   LayoutDashboard,
+  LogOut,
   MessageSquare,
   Scale,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+import { setAuthToken } from "@/context/auth/authStorage";
 
 import {
   Sidebar,
@@ -30,7 +34,14 @@ import {
 
 const defaultItems = [
   { title: "Dashboard", href: "/lawyer", icon: LayoutDashboard },
-  { title: "Profile", href: "/lawyer/profile", icon: CircleUser },
+  {
+    title: "Profile",
+    icon: CircleUser,
+    children: [
+      { title: "Details", href: "/lawyer/profile/details" },
+      { title: "Activities", href: "/lawyer/profile/activities" },
+    ],
+  },
   {
     title: "Consultation Requests",
     icon: MessageSquare,
@@ -48,12 +59,28 @@ const defaultItems = [
       { title: "Closed", href: "/lawyer/cases/closed" },
     ],
   },
+  {
+    title: "Articles",
+    icon: BookOpen,
+    children: [
+      { title: "Create", href: "/lawyer/articles/create" },
+      { title: "Pending", href: "/lawyer/articles/pending" },
+      { title: "Published", href: "/lawyer/articles/published" },
+      { title: "Rejected", href: "/lawyer/articles/rejected" },
+    ],
+  },
 ];
 
 export function LawyerSidebar({ items = defaultItems, activeHref }) {
   const currentPath =
     activeHref ??
     (typeof window !== "undefined" ? window.location.pathname : "");
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    setAuthToken(null);
+    navigate("/auth", { replace: true });
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -88,7 +115,9 @@ export function LawyerSidebar({ items = defaultItems, activeHref }) {
               );
               const shouldOpen =
                 isGroupActive ||
-                item.children.some((child) => currentPath.startsWith(child.href));
+                item.children.some((child) =>
+                  currentPath.startsWith(child.href),
+                );
 
               return (
                 <Collapsible
@@ -150,8 +179,23 @@ export function LawyerSidebar({ items = defaultItems, activeHref }) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-        <div className="px-2 py-1 text-xs text-muted-foreground">
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Logout"
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <button type="button" onClick={handleLogout}>
+                <LogOut aria-hidden="true" />
+                <span>Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <div className="px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           © {new Date().getFullYear()} LawRoute
         </div>
       </SidebarFooter>

@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
-export default function AdminArticles() {
+export default function LawyerArticles() {
   const { status } = useParams();
   const normalizedStatus = (status ?? "pending").toLowerCase();
 
