@@ -3,10 +3,13 @@ import {
   ChevronRight,
   CircleUser,
   LayoutDashboard,
+  LogOut,
   MessageSquare,
   Scale,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+import { setAuthToken } from "@/context/auth/authStorage";
 
 import {
   Sidebar,
@@ -48,13 +51,27 @@ const defaultItems = [
       { title: "Closed", href: "/citizen/cases/closed" },
     ],
   },
-  { title: "Civil Issues", href: "/citizen/civil-issues", icon: Scale },
+  {
+    title: "Civil Issues",
+    icon: Scale,
+    children: [
+      { title: "Pending", href: "/citizen/civil-issues/pending" },
+      { title: "In Progress", href: "/citizen/civil-issues/in_progress" },
+      { title: "Resolved", href: "/citizen/civil-issues/resolved" },
+    ],
+  },
 ];
 
 export function CitizenSidebar({ items = defaultItems, activeHref }) {
   const currentPath =
     activeHref ??
     (typeof window !== "undefined" ? window.location.pathname : "");
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    setAuthToken(null);
+    navigate("/auth", { replace: true });
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -153,8 +170,23 @@ export function CitizenSidebar({ items = defaultItems, activeHref }) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-        <div className="px-2 py-1 text-xs text-muted-foreground">
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Logout"
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <button type="button" onClick={handleLogout}>
+                <LogOut aria-hidden="true" />
+                <span>Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <div className="px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           © {new Date().getFullYear()} LawRoute
         </div>
       </SidebarFooter>

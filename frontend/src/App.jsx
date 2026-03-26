@@ -8,6 +8,7 @@ import AdminUsers from "./admin/pages/AdminUsers.jsx";
 import AdminCases from "./admin/pages/AdminCases.jsx";
 import AdminCivilIssues from "./admin/pages/AdminCivilIssues.jsx";
 import AdminArticles from "./admin/pages/AdminArticles.jsx";
+import AdminArticleCreate from "./admin/pages/AdminArticleCreate.jsx";
 import AdminDocuments from "./admin/pages/AdminDocuments.jsx";
 
 // Citizen
@@ -22,8 +23,11 @@ import CitizenProfile from "./citizen/pages/CitizenProfile.jsx";
 import LawyerRouteLayout from "./lawyer/LawyerRouteLayout.jsx";
 import LawyerDashboard from "./lawyer/pages/LawyerDashboard.jsx";
 import LawyerProfile from "./lawyer/pages/LawyerProfile.jsx";
+import LawyerProfileActivities from "./lawyer/pages/LawyerProfileActivities.jsx";
 import LawyerConsultationRequests from "./lawyer/pages/LawyerConsultationRequests.jsx";
 import LawyerCases from "./lawyer/pages/LawyerCases.jsx";
+import LawyerArticles from "./lawyer/pages/LawyerArticles.jsx";
+import LawyerArticleCreate from "./lawyer/pages/LawyerArticleCreate.jsx";
 
 // Authority
 import AuthorityRouteLayout from "./authority/AuthorityRouteLayout.jsx";
@@ -53,13 +57,20 @@ export default function App() {
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<CitizenCases />} />
           </Route>
-          <Route path="civil-issues" element={<CitizenCivilIssues />} />
+          <Route path="civil-issues">
+            <Route index element={<Navigate to="pending" replace />} />
+            <Route path=":status" element={<CitizenCivilIssues />} />
+          </Route>
           <Route path="*" element={<Navigate to="." replace />} />
         </Route>
 
         <Route path="/lawyer" element={<LawyerRouteLayout />}>
           <Route index element={<LawyerDashboard />} />
-          <Route path="profile" element={<LawyerProfile />} />
+          <Route path="profile">
+            <Route index element={<Navigate to="details" replace />} />
+            <Route path="details" element={<LawyerProfile />} />
+            <Route path="activities" element={<LawyerProfileActivities />} />
+          </Route>
           <Route path="consultation-requests">
             <Route index element={<Navigate to="pending" replace />} />
             <Route path=":status" element={<LawyerConsultationRequests />} />
@@ -67,6 +78,11 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<LawyerCases />} />
+          </Route>
+          <Route path="articles">
+            <Route index element={<Navigate to="pending" replace />} />
+            <Route path="create" element={<LawyerArticleCreate />} />
+            <Route path=":status" element={<LawyerArticles />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
         </Route>
@@ -84,7 +100,10 @@ export default function App() {
         <Route path="/admin" element={<AdminRouteLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
-          <Route path="users" element={<AdminUsers />} />
+          <Route path="users">
+            <Route index element={<Navigate to="authority" replace />} />
+            <Route path=":type" element={<AdminUsers />} />
+          </Route>
           <Route path="cases">
             <Route index element={<Navigate to="open" replace />} />
             <Route path=":status" element={<AdminCases />} />
@@ -95,6 +114,7 @@ export default function App() {
           </Route>
           <Route path="articles">
             <Route index element={<Navigate to="pending" replace />} />
+            <Route path="create" element={<AdminArticleCreate />} />
             <Route path=":status" element={<AdminArticles />} />
           </Route>
           <Route path="documents" element={<AdminDocuments />} />

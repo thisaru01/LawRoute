@@ -5,10 +5,13 @@ import {
   CircleUser,
   FileText,
   LayoutDashboard,
+  LogOut,
   Scale,
   Users,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+import { setAuthToken } from "@/context/auth/authStorage";
 
 import {
   Sidebar,
@@ -33,7 +36,15 @@ import {
 const defaultItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { title: "Profile", href: "/admin/profile", icon: CircleUser },
-  { title: "Users", href: "/admin/users", icon: Users },
+  {
+    title: "Users",
+    href: "/admin/users",
+    icon: Users,
+    children: [
+      { title: "Authority", href: "/admin/users/authority" },
+      { title: "Lawyer", href: "/admin/users/lawyer" },
+    ],
+  },
   {
     title: "Cases",
     icon: Briefcase,
@@ -55,10 +66,10 @@ const defaultItems = [
     title: "Articles",
     icon: BookOpen,
     children: [
+      { title: "Create", href: "/admin/articles/create" },
       { title: "Pending", href: "/admin/articles/pending" },
       { title: "Published", href: "/admin/articles/published" },
       { title: "Rejected", href: "/admin/articles/rejected" },
-      { title: "Archived", href: "/admin/articles/archived" },
     ],
   },
   { title: "Documents", href: "/admin/documents", icon: FileText },
@@ -68,6 +79,12 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
   const currentPath =
     activeHref ??
     (typeof window !== "undefined" ? window.location.pathname : "");
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    setAuthToken(null);
+    navigate("/auth", { replace: true });
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -165,8 +182,23 @@ export function AdminSidebar({ items = defaultItems, activeHref }) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-        <div className="px-2 py-1 text-xs text-muted-foreground">
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Logout"
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <button type="button" onClick={handleLogout}>
+                <LogOut aria-hidden="true" />
+                <span>Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <div className="px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           © {new Date().getFullYear()} LawRoute
         </div>
       </SidebarFooter>
