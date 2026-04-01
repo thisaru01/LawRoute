@@ -24,6 +24,16 @@ export const register = async (req, res, next) => {
       });
     }
 
+    if (role === "authority") {
+      const existingAuthority = await AuthorityProfile.findOne({ managedCategory });
+      if (existingAuthority) {
+        return res.status(409).json({
+          success: false,
+          message: "Authority already assigned to this category.",
+        });
+      }
+    }
+
     const user = await User.create({
       name,
       email,
@@ -40,10 +50,21 @@ export const register = async (req, res, next) => {
     }
 
     if (user.role === "authority") {
-      await AuthorityProfile.create({
-        user: user._id,
-        managedCategory,
-      });
+      try {
+        await AuthorityProfile.create({
+          user: user._id,
+          managedCategory,
+        });
+      } catch (error) {
+        await User.findByIdAndDelete(user._id);
+        if (error.code === 11000) {
+          return res.status(409).json({
+            success: false,
+            message: "Authority already assigned to this category.",
+          });
+        }
+        throw error;
+      }
     }
 
     const token = generateToken(user);
