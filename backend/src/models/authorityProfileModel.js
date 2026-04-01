@@ -15,6 +15,7 @@ const authorityProfileSchema = new Schema(
       type: String,
       enum: CIVIL_ISSUE_CATEGORIES,
       required: true,
+      unique: true,
     },
   },
   { timestamps: true },
