@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getArticle } from "@/api/services/articleService";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
 
 export default function AdminArticleView() {
@@ -33,9 +33,9 @@ export default function AdminArticleView() {
   if (!article) return <div className="p-6">Article not found.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 py-2">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-9 lg:pr-4 lg:border-r lg:border-muted-foreground/20">
+        <div className="lg:col-span-9 lg:pr-4 lg:border-r lg:border-muted-foreground/20 lg:-mt-8 lg:pt-16">
       <div className="flex items-center gap-4 mb-4">
         <button
           type="button"
@@ -49,25 +49,45 @@ export default function AdminArticleView() {
         <h1 className="text-2xl font-bold m-0">{article.title}</h1>
       </div>
 
-      <div className="flex items-center text-sm text-muted-foreground mb-4">
-        <div>{article.category || ""}</div>
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+        <div className="flex items-center">
+          <div>{article.category || ""}</div>
 
-        {(() => {
-          const d = article.createdAt || article.created_at || article.created || article.createdOn;
-          if (!d) return null;
-          try {
-            return (
-              <>
-                <div className="mx-2">·</div>
-                <div>
-                  {new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
-                </div>
-              </>
-            );
-          } catch (e) {
-            return null;
-          }
-        })()}
+          {(() => {
+            const d = article.createdAt || article.created_at || article.created || article.createdOn;
+            if (!d) return null;
+            try {
+              return (
+                <>
+                  <div className="mx-2">·</div>
+                  <div>
+                    {new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                  </div>
+                </>
+              );
+            } catch (e) {
+              return null;
+            }
+          })()}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Edit article"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+          >
+            <Pencil size={16} />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Delete article"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
 
       {/** Use main image if available, otherwise fall back to imagecardUrl */}
@@ -75,7 +95,7 @@ export default function AdminArticleView() {
         <img
           src={article.imageUrl || article.imagecardUrl}
           alt={article.title}
-          className="w-full h-64 object-cover rounded-lg mb-6"
+          className="w-full h-96 object-cover rounded-lg mb-6"
         />
       )}
 
