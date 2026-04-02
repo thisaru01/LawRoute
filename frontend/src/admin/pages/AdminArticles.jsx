@@ -55,7 +55,7 @@ export default function AdminArticles() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Articles</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p>
+      {/* <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p> */}
 
       <div className="mt-6">
         {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
