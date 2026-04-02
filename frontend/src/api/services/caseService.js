@@ -7,3 +7,25 @@ export const getMyCases = () => {
 export const closeCase = (id) => {
   return axios.patch(`/cases/${id}/close`);
 };
+
+export const getCaseById = (id) => {
+  return axios.get(`/cases/${id}`);
+};
+
+export const getCaseMeetings = (caseId) => {
+  return axios.get(`/cases/${caseId}/meetings`);
+};
+
+export const scheduleCaseMeeting = (caseId, payload) => {
+  return axios.post(`/cases/${caseId}/meetings`, payload);
+};
+
+export const getCaseDocuments = (caseId) => {
+  return axios.get(`/cases/${caseId}/documents`);
+};
+
+export const uploadCaseDocument = (caseId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return axios.post(`/cases/${caseId}/documents`, formData);
+};

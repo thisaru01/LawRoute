@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { getMyCases, closeCase } from "@/api/services/caseService";
+import { getMyCases } from "@/api/services/caseService";
 import {
   Card,
   CardContent,
@@ -25,6 +25,7 @@ const formatDateTime = (value) => {
 
 export default function LawyerCases() {
   const { status } = useParams();
+  const navigate = useNavigate();
   const normalizedStatus = (status ?? "opened").toLowerCase();
 
   const safeStatus = allowedStatuses.has(normalizedStatus)
@@ -37,7 +38,6 @@ export default function LawyerCases() {
   const [cases, setCases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [busyId, setBusyId] = useState(null);
 
   const fetchCases = async () => {
     setIsLoading(true);
@@ -94,17 +94,25 @@ export default function LawyerCases() {
     });
   }, [cases, backendStatus]);
 
-  const handleCloseCase = async (id) => {
-    try {
-      setBusyId(id);
-      await closeCase(id);
-      await fetchCases();
-    } catch (err) {
-      // log only; global handlers/toasts can surface this if needed
-      console.error(err);
-    } finally {
-      setBusyId(null);
-    }
+  const handleOpenCase = (caseItem) => {
+    const id = caseItem?._id;
+    if (!id) return;
+    if (backendStatus !== "open") return;
+    const citizenName = caseItem?.user?.name || "Citizen";
+    const citizenEmail = caseItem?.user?.email;
+    const createdAt = caseItem?.createdAt;
+    const summary = caseItem?.consultationRequest?.summary || "(No summary)";
+
+    navigate(`/lawyer/cases/opened/${id}`, {
+      state: {
+        caseId: id,
+        citizenName,
+        citizenEmail,
+        createdAt,
+        summary,
+        status: caseItem?.status,
+      },
+    });
   };
 
   const statusBadgeClassName = useMemo(() => {
@@ -210,7 +218,19 @@ export default function LawyerCases() {
             caseItem?.consultationRequest?.summary || "(No summary)";
 
           return (
-            <Card key={caseItem?._id || `${citizenName}-${createdAt}`}>
+            <Card
+              key={caseItem?._id || `${citizenName}-${createdAt}`}
+              className={
+                backendStatus === "open"
+                  ? "cursor-pointer transition-colors hover:bg-muted/50"
+                  : undefined
+              }
+              onClick={
+                backendStatus === "open"
+                  ? () => handleOpenCase(caseItem)
+                  : undefined
+              }
+            >
               <CardHeader>
                 <CardTitle>Case with {citizenName}</CardTitle>
                 <CardDescription>
@@ -225,18 +245,6 @@ export default function LawyerCases() {
               <CardContent>
                 <p className="whitespace-pre-line text-sm">{summary}</p>
               </CardContent>
-
-              {backendStatus === "open" && (
-                <div className="flex gap-2 px-4 pb-4">
-                  <Button
-                    variant="destructive"
-                    disabled={busyId === caseItem?._id}
-                    onClick={() => handleCloseCase(caseItem?._id)}
-                  >
-                    {busyId === caseItem?._id ? "Closing..." : "Close case"}
-                  </Button>
-                </div>
-              )}
             </Card>
           );
         })}

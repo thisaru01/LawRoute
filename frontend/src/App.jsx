@@ -28,6 +28,7 @@ import LawyerConsultationRequests from "./lawyer/pages/LawyerConsultationRequest
 import LawyerCases from "./lawyer/pages/LawyerCases.jsx";
 import LawyerArticles from "./lawyer/pages/LawyerArticles.jsx";
 import LawyerArticleCreate from "./lawyer/pages/LawyerArticleCreate.jsx";
+import LawyerCaseDetails from "./lawyer/pages/LawyerCaseDetails.jsx";
 
 // Authority
 import AuthorityRouteLayout from "./authority/AuthorityRouteLayout.jsx";
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<LawyerCases />} />
+            <Route path=":status/:caseId" element={<LawyerCaseDetails />} />
           </Route>
           <Route path="articles">
             <Route index element={<Navigate to="pending" replace />} />
