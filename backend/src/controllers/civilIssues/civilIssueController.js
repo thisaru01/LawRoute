@@ -6,6 +6,8 @@ import { cloudinary } from "../../config/cloudinary.js";
 export const submitCivilIssue = async (req, res, next) => {
   try {
     const { category, district, description } = req.body;
+    // FormData sends booleans as strings, so normalise explicitly.
+    const isPublic = req.body.isPublic === "true" || req.body.isPublic === true;
 
     // Cloudinary automatically provides the secure URLs in the `path` property of each file
     const attachments = req.files ? req.files.map((file) => file.path) : [];
@@ -16,6 +18,7 @@ export const submitCivilIssue = async (req, res, next) => {
       district,
       description,
       attachments,
+      isPublic,
     });
 
     res.status(201).json({
@@ -156,6 +159,17 @@ export const updateCivilIssueStatus = async (req, res, next) => {
         .status(error.statusCode)
         .json({ success: false, message: error.message });
     }
+    next(error);
+  }
+};
+
+// GET /api/civil-issues/public
+// Returns all publicly visible civil issues. No auth required.
+export const getPublicCivilIssues = async (req, res, next) => {
+  try {
+    const issues = await civilIssueService.getPublicIssues();
+    res.status(200).json({ success: true, data: issues });
+  } catch (error) {
     next(error);
   }
 };

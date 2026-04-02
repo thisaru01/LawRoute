@@ -5,7 +5,7 @@ import { sendEmail } from "../email/emailService.js";
 import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
 
 // Create a new civil issue, auto-routing to the correct authority by category.
-export async function createIssue({ reporterId, category, district, description, attachments = [] }) {
+export async function createIssue({ reporterId, category, district, description, attachments = [], isPublic = false }) {
     const authorityProfile = await AuthorityProfile.findOne({
         managedCategory: category,
     });
@@ -22,6 +22,7 @@ export async function createIssue({ reporterId, category, district, description,
         district,
         description,
         attachments,
+        isPublic,
         assignedTo: authorityProfile.user,
     });
 
@@ -192,4 +193,12 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
     }
 
     return issue;
+}
+
+// Get all publicly visible civil issues (no auth required).
+// Reporter identity is intentionally excluded to preserve anonymity.
+export async function getPublicIssues() {
+    return CivilIssue.find({ isPublic: true })
+        .select("category district description status createdAt")
+        .sort({ createdAt: -1 });
 }

@@ -38,6 +38,7 @@ import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 // Public
 import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
+import PublicCivilIssues from "@/public/PublicCivilIssues.jsx";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/civil-issues" element={<PublicCivilIssues />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />

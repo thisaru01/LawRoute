@@ -8,6 +8,7 @@ import {
   updateCivilIssue,
   deleteCivilIssue,
   updateCivilIssueStatus,
+  getPublicCivilIssues,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -21,6 +22,10 @@ import {
 import civilIssueUpload from "../../middleware/upload/civilIssueUpload.js";
 
 const router = express.Router();
+
+// Public: view all publicly visible civil issues (no auth required)
+// Must be defined BEFORE /:id to prevent Express treating 'public' as an ID.
+router.get("/public", getPublicCivilIssues);
 
 // Citizen: submit a new civil issue (auto-routed to correct authority by category)
 router.post(
