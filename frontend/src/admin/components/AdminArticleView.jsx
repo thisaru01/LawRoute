@@ -33,19 +33,43 @@ export default function AdminArticleView() {
   if (!article) return <div className="p-6">Article not found.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-      <div>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-9 lg:pr-4 lg:border-r lg:border-muted-foreground/20">
+      <div className="flex items-center gap-4 mb-4">
         <button
           type="button"
           onClick={() => navigate(-1)}
           aria-label="Go back"
-          className="inline-flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted mb-4"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <ArrowLeft size={18} />
         </button>
+
+        <h1 className="text-2xl font-bold m-0">{article.title}</h1>
       </div>
+
+      <div className="flex items-center text-sm text-muted-foreground mb-4">
+        <div>{article.category || ""}</div>
+
+        {(() => {
+          const d = article.createdAt || article.created_at || article.created || article.createdOn;
+          if (!d) return null;
+          try {
+            return (
+              <>
+                <div className="mx-2">·</div>
+                <div>
+                  {new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                </div>
+              </>
+            );
+          } catch (e) {
+            return null;
+          }
+        })()}
+      </div>
+
       {/** Use main image if available, otherwise fall back to imagecardUrl */}
       {(article.imageUrl || article.imagecardUrl) && (
         <img
@@ -54,8 +78,6 @@ export default function AdminArticleView() {
           className="w-full h-64 object-cover rounded-lg mb-6"
         />
       )}
-
-      <h1 className="text-2xl font-bold mb-3">{article.title}</h1>
 
       {article.subtitle && <p className="text-muted-foreground mb-4">{article.subtitle}</p>}
 

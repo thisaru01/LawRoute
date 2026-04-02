@@ -46,19 +46,19 @@ export default function RelatedArticlesSidebar({ currentArticleId, status = "pen
   if (!related.length) return null;
 
   return (
-    <aside className="lg:col-span-1">
+    <aside className="lg:col-span-3 lg:pl-1">
       <h3 className="text-lg font-semibold mb-4">Related Articles</h3>
       <div className="space-y-4">
         {related.map((r) => (
           <Card key={r._id || r.id} className="p-0 py-0">
             <Link
               to={`/admin/articles/${status}/${r._id || r.id}`}
-              className="block w-full p-3 flex items-stretch gap-3 h-28"
+              className="block w-full p-4 flex items-stretch gap-4 h-28"
             >
               <img
                 src={r.imagecardUrl || r.imageUrl}
                 alt={r.title}
-                className="w-32 h-full object-cover rounded-lg flex-shrink-0"
+                className="w-28 h-full object-cover rounded-lg flex-shrink-0"
               />
 
               <div className="flex-1 min-w-0">
