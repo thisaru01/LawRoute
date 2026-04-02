@@ -14,9 +14,15 @@ function formatDate(d) {
   }
 }
 
+function truncate(str, n = 200) {
+  if (!str) return "";
+  const s = String(str).replace(/\s+/g, ' ').trim();
+  return s.length > n ? s.slice(0, n).trim() + '…' : s;
+}
+
 export default function PendingArticleCard({ article }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden group transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
       {article?.imagecardUrl && (
         <>
           <img
@@ -29,16 +35,21 @@ export default function PendingArticleCard({ article }) {
         </>
       )}
 
-      {/* overlay with title and date */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent text-white">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium mr-2">{article?.title || "Untitled"}</h3>
+      {/* top-left title removed to avoid duplicate with bottom overlay */}
+        {/* bottom overlay with large title and excerpt (like screenshot) */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent text-white">
+          <div className="flex flex-col">
+            <h3 className="text-2xl font-semibold mb-2">{article?.title || "Untitled"}</h3>
 
-          {article?.createdAt && (
-            <div className="text-xs">{formatDate(article.createdAt)}</div>
-          )}
+            {(article?.excerpt || article?.content || article?.description) && (
+              <p className="text-sm max-w-3xl opacity-90">{truncate(article?.excerpt || article?.content || article?.description, 120)}</p>
+            )}
+
+            {article?.createdAt && (
+              <div className="mt-3 text-xs text-white/80 text-right">{formatDate(article.createdAt)}</div>
+            )}
+          </div>
         </div>
-      </div>
     </Card>
   );
 }
