@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getArticle } from "@/api/services/articleService";
+import { ArrowLeft } from "lucide-react";
+import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
 
 export default function AdminArticleView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,7 +33,19 @@ export default function AdminArticleView() {
   if (!article) return <div className="p-6">Article not found.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3">
+      <div>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted mb-4"
+        >
+          <ArrowLeft size={18} />
+        </button>
+      </div>
       {/** Use main image if available, otherwise fall back to imagecardUrl */}
       {(article.imageUrl || article.imagecardUrl) && (
         <img
@@ -49,6 +64,10 @@ export default function AdminArticleView() {
       ) : (
         <p>{article.excerpt || article.description}</p>
       )}
+        </div>
+
+        <RelatedArticlesSidebar currentArticleId={article._id} status="pending" />
+      </div>
     </div>
   );
 }
