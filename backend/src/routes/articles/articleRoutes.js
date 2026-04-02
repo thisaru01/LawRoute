@@ -3,6 +3,7 @@ import {
   createArticle,
   getAllArticles,
   getPublishedArticles,
+  getArticle,
   getPendingOthersArticles,
   getMyArticles,
   updateArticle,
@@ -21,9 +22,13 @@ router.get("/", getAllArticles);
 // Public: get only published articles
 router.get("/published", getPublishedArticles);
 
+
 // Get only the authenticated user's articles (owner), using token only
 // - Returns all statuses (pending, published, rejected, etc.) for that user
 router.get("/me", protect, authorizeRoles("admin", "lawyer"), getMyArticles);
+
+// Get single article by id (placed after /me to avoid conflicting with the '/me' route)
+router.get("/:id", getArticle);
 
 // Create article with optional image upload
 // Accept both the main `image` and the `imagecard` upload fields

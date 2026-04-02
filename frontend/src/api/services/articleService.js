@@ -8,7 +8,12 @@ export const getMyArticles = () => {
   return axios.get("/articles/me");
 };
 
+export const getArticle = (id) => {
+  return axios.get(`/articles/${id}`);
+};
+
 export default {
   getPendingOthersArticles,
   getMyArticles,
+  getArticle,
 };

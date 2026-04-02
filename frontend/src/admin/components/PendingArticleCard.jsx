@@ -1,5 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 function formatDate(d) {
   try {
@@ -22,7 +23,8 @@ function truncate(str, n = 200) {
 
 export default function PendingArticleCard({ article }) {
   return (
-    <Card className="relative overflow-hidden group transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
+    <Link to={`/admin/articles/pending/${article?._id || article?.id}`} className="block">
+      <Card className="relative overflow-hidden group transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
       {article?.imagecardUrl && (
         <>
           <img
@@ -50,6 +52,7 @@ export default function PendingArticleCard({ article }) {
             )}
           </div>
         </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }

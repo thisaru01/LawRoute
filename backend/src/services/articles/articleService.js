@@ -334,6 +334,53 @@ export const updateArticle = async ({ id, user, title, content, category, imageU
   return article;
 };
 
+export const getArticleById = async ({ id, authHeader }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId).populate('author', 'name email');
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Determine requester role (if any)
+  let requesterId = null;
+  let requesterRole = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select("role");
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+      }
+    } catch (e) {
+      // ignore invalid token
+    }
+  }
+
+  // Public users may only see published articles
+  if (String(article.status) !== 'published') {
+    const isOwner = requesterId && String(article.author?._id || article.author) === String(requesterId);
+    const isAdmin = requesterRole === 'admin';
+    if (!isOwner && !isAdmin) {
+      const err = new Error('Article not available');
+      err.status = 403;
+      throw err;
+    }
+  }
+
+  return article;
+};
+
 export const deleteArticle = async ({ id, user }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
@@ -399,6 +446,7 @@ export const deleteArticle = async ({ id, user }) => {
 export default {
   createArticle,
   getAllArticles,
+  getArticleById,
   updateArticleStatus,
   updateArticle,
   deleteArticle,

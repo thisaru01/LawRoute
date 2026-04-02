@@ -9,6 +9,7 @@ import AdminCases from "./admin/pages/AdminCases.jsx";
 import AdminCivilIssues from "./admin/pages/AdminCivilIssues.jsx";
 import AdminArticles from "./admin/pages/AdminArticles.jsx";
 import AdminArticleCreate from "./admin/pages/AdminArticleCreate.jsx";
+import AdminArticleView from "./admin/components/AdminArticleView.jsx";
 import AdminDocuments from "./admin/pages/AdminDocuments.jsx";
 
 // Citizen
@@ -116,6 +117,7 @@ export default function App() {
             <Route index element={<Navigate to="pending" replace />} />
             <Route path="create" element={<AdminArticleCreate />} />
             <Route path=":status" element={<AdminArticles />} />
+            <Route path=":status/:id" element={<AdminArticleView />} />
           </Route>
           <Route path="documents" element={<AdminDocuments />} />
           <Route path="*" element={<Navigate to="." replace />} />

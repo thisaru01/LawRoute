@@ -140,6 +140,18 @@ export const getMyArticles = async (req, res, next) => {
   }
 };
 
+// Get single article by id
+export const getArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const article = await articleService.getArticleById({ id, authHeader: req.headers.authorization });
+    return res.status(200).json({ success: true, article });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res.status(err.status || 500).json({ success: false, message: err.message || "Server error" });
+  }
+};
+
 // Update article content/metadata
 // - Only for articles with status 'pending'
 // - Admins: can update any pending article
