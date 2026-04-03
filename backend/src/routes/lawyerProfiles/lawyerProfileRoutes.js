@@ -2,11 +2,16 @@ import express from "express";
 
 import {
   getAllLawyerProfiles,
+  getLawyerProfilesForAdmin,
   getMyLawyerProfile,
+  updateLawyerVerificationStatus,
   updateLawyerProfile,
 } from "../../controllers/lawyerProfiles/lawyerProfileController.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
-import { validateUpdateLawyerProfile } from "../../validations/lawyerProfiles/lawyerProfileValidation.js";
+import {
+  validateLawyerVerificationStatusUpdate,
+  validateUpdateLawyerProfile,
+} from "../../validations/lawyerProfiles/lawyerProfileValidation.js";
 
 const router = express.Router();
 
@@ -23,6 +28,23 @@ router.put(
   authorizeRoles("lawyer"),
   validateUpdateLawyerProfile,
   updateLawyerProfile,
+);
+
+// Admin: review lawyer profiles (optionally filter by verificationStatus)
+router.get(
+  "/admin/lawyers",
+  protect,
+  authorizeRoles("admin"),
+  getLawyerProfilesForAdmin,
+);
+
+// Admin: verify/reject lawyer status by user id
+router.patch(
+  "/admin/lawyers/:userId/verification-status",
+  protect,
+  authorizeRoles("admin"),
+  validateLawyerVerificationStatusUpdate,
+  updateLawyerVerificationStatus,
 );
 
 export default router;

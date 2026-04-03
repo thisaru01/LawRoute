@@ -71,9 +71,21 @@ const LawyerProfileSchema = new Schema(
       ],
       default: "general",
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    barRegistrationNumber: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+      maxlength: 60,
+    },
+    memberships: { 
+      type: [String], 
+      default: [] 
     },
     isFree: {
       type: Boolean,
@@ -93,8 +105,6 @@ const LawyerProfileSchema = new Schema(
     educationQualifications: {
       education: { type: [educationSchema], default: [] },
       certifications: { type: [certificationSchema], default: [] },
-      barRegistrationNumber: { type: String, trim: true, maxlength: 60 },
-      memberships: { type: [String], default: [] },
     },
     profileCompleted: {
       type: Boolean,

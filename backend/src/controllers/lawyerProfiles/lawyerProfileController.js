@@ -1,6 +1,8 @@
 import {
   findAllLawyerProfiles,
   findLawyerProfileByUser,
+  findLawyerProfilesForAdmin,
+  updateLawyerVerificationStatusByAdmin,
   updateLawyerProfileByUser,
 } from "../../services/lawyerProfiles/lawyerProfileService.js";
 
@@ -41,6 +43,41 @@ export const getMyLawyerProfile = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      lawyerProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get lawyer profiles for admin moderation with optional verification status filter.
+export const getLawyerProfilesForAdmin = async (req, res, next) => {
+  try {
+    const lawyerProfiles = await findLawyerProfilesForAdmin({
+      verificationStatus: req.query.verificationStatus,
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: lawyerProfiles.length,
+      lawyerProfiles,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update a lawyer's verification status as admin.
+export const updateLawyerVerificationStatus = async (req, res, next) => {
+  try {
+    const lawyerProfile = await updateLawyerVerificationStatusByAdmin({
+      userId: req.params.userId,
+      verificationStatus: req.body.verificationStatus,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Lawyer verification status updated successfully",
       lawyerProfile,
     });
   } catch (error) {
