@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getArticle } from "@/api/services/articleService";
+import { getArticle, updateArticleStatus } from "@/api/services/articleService";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/context/auth/useAuth";
 import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
 
 export default function AdminArticleView() {
@@ -10,6 +11,9 @@ export default function AdminArticleView() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
+  const { userId } = useAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -31,6 +35,23 @@ export default function AdminArticleView() {
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!article) return <div className="p-6">Article not found.</div>;
+
+  const handleChangeStatus = async (nextStatus) => {
+    if (!article?._id && !article?.id) return;
+    setStatusError("");
+    try {
+      setUpdatingStatus(true);
+      const res = await updateArticleStatus(article._id || article.id, nextStatus);
+      const updated = res?.data?.article;
+      if (updated) {
+        setArticle(updated);
+      }
+    } catch (e) {
+      setStatusError(e?.message || "Failed to update article status");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-2">
@@ -54,6 +75,31 @@ export default function AdminArticleView() {
           <div>{article.category || ""}</div>
 
           {(() => {
+            const a = article?.author;
+            let ownerName = "";
+            try {
+              if (!a) ownerName = "";
+              else if (typeof a === "string") ownerName = a;
+              else if (typeof a === "object") {
+                ownerName = a.name || a.fullName || a.username || `${a.firstName || a.firstname || ""} ${a.lastName || a.lastname || ""}`.trim() || a.email || "";
+              }
+            } catch (e) {
+              ownerName = "";
+            }
+
+            if (ownerName) {
+              return (
+                <>
+                  <div className="mx-2">·</div>
+                  <div>{ownerName}</div>
+                </>
+              );
+            }
+
+            return null;
+          })()}
+
+          {(() => {
             const d = article.createdAt || article.created_at || article.created || article.createdOn;
             if (!d) return null;
             try {
@@ -72,22 +118,59 @@ export default function AdminArticleView() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Edit article"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            <Pencil size={16} />
-          </button>
+          {(() => {
+            const authorId = article?.author?._id ?? article?.author;
+            const isAuthor = authorId && String(authorId) === String(userId);
+            if (isAuthor) {
+              return (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Edit article"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    <Pencil size={16} />
+                  </button>
 
-          <button
-            type="button"
-            aria-label="Delete article"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 size={16} />
-          </button>
+                  <button
+                    type="button"
+                    aria-label="Delete article"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              );
+            }
+
+            return (
+            <>
+              <button
+                type="button"
+                aria-label="Publish article"
+                onClick={() => handleChangeStatus("published")}
+                disabled={updatingStatus}
+                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+              >
+                Publish
+              </button>
+
+              <button
+                type="button"
+                aria-label="Reject article"
+                onClick={() => handleChangeStatus("rejected")}
+                disabled={updatingStatus}
+                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                Reject
+              </button>
+            </>
+            );
+          })()}
         </div>
+        {statusError && (
+          <div className="mt-1 text-xs text-red-600">{statusError}</div>
+        )}
       </div>
 
       {/** Use main image if available, otherwise fall back to imagecardUrl */}

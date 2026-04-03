@@ -12,8 +12,18 @@ export const getArticle = (id) => {
   return axios.get(`/articles/${id}`);
 };
 
+export const getPublishedArticles = () => {
+  return axios.get("/articles/published");
+};
+
+export const updateArticleStatus = (id, status) => {
+  return axios.patch(`/articles/${id}/status`, { status });
+};
+
 export default {
   getPendingOthersArticles,
   getMyArticles,
   getArticle,
+  getPublishedArticles,
+  updateArticleStatus,
 };

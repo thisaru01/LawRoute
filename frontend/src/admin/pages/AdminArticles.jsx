@@ -1,8 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getMyArticles, getPendingOthersArticles } from "@/api/services/articleService";
+import { getMyArticles, getPendingOthersArticles, getPublishedArticles } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/PendingArticleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/auth/useAuth";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
@@ -21,30 +22,46 @@ export default function AdminArticles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("own"); // 'own' | 'others'
+  const { userId } = useAuth();
 
   useEffect(() => {
     let mounted = true;
 
-    const fetchPending = async () => {
-      if (safeStatus !== "pending") {
-        setArticles([]);
-        return;
-      }
-
+    const fetchArticles = async () => {
       setLoading(true);
       setError(null);
       try {
         let res;
-        if (tab === "own") {
-          // Use /articles/me — returns authenticated user's articles
-          res = await getMyArticles();
+        let list = [];
+
+        if (safeStatus === "pending") {
+          if (tab === "own") {
+            // /articles/me returns all statuses; filter to pending
+            res = await getMyArticles();
+            list = (res?.data?.articles || []).filter(
+              (a) => String(a.status || "").toLowerCase() === "pending",
+            );
+          } else {
+            // Pending articles authored by others
+            res = await getPendingOthersArticles();
+            list = res?.data?.articles || [];
+          }
+        } else if (safeStatus === "published") {
+          // All published articles; split into own vs others by author id
+          res = await getPublishedArticles();
+          const all = res?.data?.articles || [];
+          list = all.filter((a) => {
+            const authorId = a?.author?._id ?? a?.author;
+            if (!authorId || !userId) return tab === "others";
+            const isOwn = String(authorId) === String(userId);
+            return tab === "own" ? isOwn : !isOwn;
+          });
         } else {
-          // Use /articles/pending/others to get other users' pending articles
-          res = await getPendingOthersArticles();
+          list = [];
         }
 
         if (!mounted) return;
-        setArticles(res?.data?.articles || []);
+        setArticles(list);
       } catch (err) {
         if (!mounted) return;
         setError(err?.message || "Failed to load articles");
@@ -53,12 +70,12 @@ export default function AdminArticles() {
       }
     };
 
-    fetchPending();
+    fetchArticles();
 
     return () => {
       mounted = false;
     };
-  }, [safeStatus, tab]);
+  }, [safeStatus, tab, userId]);
 
   return (
     <div>
