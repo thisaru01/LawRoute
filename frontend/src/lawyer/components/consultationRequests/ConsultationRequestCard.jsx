@@ -2,17 +2,11 @@ import { useState } from "react";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/formatDateTime";
 import {
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "@/api/services/consultationRequestService";
-
-const formatDateTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString();
-};
 
 const STATUS_BADGE = {
   accepted: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",

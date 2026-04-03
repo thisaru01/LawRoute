@@ -4,15 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { formatDateTime } from "@/lib/formatDateTime";
 import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
-
-const formatDateTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString();
-};
 
 function DocumentCard({ doc }) {
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";

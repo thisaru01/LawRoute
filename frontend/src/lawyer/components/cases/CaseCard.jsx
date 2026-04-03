@@ -1,12 +1,6 @@
-import { User, Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const formatDateTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString();
-};
+import { formatDateTime } from "@/lib/formatDateTime";
 
 /**
  * CaseCard
