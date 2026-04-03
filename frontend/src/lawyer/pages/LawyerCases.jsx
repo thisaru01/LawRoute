@@ -39,21 +39,6 @@ export default function LawyerCases() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCases = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await getMyCases();
-      const list = response?.data?.data;
-      setCases(Array.isArray(list) ? list : []);
-    } catch (err) {
-      setError(err);
-      setCases([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -167,7 +152,26 @@ export default function LawyerCases() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={fetchCases}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Re-run the effect logic in a controlled way
+                setIsLoading(true);
+                setError(null);
+                getMyCases()
+                  .then((response) => {
+                    const list = response?.data?.data;
+                    setCases(Array.isArray(list) ? list : []);
+                  })
+                  .catch((err) => {
+                    setError(err);
+                    setCases([]);
+                  })
+                  .finally(() => {
+                    setIsLoading(false);
+                  });
+              }}
+            >
               Retry
             </Button>
           </CardContent>

@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
+import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 
 const formatDateTime = (value) => {
   if (!value) return "";
@@ -15,7 +16,10 @@ const formatDateTime = (value) => {
 
 function DocumentCard({ doc }) {
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
-  const extension = doc.fileType?.toUpperCase() || fileName.split(".").pop()?.toUpperCase() || "FILE";
+  const extension =
+    doc.fileType?.toUpperCase() ||
+    fileName.split(".").pop()?.toUpperCase() ||
+    "FILE";
 
   return (
     <div className="group flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/40">
@@ -36,7 +40,9 @@ function DocumentCard({ doc }) {
 
       {/* Date */}
       {doc.createdAt && (
-        <p className="text-xs text-muted-foreground">{formatDateTime(doc.createdAt)}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatDateTime(doc.createdAt)}
+        </p>
       )}
 
       {/* View link */}
@@ -68,16 +74,17 @@ function DocumentCardSkeleton() {
   );
 }
 
-export default function CaseDocuments({
-  caseId,
-  documents,
-  documentsLoading,
-  documentsError,
-  isUploading,
-  selectedFile,
-  onSelectFile,
-  onUploadConfirm,
-}) {
+export default function CaseDocuments() {
+  const {
+    caseId,
+    documents,
+    documentsLoading,
+    documentsError,
+    isUploading,
+    selectedFile,
+    handleSelectFile,
+    handleUploadDocumentConfirm,
+  } = useCaseContext();
   return (
     <AlertDialog>
       <div className="space-y-4">
@@ -141,8 +148,8 @@ export default function CaseDocuments({
 
       <UploadDocumentContent
         selectedFile={selectedFile}
-        onSelectFile={onSelectFile}
-        onConfirm={onUploadConfirm}
+        onSelectFile={handleSelectFile}
+        onConfirm={handleUploadDocumentConfirm}
         isUploading={isUploading}
       />
     </AlertDialog>

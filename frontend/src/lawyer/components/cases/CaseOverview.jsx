@@ -3,17 +3,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 
-export default function CaseOverview({
-  caseLoading,
-  caseError,
-  citizenName,
-  citizenEmail,
-  createdAtLabel,
-  summary,
-  normalizedStatus,
-  label,
-}) {
+export default function CaseOverview() {
+  const {
+    caseLoading,
+    caseError,
+    citizenName,
+    citizenEmail,
+    createdAtLabel,
+    summary,
+    normalizedStatus,
+    label,
+  } = useCaseContext();
   return (
     <div className="space-y-4">
       {/* Error */}
@@ -82,7 +84,6 @@ export default function CaseOverview({
       </div>
 
       <Separator />
-
 
       {/* Summary */}
       <div>

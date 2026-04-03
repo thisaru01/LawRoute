@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
 import {
@@ -20,6 +15,7 @@ import {
 import CaseOverview from "@/lawyer/components/cases/CaseOverview";
 import CaseMeetings from "@/lawyer/components/cases/CaseMeetings";
 import CaseDocuments from "@/lawyer/components/cases/CaseDocuments";
+import { CaseProvider } from "@/lawyer/components/cases/CaseContext";
 
 export default function LawyerCaseDetails() {
   const { status, caseId: caseIdFromParams } = useParams();
@@ -208,58 +204,88 @@ export default function LawyerCaseDetails() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="overview">
-        <TabsList variant="line">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="meetings">Meetings</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
+    <CaseProvider
+      value={useMemo(
+        () => ({
+          // Case
+          caseId,
+          caseDetails,
+          caseLoading,
+          caseError,
+          citizenName,
+          citizenEmail,
+          createdAtLabel,
+          summary,
+          normalizedStatus,
+          label,
+          // Meetings
+          meetings,
+          meetingsLoading,
+          meetingsError,
+          isScheduling,
+          scheduleForm,
+          timeOptions,
+          handleScheduleChange,
+          handleScheduleConfirm,
+          // Documents
+          documents,
+          documentsLoading,
+          documentsError,
+          isUploading,
+          selectedFile,
+          handleSelectFile,
+          handleUploadDocumentConfirm,
+        }),
+        [
+          caseId,
+          caseDetails,
+          caseLoading,
+          caseError,
+          citizenName,
+          citizenEmail,
+          createdAtLabel,
+          summary,
+          normalizedStatus,
+          label,
+          meetings,
+          meetingsLoading,
+          meetingsError,
+          isScheduling,
+          scheduleForm,
+          timeOptions,
+          documents,
+          documentsLoading,
+          documentsError,
+          isUploading,
+          selectedFile,
+        ],
+      )}
+    >
+      <div className="space-y-4">
+        <Tabs defaultValue="overview">
+          <TabsList variant="line">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="meetings">Meetings</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
 
-        <Card className="mt-4">
-          <CardContent className="pt-6">
-            <TabsContent value="overview">
-              <CaseOverview
-                caseLoading={caseLoading}
-                caseError={caseError}
-                citizenName={citizenName}
-                citizenEmail={citizenEmail}
-                createdAtLabel={createdAtLabel}
-                summary={summary}
-                normalizedStatus={normalizedStatus}
-                label={label}
-              />
-            </TabsContent>
+          <Card className="mt-4">
+            <CardContent className="pt-6">
+              <TabsContent value="overview">
+                <CaseOverview />
+              </TabsContent>
 
-            <TabsContent value="meetings">
-              <CaseMeetings
-                caseId={caseId}
-                meetings={meetings}
-                meetingsLoading={meetingsLoading}
-                meetingsError={meetingsError}
-                isScheduling={isScheduling}
-                scheduleForm={scheduleForm}
-                timeOptions={timeOptions}
-                onScheduleChange={handleScheduleChange}
-                onScheduleConfirm={handleScheduleConfirm}
-              />
-            </TabsContent>
+              <TabsContent value="meetings">
+                <CaseMeetings />
+              </TabsContent>
 
-            <TabsContent value="documents">
-              <CaseDocuments
-                caseId={caseId}
-                documents={documents}
-                documentsLoading={documentsLoading}
-                documentsError={documentsError}
-                isUploading={isUploading}
-                selectedFile={selectedFile}
-                onSelectFile={handleSelectFile}
-                onUploadConfirm={handleUploadDocumentConfirm}
-              />
-            </TabsContent>
-          </CardContent>
-        </Card>
-      </Tabs>
-    </div>
+              <TabsContent value="documents">
+                <CaseDocuments />
+              </TabsContent>
+            </CardContent>
+          </Card>
+        </Tabs>
+      </div>
+    </CaseProvider>
   );
 }

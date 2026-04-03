@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingContent";
 import { Separator } from "@/components/ui/separator";
+import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 
 function isPast(meeting) {
   if (!meeting.date) return false;
@@ -30,7 +31,9 @@ function MeetingCard({ meeting }) {
         <p className="font-semibold text-sm text-foreground leading-tight">
           {methodLabel} Meeting
         </p>
-        <Badge className={`${statusColor} shrink-0 text-[10px] uppercase tracking-wide`}>
+        <Badge
+          className={`${statusColor} shrink-0 text-[10px] uppercase tracking-wide`}
+        >
           {meeting.status || "scheduled"}
         </Badge>
       </div>
@@ -94,17 +97,18 @@ function MeetingCardSkeleton() {
   );
 }
 
-export default function CaseMeetings({
-  caseId,
-  meetings,
-  meetingsLoading,
-  meetingsError,
-  isScheduling,
-  scheduleForm,
-  timeOptions,
-  onScheduleChange,
-  onScheduleConfirm,
-}) {
+export default function CaseMeetings() {
+  const {
+    caseId,
+    meetings,
+    meetingsLoading,
+    meetingsError,
+    isScheduling,
+    scheduleForm,
+    timeOptions,
+    handleScheduleChange,
+    handleScheduleConfirm,
+  } = useCaseContext();
   const upcomingMeetings = meetings.filter((m) => !isPast(m));
   const pastMeetings = meetings.filter((m) => isPast(m));
 
@@ -118,7 +122,9 @@ export default function CaseMeetings({
               <CalendarPlus className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
-              <p className="font-semibold text-foreground">Schedule a Meeting</p>
+              <p className="font-semibold text-foreground">
+                Schedule a Meeting
+              </p>
               <p className="text-sm text-muted-foreground">
                 Set up an online or in-person meeting with your client.
               </p>
@@ -200,8 +206,8 @@ export default function CaseMeetings({
       {/* Dialog lives outside the cards so it can overlay the whole page */}
       <ScheduleMeetingContent
         scheduleForm={scheduleForm}
-        onChange={onScheduleChange}
-        onConfirm={onScheduleConfirm}
+        onChange={handleScheduleChange}
+        onConfirm={handleScheduleConfirm}
         isScheduling={isScheduling}
         timeOptions={timeOptions}
       />
