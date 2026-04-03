@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
 import {
@@ -12,6 +12,31 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   getCaseById,
   getCaseDocuments,
@@ -54,7 +79,7 @@ export default function LawyerCaseDetails() {
   const [documentsLoading, setDocumentsLoading] = useState(Boolean(caseId));
   const [documentsError, setDocumentsError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Fallbacks from navigation state while loading
   const fallbackCitizenName = navState.citizenName || "Citizen";
@@ -153,8 +178,27 @@ export default function LawyerCaseDetails() {
     setScheduleForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleScheduleSubmit = async (event) => {
-    event.preventDefault();
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    return d.toISOString().slice(0, 10);
+  };
+
+  const generateTimeOptions = (intervalMinutes = 30) => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += intervalMinutes) {
+        const hh = String(h).padStart(2, "0");
+        const mm = String(m).padStart(2, "0");
+        times.push(`${hh}:${mm}`);
+      }
+    }
+    return times;
+  };
+  const timeOptions = generateTimeOptions(30);
+
+  const handleScheduleConfirm = async () => {
     if (!caseId) return;
 
     setIsScheduling(true);
@@ -178,19 +222,18 @@ export default function LawyerCaseDetails() {
     }
   };
 
-  const handleTriggerUpload = () => {
-    if (!caseId || !fileInputRef.current) return;
-    fileInputRef.current.click();
+  const handleSelectFile = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
   };
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file || !caseId) return;
+  const handleUploadDocumentConfirm = async () => {
+    if (!caseId || !selectedFile) return;
 
     setIsUploading(true);
     try {
-      await uploadCaseDocument(caseId, file);
-      event.target.value = "";
+      await uploadCaseDocument(caseId, selectedFile);
+      setSelectedFile(null);
 
       const response = await getCaseDocuments(caseId);
       const list = response?.data?.data;
@@ -208,10 +251,6 @@ export default function LawyerCaseDetails() {
       <Card>
         <CardHeader>
           <CardTitle>Case details</CardTitle>
-          <CardDescription>
-            Overview of this case, including the summary and the citizen
-            involved.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           {caseError && (
@@ -221,13 +260,20 @@ export default function LawyerCaseDetails() {
           )}
 
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
-            <span>
-              <span className="font-medium text-foreground">Case ID: </span>
-              {caseId || "-"}
-            </span>
-            <span>
-              <span className="font-medium text-foreground">Status: </span>
-              {caseLoading ? "Loading..." : label}
+            <span className="flex items-center gap-2">
+              <span className="font-medium text-foreground">Status:</span>
+              {caseLoading ? (
+                <span>Loading...</span>
+              ) : (
+                <Badge
+                  variant={
+                    normalizedStatus === "closed" ? "secondary" : "default"
+                  }
+                  className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                >
+                  {label}
+                </Badge>
+              )}
             </span>
             {createdAtLabel && (
               <span>
@@ -243,10 +289,12 @@ export default function LawyerCaseDetails() {
             <p className="text-xs font-medium uppercase text-muted-foreground">
               Involved person
             </p>
-            <p className="text-foreground">
-              {citizenName}
-              {citizenEmail ? ` \\u2022 ${citizenEmail}` : ""}
-            </p>
+            <div className="space-y-0.5">
+              <p className="text-foreground">{citizenName}</p>
+              {citizenEmail && (
+                <p className="text-foreground">{citizenEmail}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -262,188 +310,289 @@ export default function LawyerCaseDetails() {
 
       {/* Upcoming meetings section */}
       <Card>
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle>Upcoming meetings</CardTitle>
-            <CardDescription>
-              See and schedule meetings for this case.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
-          {meetingsError && (
-            <p className="text-sm text-destructive">
-              {meetingsError.message || "Failed to load meetings"}
-            </p>
-          )}
-
-          <form
-            onSubmit={handleScheduleSubmit}
-            className="space-y-3 rounded-md border bg-muted/40 p-3 text-xs text-foreground"
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="meeting-date">Date</Label>
-                <Input
-                  id="meeting-date"
-                  type="date"
-                  value={scheduleForm.date}
-                  onChange={(e) => handleScheduleChange("date", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="meeting-time">Time</Label>
-                <Input
-                  id="meeting-time"
-                  type="time"
-                  value={scheduleForm.time}
-                  onChange={(e) => handleScheduleChange("time", e.target.value)}
-                  required
-                />
-              </div>
+        <AlertDialog>
+          <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Upcoming meetings</CardTitle>
+              <CardDescription>
+                See and schedule meetings for this case.
+              </CardDescription>
             </div>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" disabled={!caseId}>
+                Schedule meeting
+              </Button>
+            </AlertDialogTrigger>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            {meetingsError && (
+              <p className="text-sm text-destructive">
+                {meetingsError.message || "Failed to load meetings"}
+              </p>
+            )}
 
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="meeting-method">Method</Label>
-                <Input
-                  id="meeting-method"
-                  value={scheduleForm.method}
-                  onChange={(e) =>
-                    handleScheduleChange("method", e.target.value)
-                  }
-                  placeholder="online or physical"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="meeting-location-link">
-                  Meeting link or location
-                </Label>
-                <Input
-                  id="meeting-location-link"
-                  value={
-                    scheduleForm.method === "online"
-                      ? scheduleForm.meetingLink
-                      : scheduleForm.location
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (scheduleForm.method === "online") {
-                      handleScheduleChange("meetingLink", value);
-                    } else {
-                      handleScheduleChange("location", value);
+            {meetingsLoading ? (
+              <p>Loading meetings...</p>
+            ) : meetings.length === 0 ? (
+              <p>No meetings scheduled yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {meetings.map((meeting) => {
+                  const when = `${meeting.date} at ${meeting.time}`;
+                  const methodLabel =
+                    meeting.method === "physical" ? "In person" : "Online";
+                  const locationText =
+                    meeting.method === "physical"
+                      ? meeting.location
+                      : meeting.meetingLink;
+
+                  return (
+                    <li
+                      key={meeting._id}
+                      className="rounded-md border bg-background px-3 py-2"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium text-foreground">
+                          {when}
+                        </span>
+                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="uppercase tracking-wide">
+                            {methodLabel}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="px-1.5 py-0 text-[10px] uppercase tracking-wide"
+                          >
+                            {meeting.status || "scheduled"}
+                          </Badge>
+                        </span>
+                      </div>
+                      {locationText &&
+                        (meeting.method === "online" ? (
+                          <a
+                            href={locationText}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 block break-all text-xs text-primary underline underline-offset-2"
+                          >
+                            {locationText}
+                          </a>
+                        ) : (
+                          <p className="mt-1 text-xs">{locationText}</p>
+                        ))}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+
+          <AlertDialogContent size="lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Schedule meeting</AlertDialogTitle>
+              <AlertDialogDescription>
+                Choose date, time and method for this case.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-3 text-sm text-foreground">
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="meeting-date">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Input
+                        id="meeting-date"
+                        readOnly
+                        value={formatDateForInput(scheduleForm.date)}
+                        placeholder="Select date"
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          scheduleForm.date
+                            ? new Date(scheduleForm.date)
+                            : undefined
+                        }
+                        onSelect={(date) =>
+                          handleScheduleChange(
+                            "date",
+                            date ? date.toISOString().slice(0, 10) : "",
+                          )
+                        }
+                        className="p-2"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="meeting-time">Time</Label>
+                  <Select
+                    value={scheduleForm.time}
+                    onValueChange={(value) =>
+                      handleScheduleChange("time", value)
                     }
-                  }}
-                  placeholder="Video link for online, address for physical"
-                />
+                    required
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeOptions.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="meeting-method">Method</Label>
+                  <Select
+                    value={scheduleForm.method}
+                    onValueChange={(value) =>
+                      handleScheduleChange("method", value)
+                    }
+                    required
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="physical">Physical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="meeting-location-link">
+                    Meeting link or location
+                  </Label>
+                  <Input
+                    id="meeting-location-link"
+                    value={
+                      scheduleForm.method === "online"
+                        ? scheduleForm.meetingLink
+                        : scheduleForm.location
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (scheduleForm.method === "online") {
+                        handleScheduleChange("meetingLink", value);
+                      } else {
+                        handleScheduleChange("location", value);
+                      }
+                    }}
+                    placeholder="Video link for online, address for physical"
+                  />
+                </div>
               </div>
             </div>
 
-            <Button type="submit" size="sm" disabled={isScheduling || !caseId}>
-              {isScheduling ? "Scheduling..." : "Schedule meeting"}
-            </Button>
-          </form>
-
-          <Separator />
-
-          {meetingsLoading ? (
-            <p>Loading meetings...</p>
-          ) : meetings.length === 0 ? (
-            <p>No meetings scheduled yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {meetings.map((meeting) => {
-                const when = `${meeting.date} at ${meeting.time}`;
-                const methodLabel =
-                  meeting.method === "physical" ? "In person" : "Online";
-                const locationText =
-                  meeting.method === "physical"
-                    ? meeting.location
-                    : meeting.meetingLink;
-
-                return (
-                  <li
-                    key={meeting._id}
-                    className="rounded-md border bg-background px-3 py-2"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-medium text-foreground">
-                        {when}
-                      </span>
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                        {methodLabel} \\u2022 {meeting.status || "scheduled"}
-                      </span>
-                    </div>
-                    {locationText && (
-                      <p className="mt-1 text-xs">{locationText}</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleScheduleConfirm}
+                disabled={isScheduling || !caseId}
+              >
+                {isScheduling ? "Scheduling..." : "Schedule meeting"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
 
       {/* Documents section */}
       <Card>
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle>Documents</CardTitle>
-            <CardDescription>Documents attached to this case.</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <Button
-              size="sm"
-              onClick={handleTriggerUpload}
-              disabled={isUploading || !caseId}
-            >
-              {isUploading ? "Uploading..." : "Add document"}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          {documentsError && (
-            <p className="text-sm text-destructive">
-              {documentsError.message || "Failed to load documents"}
-            </p>
-          )}
+        <AlertDialog>
+          <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Documents</CardTitle>
+              <CardDescription>
+                Documents attached to this case.
+              </CardDescription>
+            </div>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" disabled={isUploading || !caseId}>
+                {isUploading ? "Uploading..." : "Add document"}
+              </Button>
+            </AlertDialogTrigger>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            {documentsError && (
+              <p className="text-sm text-destructive">
+                {documentsError.message || "Failed to load documents"}
+              </p>
+            )}
 
-          {documentsLoading ? (
-            <p>Loading documents...</p>
-          ) : documents.length === 0 ? (
-            <p>No documents attached yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {documents.map((doc) => (
-                <li
-                  key={doc._id}
-                  className="rounded-md border bg-background px-3 py-2"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium text-foreground">
-                      {doc.fileType}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDateTime(doc.createdAt)}
-                    </span>
-                  </div>
-                  <p className="mt-1 break-all text-xs text-muted-foreground">
-                    {doc.fileUrl}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
+            {documentsLoading ? (
+              <p>Loading documents...</p>
+            ) : documents.length === 0 ? (
+              <p>No documents attached yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {documents.map((doc) => (
+                  <li
+                    key={doc._id}
+                    className="rounded-md border bg-background px-3 py-2"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium text-foreground">
+                        {doc.fileType}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(doc.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1 break-all text-xs text-muted-foreground">
+                      {doc.fileUrl}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+
+          <AlertDialogContent size="lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Add document</AlertDialogTitle>
+              <AlertDialogDescription>
+                Choose a file to upload for this case.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-3 text-sm text-foreground">
+              <div className="space-y-1">
+                <Label htmlFor="document-file">File</Label>
+                <Input
+                  id="document-file"
+                  type="file"
+                  onChange={handleSelectFile}
+                />
+              </div>
+              {selectedFile && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {selectedFile.name}
+                </p>
+              )}
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleUploadDocumentConfirm}
+                disabled={isUploading || !caseId || !selectedFile}
+              >
+                {isUploading ? "Uploading..." : "Upload"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
     </div>
   );
