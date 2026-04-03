@@ -4,6 +4,8 @@ import User from "../../models/userModel.js";
 import { sendEmail } from "../email/emailService.js";
 import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const parseDateOnlyToUtcDate = (value) => {
     if (!value) {
         return null;
@@ -264,8 +266,65 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
 
 // Get all publicly visible civil issues (no auth required).
 // Reporter identity is intentionally excluded to preserve anonymity.
-export async function getPublicIssues() {
-    return CivilIssue.find({ isPublic: true })
-    .select("category subject district exactLocation postalAreaOrZip whatHappened whenItHappened impactOnPeople status createdAt")
-        .sort({ createdAt: -1 });
+export async function getPublicIssues({ category, district, location, postcode, page = 1, limit = 10 }) {
+    const baseQuery = { isPublic: true };
+
+    if (category) {
+        baseQuery.category = category;
+    }
+
+    if (district) {
+        baseQuery.district = district;
+    }
+
+    const selectedFields = "category subject district exactLocation postalAreaOrZip whatHappened whenItHappened impactOnPeople status createdAt";
+
+    const safePage = Math.max(Number(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    const skip = (safePage - 1) * safeLimit;
+
+    let effectiveQuery = { ...baseQuery };
+
+    if (postcode) {
+        const postcodeQuery = {
+            ...baseQuery,
+            postalAreaOrZip: { $regex: new RegExp(escapeRegex(postcode), "i") },
+        };
+
+        const postcodeCount = await CivilIssue.countDocuments(postcodeQuery);
+
+        if (postcodeCount > 0 || !location) {
+            effectiveQuery = postcodeQuery;
+        } else {
+            effectiveQuery = {
+                ...baseQuery,
+                exactLocation: { $regex: new RegExp(escapeRegex(location), "i") },
+            };
+        }
+    } else if (location) {
+        effectiveQuery = {
+            ...baseQuery,
+            exactLocation: { $regex: new RegExp(escapeRegex(location), "i") },
+        };
+    }
+
+    const total = await CivilIssue.countDocuments(effectiveQuery);
+    const items = await CivilIssue.find(effectiveQuery)
+        .select(selectedFields)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit);
+
+    const totalPages = total > 0 ? Math.ceil(total / safeLimit) : 0;
+
+    return {
+        items,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            total,
+            totalPages,
+            hasNextPage: safePage < totalPages,
+        },
+    };
 }

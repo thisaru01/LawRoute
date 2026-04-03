@@ -198,8 +198,27 @@ export const updateCivilIssueStatus = async (req, res, next) => {
 // Returns all publicly visible civil issues. No auth required.
 export const getPublicCivilIssues = async (req, res, next) => {
   try {
-    const issues = await civilIssueService.getPublicIssues();
-    res.status(200).json({ success: true, data: issues });
+    const category = typeof req.query.category === "string" ? req.query.category.trim() : "";
+    const district = typeof req.query.district === "string" ? req.query.district.trim() : "";
+    const location = typeof req.query.location === "string" ? req.query.location.trim() : "";
+    const postcode = typeof req.query.postcode === "string" ? req.query.postcode.trim() : "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result = await civilIssueService.getPublicIssues({
+      category: category || undefined,
+      district: district || undefined,
+      location: location || undefined,
+      postcode: postcode || undefined,
+      page,
+      limit,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result.items,
+      pagination: result.pagination,
+    });
   } catch (error) {
     next(error);
   }

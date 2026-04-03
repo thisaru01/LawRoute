@@ -6,37 +6,54 @@ import { useCountdownRedirect } from "@/citizen/components/civil-issues/hooks/us
 const MAX_SUBJECT_LENGTH = 120;
 const MAX_FILES = 5;
 const MAX_FILE_SIZE_MB = 5;
+const POSTCODE_PATTERN = /^\d{5}$/;
+const CONTACT_NUMBER_PATTERN = /^\d{10}$/;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const isFilled = (value) => typeof value === "string" && value.trim().length > 0;
+
+const isValidDateOnly = (value) => {
+  if (!isFilled(value) || !DATE_ONLY_PATTERN.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  return parsed.toISOString().slice(0, 10) === value;
+};
 
 const getFieldErrors = (data) => ({
   category: !isFilled(data.category) ? "Please select a category." : "",
   subject: !isFilled(data.subject) ? "Please enter a subject." : "",
   district: !isFilled(data.district) ? "Please select a district." : "",
-  exactLocation: !isFilled(data.exactLocation) ? "Please enter the town or village." : "",
-  postalAreaOrZip: !isFilled(data.postalAreaOrZip) ? "Please enter the postal area or zip code." : "",
+  exactLocation: !isFilled(data.exactLocation)
+    ? "Please enter the town or village."
+    : !data.exactLocationSelected
+      ? "Please select a location from suggestions."
+      : "",
+  postalAreaOrZip: !isFilled(data.postalAreaOrZip)
+    ? "Please enter the postal area or zip code."
+    : !POSTCODE_PATTERN.test(data.postalAreaOrZip)
+      ? "Postal area or ZIP must be exactly 5 digits."
+      : "",
   whatHappened: !isFilled(data.whatHappened) ? "Please describe what happened." : "",
-  whenItHappened: !isFilled(data.whenItHappened) ? "Please select when it happened." : "",
+  whenItHappened: !isFilled(data.whenItHappened)
+    ? "Please select when it happened."
+    : !isValidDateOnly(data.whenItHappened)
+      ? "Please select a valid incident date."
+      : "",
   impactOnPeople: !isFilled(data.impactOnPeople) ? "Please explain how it affects people." : "",
-  contactNumber: !isFilled(data.contactNumber) ? "Please provide a contact number." : "",
+  contactNumber: !isFilled(data.contactNumber)
+    ? "Please provide a contact number."
+    : !CONTACT_NUMBER_PATTERN.test(data.contactNumber)
+      ? "Contact number must be exactly 10 digits."
+      : "",
 });
 
 const hasAnyFieldError = (errors) => Object.values(errors).some(Boolean);
-
-const reportFirstInvalidTypingField = (formElement) => {
-  if (!formElement) {
-    return;
-  }
-
-  const typingFields = formElement.querySelectorAll("input[required], textarea[required]");
-
-  for (const field of typingFields) {
-    if (!field.checkValidity()) {
-      field.reportValidity();
-      break;
-    }
-  }
-};
 
 export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
   const [formData, setFormData] = useState({
@@ -44,6 +61,7 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
     subject: "",
     district: "",
     exactLocation: "",
+    exactLocationSelected: false,
     postalAreaOrZip: "",
     whatHappened: "",
     whenItHappened: "",
@@ -73,11 +91,12 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
     isFilled(formData.subject) &&
     isFilled(formData.district) &&
     isFilled(formData.exactLocation) &&
-    isFilled(formData.postalAreaOrZip) &&
+    formData.exactLocationSelected &&
+    POSTCODE_PATTERN.test(formData.postalAreaOrZip) &&
     isFilled(formData.whatHappened) &&
-    isFilled(formData.whenItHappened) &&
+    isValidDateOnly(formData.whenItHappened) &&
     isFilled(formData.impactOnPeople) &&
-    isFilled(formData.contactNumber);
+    CONTACT_NUMBER_PATTERN.test(formData.contactNumber);
 
   const fieldErrors = getFieldErrors(formData);
   const showValidationErrors = submitAttempted;
@@ -87,8 +106,7 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
     setSubmitAttempted(true);
 
     if (hasAnyFieldError(fieldErrors)) {
-      setError("Please fill in all required fields.");
-      reportFirstInvalidTypingField(e.currentTarget);
+      setError("Please review the highlighted fields and correct the invalid values.");
       return;
     }
 

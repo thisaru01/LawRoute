@@ -18,8 +18,8 @@ export const getMyCivilIssues = () => {
 /**
  * Get all publicly shared civil issues (No auth required).
  */
-export const getPublicCivilIssues = () => {
-  return axios.get("/civil-issues/public");
+export const getPublicCivilIssues = (params = {}) => {
+  return axios.get("/civil-issues/public", { params });
 };
 
 /**

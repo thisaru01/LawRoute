@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,12 +7,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSriLankaLocationAutocomplete } from "@/hooks/useSriLankaLocationAutocomplete";
 
 const MAX_EXACT_LOCATION_LENGTH = 180;
-const MAX_POSTAL_AREA_LENGTH = 60;
+const MAX_POSTAL_AREA_LENGTH = 5;
 const MAX_WHAT_HAPPENED_LENGTH = 1200;
 const MAX_IMPACT_LENGTH = 1200;
-const MAX_CONTACT_LENGTH = 20;
+const MAX_CONTACT_LENGTH = 10;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const parseDateOnly = (value) => {
@@ -69,14 +71,44 @@ function DetailFieldCard({ label, helperText, required = false, counter, error =
 }
 
 export default function CivilIssueReportDetailsSection({ value, onChange, errors = {} }) {
+  const { suggestions, loading, error: locationSuggestionError } = useSriLankaLocationAutocomplete({
+    query: value.exactLocation,
+  });
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+
   const setField = (field) => (event) => {
     const nextValue = event.target.value;
-    onChange((prev) => ({ ...prev, [field]: nextValue }));
+    onChange((prev) => ({
+      ...prev,
+      [field]: nextValue,
+      ...(field === "exactLocation" ? { exactLocationSelected: false } : {}),
+    }));
+
+    if (field === "exactLocation") {
+      setShowLocationSuggestions(true);
+    }
   };
 
   const setTextareaField = (field) => (event) => {
     const nextValue = event.target.value;
     onChange((prev) => ({ ...prev, [field]: nextValue }));
+  };
+
+  const setDigitsField = (field, maxLength) => (event) => {
+    const nextValue = event.target.value.replace(/\D/g, "").slice(0, maxLength);
+    onChange((prev) => ({ ...prev, [field]: nextValue }));
+  };
+
+  const hasLocationSuggestions = showLocationSuggestions && suggestions.length > 0;
+
+  const applyLocationSuggestion = (item) => {
+    onChange((prev) => ({
+      ...prev,
+      exactLocation: item.locationName || prev.exactLocation,
+      postalAreaOrZip: item.postcode || prev.postalAreaOrZip,
+      exactLocationSelected: true,
+    }));
+    setShowLocationSuggestions(false);
   };
 
   return (
@@ -96,31 +128,89 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
           counter={`${value.exactLocation.length}/${MAX_EXACT_LOCATION_LENGTH}`}
           error={errors.exactLocation}
         >
-          <Input
-            value={value.exactLocation}
-            onChange={setField("exactLocation")}
-            maxLength={MAX_EXACT_LOCATION_LENGTH}
-            placeholder="e.g., Kadawatha"
-            className="h-11 text-sm"
-            aria-invalid={Boolean(errors.exactLocation)}
-            required
-          />
+          <div className="relative">
+            <Input
+              value={value.exactLocation}
+              onChange={setField("exactLocation")}
+              onFocus={() => setShowLocationSuggestions(true)}
+              onBlur={() => {
+                // Allow suggestion click handlers to run before closing.
+                setTimeout(() => setShowLocationSuggestions(false), 120);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  setShowLocationSuggestions(false);
+                }
+              }}
+              maxLength={MAX_EXACT_LOCATION_LENGTH}
+              placeholder="Type town or area to search suggestions"
+              className="h-11 text-sm"
+              aria-invalid={Boolean(errors.exactLocation)}
+              required
+            />
+
+            {loading ? (
+              <p className="mt-2 text-xs text-slate-500">Loading location suggestions...</p>
+            ) : null}
+
+            {locationSuggestionError ? (
+              <p className="mt-2 text-xs text-amber-600">{locationSuggestionError}</p>
+            ) : null}
+
+            {value.exactLocation && !value.exactLocationSelected ? (
+              <p className="mt-2 text-xs text-amber-600">
+                Select a suggestion to confirm this location.
+              </p>
+            ) : null}
+
+            {hasLocationSuggestions ? (
+              <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
+                <ul className="max-h-60 overflow-auto py-1">
+                  {suggestions.map((item, index) => (
+                    <li key={`${item.formatted}-${index}`}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left transition-colors hover:bg-slate-50"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          applyLocationSuggestion(item);
+                        }}
+                        onClick={() => applyLocationSuggestion(item)}
+                      >
+                        <p className="text-sm font-medium text-slate-800">
+                          {item.locationName}
+                          {item.postcode ? ` (${item.postcode})` : ""}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {item.district || item.formatted}
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
         </DetailFieldCard>
 
         <DetailFieldCard
           label="Postal area or zip code"
-          helperText="District is selected above. Add the nearest postal area or zip code here."
+          helperText="Enter exactly 5 digits."
           required
           counter={`${value.postalAreaOrZip.length}/${MAX_POSTAL_AREA_LENGTH}`}
           error={errors.postalAreaOrZip}
         >
           <Input
             value={value.postalAreaOrZip}
-            onChange={setField("postalAreaOrZip")}
+            onChange={setDigitsField("postalAreaOrZip", MAX_POSTAL_AREA_LENGTH)}
             maxLength={MAX_POSTAL_AREA_LENGTH}
-            placeholder="e.g., Colombo 07 / 00700"
+            placeholder="e.g., 11856"
             className="h-11 text-sm"
             aria-invalid={Boolean(errors.postalAreaOrZip)}
+            inputMode="numeric"
+            pattern="[0-9]{5}"
+            title="Postal area or ZIP must be exactly 5 digits."
             required
           />
         </DetailFieldCard>
@@ -205,20 +295,23 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
 
         <DetailFieldCard
           label="Contact number"
-          helperText="This is kept for authority follow-up and is not shown in the public feed."
+          helperText="Enter exactly 10 digits. This is kept for authority follow-up and is not shown in the public feed."
           required
           counter={`${value.contactNumber.length}/${MAX_CONTACT_LENGTH}`}
           error={errors.contactNumber}
         >
           <Input
             value={value.contactNumber}
-            onChange={setField("contactNumber")}
+            onChange={setDigitsField("contactNumber", MAX_CONTACT_LENGTH)}
             maxLength={MAX_CONTACT_LENGTH}
-            placeholder="e.g., 07X XXX XXXX"
+            placeholder="e.g., 0771234567"
             className="h-11 text-sm"
-            inputMode="tel"
+            type="tel"
+            inputMode="numeric"
             autoComplete="tel"
             aria-invalid={Boolean(errors.contactNumber)}
+            pattern="[0-9]{10}"
+            title="Contact number must be exactly 10 digits."
             required
           />
         </DetailFieldCard>

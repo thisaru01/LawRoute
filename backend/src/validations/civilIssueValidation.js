@@ -2,6 +2,8 @@ import { CIVIL_ISSUE_CATEGORIES, CIVIL_ISSUE_STATUSES } from "../constants/civil
 
 const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const POSTCODE_PATTERN = /^\d{5}$/;
+const CONTACT_NUMBER_PATTERN = /^\d{10}$/;
 
 const isValidDateOnly = (value) => {
     if (!isNonEmptyString(value) || !DATE_ONLY_PATTERN.test(value)) {
@@ -73,10 +75,10 @@ export const validateSubmitCivilIssue = (req, res, next) => {
         });
     }
 
-    if (!isNonEmptyString(postalAreaOrZip)) {
+    if (!isNonEmptyString(postalAreaOrZip) || !POSTCODE_PATTERN.test(postalAreaOrZip.trim())) {
         return res.status(400).json({
             success: false,
-            message: "postalAreaOrZip must be a non-empty string.",
+            message: "postalAreaOrZip must be exactly 5 digits.",
         });
     }
 
@@ -101,10 +103,10 @@ export const validateSubmitCivilIssue = (req, res, next) => {
         });
     }
 
-    if (!isNonEmptyString(contactNumber) || contactNumber.length > 20) {
+    if (!isNonEmptyString(contactNumber) || !CONTACT_NUMBER_PATTERN.test(contactNumber.trim())) {
         return res.status(400).json({
             success: false,
-            message: "contactNumber must be a non-empty string up to 20 characters.",
+            message: "contactNumber must be exactly 10 digits.",
         });
     }
 
@@ -192,10 +194,13 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         });
     }
 
-    if (postalAreaOrZip !== undefined && !isNonEmptyString(postalAreaOrZip)) {
+    if (
+        postalAreaOrZip !== undefined
+        && (!isNonEmptyString(postalAreaOrZip) || !POSTCODE_PATTERN.test(postalAreaOrZip.trim()))
+    ) {
         return res.status(400).json({
             success: false,
-            message: "postalAreaOrZip must be a non-empty string.",
+            message: "postalAreaOrZip must be exactly 5 digits.",
         });
     }
 
@@ -220,10 +225,13 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         });
     }
 
-    if (contactNumber !== undefined && (!isNonEmptyString(contactNumber) || contactNumber.length > 20)) {
+    if (
+        contactNumber !== undefined
+        && (!isNonEmptyString(contactNumber) || !CONTACT_NUMBER_PATTERN.test(contactNumber.trim()))
+    ) {
         return res.status(400).json({
             success: false,
-            message: "contactNumber must be a non-empty string up to 20 characters.",
+            message: "contactNumber must be exactly 10 digits.",
         });
     }
 

@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar.jsx";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Paperclip, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import IssueCard from "@/public/civil-issues/components/IssueCard.jsx";
 import IssueFilters from "@/public/civil-issues/components/IssueFilters.jsx";
 import EmptyState from "@/public/civil-issues/components/EmptyState.jsx";
@@ -18,15 +19,23 @@ export default function PublicCivilIssuesPage() {
     fetchIssues,
     filterCategory,
     filterDistrict,
+    hasNextPage,
+    handleLocationQueryChange,
+    handleLocationSelect,
     handleClearFilters,
     handleCloseForm,
     handleStartSubmission,
+    loadNextPage,
     loading,
+    loadingMore,
+    locationQuery,
     openIssues,
+    page,
     setFilterCategory,
     setFilterDistrict,
     setOpenIssues,
     showForm,
+    totalPages,
   } = usePublicCivilIssuesPage();
 
   return (
@@ -36,7 +45,7 @@ export default function PublicCivilIssuesPage() {
       <main>
         <section className="bg-slate-50 py-12 sm:py-16 lg:py-20 border-b border-slate-200">
           <div className="max-w-5xl mx-auto px-4 space-y-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Community Issues Feed</h2>
                 <p className="text-sm sm:text-base text-slate-500">Explore concerns shared by fellow citizens across Sri Lanka.</p>
@@ -47,8 +56,11 @@ export default function PublicCivilIssuesPage() {
                 districts={DISTRICTS}
                 selectedCategory={filterCategory}
                 selectedDistrict={filterDistrict}
+                locationQuery={locationQuery}
                 onCategoryChange={setFilterCategory}
                 onDistrictChange={setFilterDistrict}
+                onLocationQueryChange={handleLocationQueryChange}
+                onLocationSelect={handleLocationSelect}
               />
             </div>
 
@@ -74,20 +86,40 @@ export default function PublicCivilIssuesPage() {
                   <p className="mt-4 text-slate-500">Loading community issues...</p>
                 </div>
               ) : filteredIssues.length > 0 ? (
-                filteredIssues.map((issue) => {
-                  const isOpen = Boolean(openIssues[issue._id]);
-                  return (
-                    <IssueCard
-                      key={issue._id}
-                      issue={issue}
-                      isOpen={isOpen}
-                      onToggle={(nextOpen) =>
-                        setOpenIssues((prev) => ({ ...prev, [issue._id]: nextOpen }))
-                      }
-                      categoryLabels={CATEGORY_LABELS}
-                    />
-                  );
-                })
+                <>
+                  {filteredIssues.map((issue) => {
+                    const isOpen = Boolean(openIssues[issue._id]);
+                    return (
+                      <IssueCard
+                        key={issue._id}
+                        issue={issue}
+                        isOpen={isOpen}
+                        onToggle={(nextOpen) =>
+                          setOpenIssues((prev) => ({ ...prev, [issue._id]: nextOpen }))
+                        }
+                        categoryLabels={CATEGORY_LABELS}
+                      />
+                    );
+                  })}
+
+                  <div className="flex flex-col items-center gap-3 pt-2">
+                    {totalPages > 0 ? (
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                        Page {page} of {totalPages}
+                      </p>
+                    ) : null}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={loadNextPage}
+                      disabled={!hasNextPage || loadingMore}
+                      className="h-11 min-w-40"
+                    >
+                      {loadingMore ? "Loading..." : hasNextPage ? "Next page" : "No more issues"}
+                    </Button>
+                  </div>
+                </>
               ) : (
                 <EmptyState
                   onClearFilters={handleClearFilters}
