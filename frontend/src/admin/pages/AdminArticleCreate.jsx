@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import axios from "@/api/axios";
 
-const CATEGORIES = ["Property", "Politics", "Business", "Technology", "General"];
+// categories will be fetched from the backend model
+const DEFAULT_CATEGORIES = ["Family", "Property", "Work", "Consumer", "Finance"];
 
 export default function AdminArticleCreate() {
   const [title, setTitle] = useState("");
@@ -22,6 +24,8 @@ export default function AdminArticleCreate() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const navigate = useNavigate();
 
   const handleFile = (e, setter) => {
     const f = e.target.files && e.target.files[0];
@@ -47,17 +51,33 @@ export default function AdminArticleCreate() {
       setSubmitting(true);
       await axios.post("/articles", form);
       setSuccess("Article created successfully");
-      setTitle("");
-      setContent("");
-      setCategory("");
-      setImage(null);
-      setImageCard(null);
+      // Redirect to admin pending articles so the new article appears under "Own"
+      navigate("/admin/articles/pending");
     } catch (err) {
       setError(err?.message || "Failed to create article");
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/articles/categories");
+        if (!mounted) return;
+        setCategories(res?.data?.categories || []);
+      } catch (err) {
+        // silently ignore; keep categories empty
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -96,17 +116,21 @@ export default function AdminArticleCreate() {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent className="w-full">
-                    {CATEGORIES.map((c) => (
-                      <DropdownMenuItem
-                        key={c}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          setCategory(c);
-                        }}
-                      >
-                        {c}
-                      </DropdownMenuItem>
-                    ))}
+                    {categories.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">No categories</div>
+                    ) : (
+                      categories.map((c) => (
+                        <DropdownMenuItem
+                          key={c}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setCategory(c);
+                          }}
+                        >
+                          {c}
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </Field>
