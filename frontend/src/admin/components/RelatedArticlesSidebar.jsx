@@ -1,43 +1,73 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { getPendingOthersArticles, getMyArticles } from "@/api/services/articleService";
+import { useAuth } from "@/context/auth/useAuth";
+import {
+  getPendingOthersArticles,
+  getMyArticles,
+  getPublishedArticles,
+  getArticlesByStatus,
+} from "@/api/services/articleService";
 
-export default function RelatedArticlesSidebar({ currentArticleId, status = "pending" }) {
+export default function RelatedArticlesSidebar({
+  currentArticleId,
+  status = "pending",
+  ownerScope = "others", // 'own' | 'others'
+}) {
   const [related, setRelated] = useState([]);
+  const { userId } = useAuth();
 
   const fetchRelated = useCallback(async () => {
     if (!currentArticleId) return;
 
     try {
-      const res = await getPendingOthersArticles();
-      const items = res?.data?.articles || res?.data || [];
+      let res;
+      let items = [];
+      const normalizedStatus = String(status || "pending").toLowerCase();
+
+      if (normalizedStatus === "pending") {
+        if (ownerScope === "others") {
+          res = await getPendingOthersArticles();
+          items = res?.data?.articles || res?.data || [];
+        } else {
+          res = await getMyArticles();
+          const all = res?.data?.articles || res?.data || [];
+          items = all.filter(
+            (a) => String(a.status || "").toLowerCase() === "pending",
+          );
+        }
+      } else if (normalizedStatus === "published") {
+        res = await getPublishedArticles();
+        items = res?.data?.articles || res?.data || [];
+      } else if (normalizedStatus === "rejected") {
+        res = await getArticlesByStatus("rejected");
+        items = res?.data?.articles || res?.data || [];
+      }
+
+      if (!items.length) {
+        setRelated([]);
+        return;
+      }
+
+      // For published/rejected, and pending fetched via generic lists, split by ownerScope
+      if (normalizedStatus !== "pending" || ownerScope === "own") {
+        items = items.filter((a) => {
+          const authorId = a?.author?._id ?? a?.author;
+          if (!authorId || !userId) return ownerScope === "others";
+          const isOwn = String(authorId) === String(userId);
+          return ownerScope === "own" ? isOwn : !isOwn;
+        });
+      }
+
       const filtered = items
         .filter((a) => String(a._id || a.id) !== String(currentArticleId))
         .slice(0, 6);
-      if (filtered.length > 0) {
-        setRelated(filtered);
-        return;
-      }
-    } catch (e) {
-      // ignore and fall back
-    }
 
-    try {
-      const res2 = await getMyArticles();
-      const items2 = res2?.data?.articles || res2?.data || [];
-      const pending = items2
-        .filter(
-          (a) =>
-            a.status === "pending" &&
-            String(a._id || a.id) !== String(currentArticleId),
-        )
-        .slice(0, 6);
-      setRelated(pending);
+      setRelated(filtered);
     } catch (e) {
-      // ignore
+      setRelated([]);
     }
-  }, [currentArticleId]);
+  }, [currentArticleId, status, ownerScope, userId]);
 
   useEffect(() => {
     fetchRelated();

@@ -20,10 +20,15 @@ export const updateArticleStatus = (id, status) => {
   return axios.patch(`/articles/${id}/status`, { status });
 };
 
+export const getArticlesByStatus = (status) => {
+  return axios.get("/articles", { params: { status } });
+};
+
 export default {
   getPendingOthersArticles,
   getMyArticles,
   getArticle,
   getPublishedArticles,
   updateArticleStatus,
+  getArticlesByStatus,
 };

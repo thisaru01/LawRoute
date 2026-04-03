@@ -5,8 +5,10 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth/useAuth";
 import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
 
+const allowedStatuses = new Set(["pending", "published", "rejected"]);
+
 export default function AdminArticleView() {
-  const { id } = useParams();
+  const { id, status: routeStatus } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,15 @@ export default function AdminArticleView() {
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!article) return <div className="p-6">Article not found.</div>;
+
+  const normalizedRouteStatus = String(routeStatus || "pending").toLowerCase();
+  const sidebarStatus = allowedStatuses.has(normalizedRouteStatus)
+    ? normalizedRouteStatus
+    : "pending";
+
+  const authorId = article?.author?._id ?? article?.author;
+  const isAuthor = authorId && String(authorId) === String(userId);
+  const ownerScope = isAuthor ? "own" : "others";
 
   const handleChangeStatus = async (nextStatus) => {
     if (!article?._id && !article?.id) return;
@@ -119,8 +130,6 @@ export default function AdminArticleView() {
 
         <div className="flex items-center gap-2">
           {(() => {
-            const authorId = article?.author?._id ?? article?.author;
-            const isAuthor = authorId && String(authorId) === String(userId);
             if (isAuthor) {
               return (
                 <>
@@ -191,7 +200,11 @@ export default function AdminArticleView() {
       )}
         </div>
 
-        <RelatedArticlesSidebar currentArticleId={article._id} status="pending" />
+        <RelatedArticlesSidebar
+          currentArticleId={article._id}
+          status={sidebarStatus}
+          ownerScope={ownerScope}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getMyArticles, getPendingOthersArticles, getPublishedArticles } from "@/api/services/articleService";
+import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArticlesByStatus } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/PendingArticleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth/useAuth";
@@ -56,6 +56,16 @@ export default function AdminArticles() {
             const isOwn = String(authorId) === String(userId);
             return tab === "own" ? isOwn : !isOwn;
           });
+        } else if (safeStatus === "rejected") {
+          // All rejected articles via /articles?status=rejected; split own vs others
+          res = await getArticlesByStatus("rejected");
+          const all = res?.data?.articles || [];
+          list = all.filter((a) => {
+            const authorId = a?.author?._id ?? a?.author;
+            if (!authorId || !userId) return tab === "others";
+            const isOwn = String(authorId) === String(userId);
+            return tab === "own" ? isOwn : !isOwn;
+          });
         } else {
           list = [];
         }
@@ -101,7 +111,11 @@ export default function AdminArticles() {
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((a) => (
-            <PendingArticleCard key={a._id || a.id} article={a} />
+            <PendingArticleCard
+              key={a._id || a.id}
+              article={a}
+              status={safeStatus}
+            />
           ))}
         </div>
       </div>
