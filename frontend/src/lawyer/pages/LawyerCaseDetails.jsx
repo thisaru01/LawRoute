@@ -10,33 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import ScheduleMeetingContent from "@/lawyer/components/ScheduleMeetingContent";
+import UploadDocumentContent from "@/lawyer/components/UploadDocumentContent";
 import {
   getCaseById,
   getCaseDocuments,
@@ -45,19 +23,19 @@ import {
   uploadCaseDocument,
 } from "@/api/services/caseService";
 
-const formatDateTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString();
-};
-
 export default function LawyerCaseDetails() {
   const { status, caseId: caseIdFromParams } = useParams();
   const location = useLocation();
 
   const navState = location.state || {};
   const caseId = caseIdFromParams || navState.caseId;
+
+  const formatDateTime = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString();
+  };
 
   const [caseDetails, setCaseDetails] = useState(null);
   const [caseLoading, setCaseLoading] = useState(Boolean(caseId));
@@ -176,13 +154,6 @@ export default function LawyerCaseDetails() {
 
   const handleScheduleChange = (field, value) => {
     setScheduleForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const formatDateForInput = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime())) return dateStr;
-    return d.toISOString().slice(0, 10);
   };
 
   const generateTimeOptions = (intervalMinutes = 30) => {
@@ -387,123 +358,13 @@ export default function LawyerCaseDetails() {
             )}
           </CardContent>
 
-          <AlertDialogContent size="lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Schedule meeting</AlertDialogTitle>
-              <AlertDialogDescription>
-                Choose date, time and method for this case.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <div className="space-y-3 text-sm text-foreground">
-              <div className="grid gap-2 md:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="meeting-date">Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Input
-                        id="meeting-date"
-                        readOnly
-                        value={formatDateForInput(scheduleForm.date)}
-                        placeholder="Select date"
-                      />
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          scheduleForm.date
-                            ? new Date(scheduleForm.date)
-                            : undefined
-                        }
-                        onSelect={(date) =>
-                          handleScheduleChange(
-                            "date",
-                            date ? date.toISOString().slice(0, 10) : "",
-                          )
-                        }
-                        className="p-2"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="meeting-time">Time</Label>
-                  <Select
-                    value={scheduleForm.time}
-                    onValueChange={(value) =>
-                      handleScheduleChange("time", value)
-                    }
-                    required
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timeOptions.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-2 md:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="meeting-method">Method</Label>
-                  <Select
-                    value={scheduleForm.method}
-                    onValueChange={(value) =>
-                      handleScheduleChange("method", value)
-                    }
-                    required
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="physical">Physical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="meeting-location-link">
-                    Meeting link or location
-                  </Label>
-                  <Input
-                    id="meeting-location-link"
-                    value={
-                      scheduleForm.method === "online"
-                        ? scheduleForm.meetingLink
-                        : scheduleForm.location
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (scheduleForm.method === "online") {
-                        handleScheduleChange("meetingLink", value);
-                      } else {
-                        handleScheduleChange("location", value);
-                      }
-                    }}
-                    placeholder="Video link for online, address for physical"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleScheduleConfirm}
-                disabled={isScheduling || !caseId}
-              >
-                {isScheduling ? "Scheduling..." : "Schedule meeting"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <ScheduleMeetingContent
+            scheduleForm={scheduleForm}
+            onChange={handleScheduleChange}
+            onConfirm={handleScheduleConfirm}
+            isScheduling={isScheduling}
+            timeOptions={timeOptions}
+          />
         </AlertDialog>
       </Card>
 
@@ -558,40 +419,12 @@ export default function LawyerCaseDetails() {
             )}
           </CardContent>
 
-          <AlertDialogContent size="lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Add document</AlertDialogTitle>
-              <AlertDialogDescription>
-                Choose a file to upload for this case.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <div className="space-y-3 text-sm text-foreground">
-              <div className="space-y-1">
-                <Label htmlFor="document-file">File</Label>
-                <Input
-                  id="document-file"
-                  type="file"
-                  onChange={handleSelectFile}
-                />
-              </div>
-              {selectedFile && (
-                <p className="text-xs text-muted-foreground">
-                  Selected: {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleUploadDocumentConfirm}
-                disabled={isUploading || !caseId || !selectedFile}
-              >
-                {isUploading ? "Uploading..." : "Upload"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <UploadDocumentContent
+            selectedFile={selectedFile}
+            onSelectFile={handleSelectFile}
+            onConfirm={handleUploadDocumentConfirm}
+            isUploading={isUploading}
+          />
         </AlertDialog>
       </Card>
     </div>
