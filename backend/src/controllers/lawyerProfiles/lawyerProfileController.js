@@ -1,4 +1,5 @@
 import {
+  findApprovedLawyerProfiles,
   findAllLawyerProfiles,
   findLawyerProfileByUser,
   findLawyerProfilesForAdmin,
@@ -10,6 +11,21 @@ import {
 export const getAllLawyerProfiles = async (req, res, next) => {
   try {
     const lawyerProfiles = await findAllLawyerProfiles();
+
+    return res.status(200).json({
+      success: true,
+      count: lawyerProfiles.length,
+      lawyerProfiles,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get approved lawyer profiles for public browsing.
+export const getApprovedLawyerProfiles = async (req, res, next) => {
+  try {
+    const lawyerProfiles = await findApprovedLawyerProfiles();
 
     return res.status(200).json({
       success: true,

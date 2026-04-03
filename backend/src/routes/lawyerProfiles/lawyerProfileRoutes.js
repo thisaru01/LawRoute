@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  getApprovedLawyerProfiles,
   getAllLawyerProfiles,
   getLawyerProfilesForAdmin,
   getMyLawyerProfile,
@@ -17,6 +18,9 @@ const router = express.Router();
 
 // Get all lawyer profiles with details
 router.get("/", getAllLawyerProfiles);
+
+// Get approved lawyer profiles with details
+router.get("/approved", getApprovedLawyerProfiles);
 
 // Get logged-in lawyer profile
 router.get("/me", protect, authorizeRoles("lawyer"), getMyLawyerProfile);

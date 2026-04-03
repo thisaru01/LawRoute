@@ -334,6 +334,24 @@ export const findAllLawyerProfiles = async () => {
   return lawyerProfiles.map(mapLawyerProfileResponse);
 };
 
+// Return only approved lawyer profiles for public listing.
+export const findApprovedLawyerProfiles = async () => {
+  const lawyerProfiles = await LawyerProfile.find({
+    verificationStatus: "approved",
+  })
+    .populate({
+      path: "user",
+      select: "name email role profilePhoto",
+      match: { role: "lawyer" },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return lawyerProfiles
+    .filter((lawyerProfile) => Boolean(lawyerProfile.user))
+    .map(mapLawyerProfileResponse);
+};
+
 // Return lawyer profiles for admin review, optionally filtered by verification status.
 export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) => {
   if (
