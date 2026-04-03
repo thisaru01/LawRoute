@@ -1,5 +1,8 @@
+import { FilePlus, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
 
@@ -9,6 +12,61 @@ const formatDateTime = (value) => {
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString();
 };
+
+function DocumentCard({ doc }) {
+  const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
+  const extension = doc.fileType?.toUpperCase() || fileName.split(".").pop()?.toUpperCase() || "FILE";
+
+  return (
+    <div className="group flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/40">
+      {/* Icon + extension */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
+          <FileText className="h-5 w-5 text-primary" />
+        </div>
+        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {extension}
+        </span>
+      </div>
+
+      {/* File name */}
+      <p className="text-sm font-medium text-foreground leading-snug break-words line-clamp-2">
+        {fileName}
+      </p>
+
+      {/* Date */}
+      {doc.createdAt && (
+        <p className="text-xs text-muted-foreground">{formatDateTime(doc.createdAt)}</p>
+      )}
+
+      {/* View link */}
+      {doc.fileUrl && (
+        <a
+          href={doc.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto flex items-center gap-1 text-xs text-primary underline underline-offset-2 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <ExternalLink className="h-3 w-3" />
+          View file
+        </a>
+      )}
+    </div>
+  );
+}
+
+function DocumentCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <Skeleton className="h-10 w-10 rounded-md" />
+        <Skeleton className="h-4 w-10" />
+      </div>
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
+    </div>
+  );
+}
 
 export default function CaseDocuments({
   caseId,
@@ -23,83 +81,62 @@ export default function CaseDocuments({
   return (
     <AlertDialog>
       <div className="space-y-4">
-        {/* Header row */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-foreground">
-              Documents
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Documents attached to this case.
-            </p>
-          </div>
-          <AlertDialogTrigger asChild>
-            <Button size="sm" disabled={isUploading || !caseId}>
-              {isUploading ? "Uploading..." : "Add document"}
-            </Button>
-          </AlertDialogTrigger>
+        {/* Add Documents Banner */}
+        <div>
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <FilePlus className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-semibold text-foreground">Add Documents</p>
+              <p className="text-sm text-muted-foreground">
+                Upload files relevant to this case for easy access.
+              </p>
+            </div>
+            <AlertDialogTrigger asChild>
+              <Button disabled={isUploading || !caseId} className="gap-2">
+                <FilePlus className="h-4 w-4" />
+                {isUploading ? "Uploading..." : "Add document"}
+              </Button>
+            </AlertDialogTrigger>
+          </CardContent>
         </div>
 
-        {/* Error */}
-        {documentsError && (
-          <p className="text-sm text-destructive">
-            {documentsError.message || "Failed to load documents"}
-          </p>
-        )}
+        <Separator />
 
-        {/* Content */}
-        {documentsLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-14 w-full rounded-md" />
-            <Skeleton className="h-14 w-full rounded-md" />
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mb-2 h-8 w-8 opacity-30"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
-            No documents attached yet.
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {documents.map((doc) => (
-              <li
-                key={doc._id}
-                className="rounded-md border bg-background px-3 py-2.5"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium text-sm text-foreground">
-                    {doc.fileType}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDateTime(doc.createdAt)}
-                  </span>
-                </div>
-                {doc.fileUrl && (
-                  <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 block break-all text-xs text-primary underline underline-offset-2"
-                  >
-                    {doc.fileUrl}
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Documents list */}
+        <div>
+          <CardHeader className="pb-3 px-0">
+            <CardTitle className="text-base">Documents</CardTitle>
+          </CardHeader>
+          <CardContent className="px-0">
+            {documentsError && (
+              <p className="text-sm text-destructive mb-3">
+                {documentsError.message || "Failed to load documents"}
+              </p>
+            )}
+
+            {documentsLoading ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DocumentCardSkeleton />
+                <DocumentCardSkeleton />
+                <DocumentCardSkeleton />
+                <DocumentCardSkeleton />
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+                <FileText className="mb-2 h-7 w-7 opacity-30" />
+                No documents attached yet.
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {documents.map((doc) => (
+                  <DocumentCard key={doc._id} doc={doc} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </div>
       </div>
 
       <UploadDocumentContent
