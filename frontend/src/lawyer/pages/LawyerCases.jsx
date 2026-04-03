@@ -2,176 +2,155 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { getMyCases } from "@/api/services/caseService";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardAction,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import CaseCard from "@/lawyer/components/cases/CaseCard";
 
 const allowedStatuses = new Set(["opened", "closed"]);
-
-const formatDateTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString();
-};
 
 export default function LawyerCases() {
   const { status } = useParams();
   const navigate = useNavigate();
-  const normalizedStatus = (status ?? "opened").toLowerCase();
 
+  const normalizedStatus = (status ?? "opened").toLowerCase();
   const safeStatus = allowedStatuses.has(normalizedStatus)
     ? normalizedStatus
     : "opened";
 
+  // Backend uses "open" / "closed" while route uses "opened" / "closed"
+  const backendStatus = safeStatus === "opened" ? "open" : "closed";
+
   const label =
     safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1).toLowerCase();
+
+  const statusBadgeClass =
+    backendStatus === "closed"
+      ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+      : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
 
   const [cases, setCases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchCases = () => {
+    setIsLoading(true);
+    setError(null);
+    getMyCases()
+      .then((response) => {
+        const list = response?.data?.data;
+        setCases(Array.isArray(list) ? list : []);
+      })
+      .catch((err) => {
+        setError(err);
+        setCases([]);
+      })
+      .finally(() => setIsLoading(false));
+  };
+
   useEffect(() => {
     let cancelled = false;
 
-    const run = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await getMyCases();
-        const list = response?.data?.data;
-        if (!cancelled) {
-          setCases(Array.isArray(list) ? list : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err);
-          setCases([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
+    setIsLoading(true);
+    setError(null);
 
-    run();
+    getMyCases()
+      .then((response) => {
+        if (cancelled) return;
+        const list = response?.data?.data;
+        setCases(Array.isArray(list) ? list : []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err);
+        setCases([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Backend uses "open"/"closed" while route uses "opened"/"closed"
-  const backendStatus = safeStatus === "opened" ? "open" : "closed";
-
-  const filteredCases = useMemo(() => {
-    return (Array.isArray(cases) ? cases : []).filter((c) => {
-      const statusValue = (c?.status || "").toLowerCase();
-      return statusValue === backendStatus;
-    });
-  }, [cases, backendStatus]);
+  const filteredCases = useMemo(
+    () =>
+      (Array.isArray(cases) ? cases : []).filter(
+        (c) => (c?.status || "").toLowerCase() === backendStatus
+      ),
+    [cases, backendStatus]
+  );
 
   const handleOpenCase = (caseItem) => {
     const id = caseItem?._id;
-    if (!id) return;
-    if (backendStatus !== "open") return;
-    const citizenName = caseItem?.user?.name || "Citizen";
-    const citizenEmail = caseItem?.user?.email;
-    const createdAt = caseItem?.createdAt;
-    const summary = caseItem?.consultationRequest?.summary || "(No summary)";
-
+    if (!id || backendStatus !== "open") return;
     navigate(`/lawyer/cases/opened/${id}`, {
       state: {
         caseId: id,
-        citizenName,
-        citizenEmail,
-        createdAt,
-        summary,
+        citizenName: caseItem?.user?.name || "Citizen",
+        citizenEmail: caseItem?.user?.email,
+        createdAt: caseItem?.createdAt,
+        summary: caseItem?.consultationRequest?.summary || "(No summary)",
         status: caseItem?.status,
       },
     });
   };
 
-  const statusBadgeClassName = useMemo(() => {
-    switch (backendStatus) {
-      case "closed":
-        return "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300";
-      case "open":
-      default:
-        return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
-    }
-  }, [backendStatus]);
+  // Shared page header 
+  const PageHeader = () => (
+    <div className="flex items-center gap-3">
+      <h1 className="text-2xl font-semibold">Cases</h1>
+      <Badge className={statusBadgeClass}>{label}</Badge>
+    </div>
+  );
 
+  // Loading skeleton
   if (isLoading) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold">Cases</h1>
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Status:</span>
-          <Badge className={statusBadgeClassName}>{label}</Badge>
-        </div>
-
-        <div className="mt-6 space-y-4">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-56" />
-              <Skeleton className="h-4 w-40" />
-            </CardHeader>
-            <CardContent>
+      <div className="space-y-4">
+        <PageHeader />
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          {[1, 2, 3, 4].map((n) => (
+            <div
+              key={n}
+              className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-9 rounded-full" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                </div>
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </div>
               <Skeleton className="h-4 w-full" />
-              <Skeleton className="mt-2 h-4 w-5/6" />
-            </CardContent>
-          </Card>
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
+  // Error state 
   if (error) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold">Cases</h1>
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Status:</span>
-          <Badge className={statusBadgeClassName}>{label}</Badge>
-        </div>
-
-        <Card className="mt-6">
+      <div className="space-y-4">
+        <PageHeader />
+        <Card className="mt-2">
           <CardHeader>
-            <CardTitle>Couldn’t load cases</CardTitle>
+            <CardTitle>Couldn't load cases</CardTitle>
             <CardDescription className="text-destructive">
               {error.message || "Request failed"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Re-run the effect logic in a controlled way
-                setIsLoading(true);
-                setError(null);
-                getMyCases()
-                  .then((response) => {
-                    const list = response?.data?.data;
-                    setCases(Array.isArray(list) ? list : []);
-                  })
-                  .catch((err) => {
-                    setError(err);
-                    setCases([]);
-                  })
-                  .finally(() => {
-                    setIsLoading(false);
-                  });
-              }}
-            >
+            <Button variant="outline" onClick={fetchCases}>
               Retry
             </Button>
           </CardContent>
@@ -180,78 +159,32 @@ export default function LawyerCases() {
     );
   }
 
-  if (!Array.isArray(filteredCases) || filteredCases.length === 0) {
+  // Empty state 
+  if (filteredCases.length === 0) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold">Cases</h1>
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Status:</span>
-          <Badge className={statusBadgeClassName}>{label}</Badge>
+      <div className="space-y-4">
+        <PageHeader />
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground mt-2">
+          <p className="font-medium">No {backendStatus} cases</p>
+          <p className="mt-1 text-xs">Cases will appear here once assigned.</p>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
-          No {backendStatus} cases.
-        </p>
       </div>
     );
   }
 
+  // Cases grid
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Cases</h1>
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Status:</span>
-        <Badge className={statusBadgeClassName}>{label}</Badge>
-      </div>
-
-      <div className="mt-6 space-y-4">
-        {filteredCases.map((caseItem) => {
-          const citizenName = caseItem?.user?.name || "Citizen";
-          const citizenEmail = caseItem?.user?.email;
-          const createdAt = formatDateTime(caseItem?.createdAt);
-          const caseStatus = (caseItem?.status || "open").toLowerCase();
-          const statusLabel =
-            caseStatus.charAt(0).toUpperCase() +
-            caseStatus.slice(1).toLowerCase();
-
-          const badgeClassName =
-            caseStatus === "closed"
-              ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-              : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
-
-          const summary =
-            caseItem?.consultationRequest?.summary || "(No summary)";
-
-          return (
-            <Card
-              key={caseItem?._id || `${citizenName}-${createdAt}`}
-              className={
-                backendStatus === "open"
-                  ? "cursor-pointer transition-colors hover:bg-muted/50"
-                  : undefined
-              }
-              onClick={
-                backendStatus === "open"
-                  ? () => handleOpenCase(caseItem)
-                  : undefined
-              }
-            >
-              <CardHeader>
-                <CardTitle>Case with {citizenName}</CardTitle>
-                <CardDescription>
-                  {createdAt ? `Opened: ${createdAt}` : ""}
-                  {citizenEmail ? ` • ${citizenEmail}` : ""}
-                </CardDescription>
-                <CardAction>
-                  <Badge className={badgeClassName}>{statusLabel}</Badge>
-                </CardAction>
-              </CardHeader>
-
-              <CardContent>
-                <p className="whitespace-pre-line text-sm">{summary}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+    <div className="space-y-4">
+      <PageHeader />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {filteredCases.map((caseItem) => (
+          <CaseCard
+            key={caseItem?._id}
+            caseItem={caseItem}
+            clickable={backendStatus === "open"}
+            onClick={() => handleOpenCase(caseItem)}
+          />
+        ))}
       </div>
     </div>
   );
