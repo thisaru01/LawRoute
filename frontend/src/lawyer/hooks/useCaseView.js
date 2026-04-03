@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
 import {
+  closeCase,
   getCaseById,
   getCaseDocuments,
   getCaseMeetings,
@@ -47,6 +48,10 @@ export function useCaseView() {
   const [documentsError, setDocumentsError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  //  Close case
+  const [isClosing, setIsClosing] = useState(false);
+  const [closeError, setCloseError] = useState(null);
 
   //  Fallbacks from navigation state while API loads
   const fallbackCitizenName = navState.citizenName || "Citizen";
@@ -156,6 +161,22 @@ export function useCaseView() {
     }
   }, [caseId, selectedFile]);
 
+  const handleCloseCase = useCallback(async () => {
+    if (!caseId) return;
+    setIsClosing(true);
+    setCloseError(null);
+    try {
+      await closeCase(caseId);
+      // Refresh case details so status badge updates immediately
+      const res = await getCaseById(caseId);
+      setCaseDetails(res?.data?.data || null);
+    } catch (err) {
+      setCloseError(err);
+    } finally {
+      setIsClosing(false);
+    }
+  }, [caseId]);
+
   return {
     // Case
     caseId,
@@ -184,5 +205,9 @@ export function useCaseView() {
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    // Close case
+    isClosing,
+    closeError,
+    handleCloseCase,
   };
 }

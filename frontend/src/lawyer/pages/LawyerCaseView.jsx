@@ -36,6 +36,7 @@ export default function LawyerCaseDetails() {
       caseViewData.documentsLoading, caseViewData.documentsError,
       caseViewData.isUploading, caseViewData.selectedFile,
       caseViewData.handleSelectFile, caseViewData.handleUploadDocumentConfirm,
+      caseViewData.isClosing, caseViewData.closeError, caseViewData.handleCloseCase,
     ]
   );
 

@@ -1,8 +1,20 @@
-import { User, Calendar, FileText } from "lucide-react";
+import { User, Calendar, FileText, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 
 export default function CaseOverview() {
@@ -15,39 +27,90 @@ export default function CaseOverview() {
     summary,
     normalizedStatus,
     label,
+    isClosing,
+    closeError,
+    handleCloseCase,
   } = useCaseContext();
+
+  const isAlreadyClosed = normalizedStatus === "closed";
+
   return (
     <div className="space-y-4">
-      {/* Error */}
+      {/* Errors */}
       {caseError && (
         <p className="text-sm text-destructive">
           {caseError.message || "Failed to load case details"}
         </p>
       )}
+      {closeError && (
+        <p className="text-sm text-destructive">
+          {closeError.message || "Failed to close case. Please try again."}
+        </p>
+      )}
 
-      {/* Status + date row */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <span className="flex items-center gap-2">
-          <span className="font-medium text-foreground">Status:</span>
-          {caseLoading ? (
-            <Skeleton className="h-5 w-16" />
-          ) : (
-            <Badge
-              className={
-                normalizedStatus === "closed"
-                  ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                  : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-              }
-            >
-              {label}
-            </Badge>
-          )}
-        </span>
-        {(caseLoading || createdAtLabel) && (
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            {caseLoading ? <Skeleton className="h-4 w-36" /> : createdAtLabel}
+      {/* Status + date row + Close button */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <span className="flex items-center gap-2">
+            <span className="font-medium text-foreground">Status:</span>
+            {caseLoading ? (
+              <Skeleton className="h-5 w-16" />
+            ) : (
+              <Badge
+                className={
+                  isAlreadyClosed
+                    ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                    : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                }
+              >
+                {label}
+              </Badge>
+            )}
           </span>
+
+          {(caseLoading || createdAtLabel) && (
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
+              {caseLoading ? <Skeleton className="h-4 w-36" /> : createdAtLabel}
+            </span>
+          )}
+        </div>
+
+        {/* Close Case button — only shown when case is open and loaded */}
+        {!caseLoading && !isAlreadyClosed && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5"
+                disabled={isClosing}
+              >
+                <XCircle className="h-4 w-4" />
+                {isClosing ? "Closing…" : "Close case"}
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Close this case?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will mark the case as <strong>closed</strong>. The case
+                  will no longer be active and cannot be reopened. This action
+                  cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCloseCase}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, close case
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
