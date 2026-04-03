@@ -28,7 +28,7 @@ import LawyerConsultationRequests from "./lawyer/pages/LawyerConsultationRequest
 import LawyerCases from "./lawyer/pages/LawyerCases.jsx";
 import LawyerArticles from "./lawyer/pages/LawyerArticles.jsx";
 import LawyerArticleCreate from "./lawyer/pages/LawyerArticleCreate.jsx";
-import LawyerCaseDetails from "./lawyer/pages/LawyerCaseDetails.jsx";
+import LawyerCaseDetails from "./lawyer/pages/LawyerCaseView.jsx";
 
 // Authority
 import AuthorityRouteLayout from "./authority/AuthorityRouteLayout.jsx";
