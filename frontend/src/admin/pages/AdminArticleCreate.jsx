@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import axios from "@/api/axios";
@@ -82,39 +81,128 @@ export default function AdminArticleCreate() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="w-full min-h-[180px] rounded-lg border border-input px-3 py-2 text-base"
-                  placeholder="Article body (HTML or plain text)"
+                  placeholder="Article body"
                 />
-                <FieldDescription>Accepts HTML or plain text. Consider pasting formatted content.</FieldDescription>
+                {/* <FieldDescription>Accepts HTML or plain text. Consider pasting formatted content.</FieldDescription> */}
+              </Field>
+
+              <Field>
+                <FieldLabel>Category</FieldLabel>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      {category || "Select category"}
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent className="w-full">
+                    {CATEGORIES.map((c) => (
+                      <DropdownMenuItem
+                        key={c}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setCategory(c);
+                        }}
+                      >
+                        {c}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </Field>
 
               <Field orientation="horizontal">
                 <div className="w-1/2">
-                  <FieldLabel>Category</FieldLabel>
-                  <Select value={category} onValueChange={(v) => setCategory(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FieldLabel>Image</FieldLabel>
+
+                  <div
+                    onClick={() => document.getElementById("article-image-input").click()}
+                    className="mt-2 cursor-pointer flex items-center justify-center border-2 border-dashed border-input rounded-lg h-48 bg-muted/30 overflow-hidden"
+                  >
+                    {image ? (
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt="preview"
+                        className="max-h-full w-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mx-auto h-12 w-12">
+                          <rect x="3" y="3" width="18" height="14" rx="2" ry="2" strokeWidth="1.5" />
+                          <circle cx="8.5" cy="8.5" r="1.5" strokeWidth="1.5" />
+                          <path d="M21 21l-5.2-5.2" strokeWidth="1.5" />
+                        </svg>
+                        <div className="mt-2 font-medium">Click to choose image</div>
+                        <div className="text-xs mt-1">Primary article image (large hero)</div>
+                      </div>
+                    )}
+
+                    <input
+                      id="article-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFile(e, setImage)}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {image && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-sm truncate">{image.name}</span>
+                      <button type="button" className="text-sm text-red-600" onClick={() => setImage(null)}>
+                        Remove
+                      </button>
+                    </div>
+                  )}
+
+                  {/* <FieldDescription>Primary article image (large hero).</FieldDescription> */}
                 </div>
 
                 <div className="w-1/2">
-                  <FieldLabel>Image</FieldLabel>
-                  <Input type="file" accept="image/*" onChange={(e) => handleFile(e, setImage)} />
-                  <FieldDescription>Primary article image (large hero).</FieldDescription>
-                </div>
-              </Field>
+                  <FieldLabel>Image Card</FieldLabel>
 
-              <Field>
-                <FieldLabel>Image Card</FieldLabel>
-                <Input type="file" accept="image/*" onChange={(e) => handleFile(e, setImageCard)} />
-                <FieldDescription>Small thumbnail used in article lists and cards.</FieldDescription>
+                  <div
+                    onClick={() => document.getElementById("article-imagecard-input").click()}
+                    className="mt-2 cursor-pointer flex items-center justify-center border-2 border-dashed border-input rounded-lg h-48 bg-muted/30 overflow-hidden"
+                  >
+                    {imageCard ? (
+                      <img
+                        src={URL.createObjectURL(imageCard)}
+                        alt="preview"
+                        className="max-h-full w-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mx-auto h-12 w-12">
+                          <rect x="3" y="3" width="18" height="14" rx="2" ry="2" strokeWidth="1.5" />
+                          <circle cx="8.5" cy="8.5" r="1.5" strokeWidth="1.5" />
+                          <path d="M21 21l-5.2-5.2" strokeWidth="1.5" />
+                        </svg>
+                        <div className="mt-2 font-medium">Click to choose image</div>
+                        <div className="text-xs mt-1">Small thumbnail used in article lists and cards.</div>
+                      </div>
+                    )}
+
+                    <input
+                      id="article-imagecard-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFile(e, setImageCard)}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {imageCard && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-sm truncate">{imageCard.name}</span>
+                      <button type="button" className="text-sm text-red-600" onClick={() => setImageCard(null)}>
+                        Remove
+                      </button>
+                    </div>
+                  )}
+
+                  {/* <FieldDescription>Small thumbnail used in article lists and cards.</FieldDescription> */}
+                </div>
               </Field>
 
               {error && <div className="text-sm text-red-600">{error}</div>}
