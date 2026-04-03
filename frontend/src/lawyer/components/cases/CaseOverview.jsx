@@ -4,18 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
+import ConfirmDialog from "@/lawyer/components/shared/ConfirmDialog";
 
 export default function CaseOverview() {
   const {
@@ -76,10 +66,10 @@ export default function CaseOverview() {
           )}
         </div>
 
-        {/* Close Case button — only shown when case is open and loaded */}
+        {/* Close case — only shown when case is open and loaded */}
         {!caseLoading && !isAlreadyClosed && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          <ConfirmDialog
+            trigger={
               <Button
                 variant="destructive"
                 size="sm"
@@ -89,28 +79,13 @@ export default function CaseOverview() {
                 <XCircle className="h-4 w-4" />
                 {isClosing ? "Closing…" : "Close case"}
               </Button>
-            </AlertDialogTrigger>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Close this case?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will mark the case as <strong>closed</strong>. The case
-                  will no longer be active and cannot be reopened. This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleCloseCase}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Yes, close case
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            }
+            title="Close this case?"
+            description="This will mark the case as closed. The case will no longer be active and cannot be reopened. This action cannot be undone."
+            confirmLabel="Yes, close case"
+            confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onConfirm={handleCloseCase}
+          />
         )}
       </div>
 

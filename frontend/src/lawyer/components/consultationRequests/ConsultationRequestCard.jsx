@@ -7,6 +7,7 @@ import {
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "@/api/services/consultationRequestService";
+import ConfirmDialog from "@/lawyer/components/shared/ConfirmDialog";
 
 const STATUS_BADGE = {
   accepted: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
@@ -16,16 +17,16 @@ const STATUS_BADGE = {
 
 /**
  * ConsultationRequestCard
- * @param {object}   request   – raw request object from the API
+ * @param {object}   request     – raw request object from the API
  * @param {boolean}  showActions – show Accept / Reject buttons (pending only)
- * @param {function} onAction  – called after a successful accept / reject
+ * @param {function} onAction    – called after a successful accept / reject
  */
 export default function ConsultationRequestCard({
   request,
   showActions = false,
   onAction,
 }) {
-  const [busyId, setBusyId] = useState(null);
+  const [isBusy, setIsBusy] = useState(false);
 
   const citizenName = request?.user?.name || "Citizen";
   const citizenEmail = request?.user?.email || "";
@@ -36,18 +37,16 @@ export default function ConsultationRequestCard({
   const badgeClass = STATUS_BADGE[status] ?? STATUS_BADGE.pending;
 
   const act = async (fn) => {
+    setIsBusy(true);
     try {
-      setBusyId(request?._id);
       await fn(request?._id);
       onAction?.();
     } catch (err) {
       console.error(err);
     } finally {
-      setBusyId(null);
+      setIsBusy(false);
     }
   };
-
-  const isBusy = busyId === request?._id;
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm text-card-foreground">
@@ -68,9 +67,7 @@ export default function ConsultationRequestCard({
             )}
           </div>
         </div>
-        <Badge
-          className={`${badgeClass} shrink-0 text-[10px] uppercase tracking-wide`}
-        >
+        <Badge className={`${badgeClass} shrink-0 text-[10px] uppercase tracking-wide`}>
           {statusLabel}
         </Badge>
       </div>
@@ -91,22 +88,35 @@ export default function ConsultationRequestCard({
 
         {showActions && (
           <div className="flex gap-2 ml-auto">
-            <Button
-              size="sm"
-              className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:text-green-300"
-              disabled={isBusy}
-              onClick={() => act(acceptConsultationRequest)}
-            >
-              {isBusy ? "Working..." : "Accept"}
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={isBusy}
-              onClick={() => act(rejectConsultationRequest)}
-            >
-              {isBusy ? "Working..." : "Reject"}
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button
+                  size="sm"
+                  className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:text-green-300"
+                  disabled={isBusy}
+                >
+                  {isBusy ? "Working..." : "Accept"}
+                </Button>
+              }
+              title="Accept this request?"
+              description={`You are about to accept the consultation request from ${citizenName}. A new case will be opened for this client.`}
+              confirmLabel="Yes, accept"
+              confirmClass="bg-green-600 text-white hover:bg-green-700"
+              onConfirm={() => act(acceptConsultationRequest)}
+            />
+
+            <ConfirmDialog
+              trigger={
+                <Button size="sm" variant="destructive" disabled={isBusy}>
+                  {isBusy ? "Working..." : "Reject"}
+                </Button>
+              }
+              title="Reject this request?"
+              description={`You are about to reject the consultation request from ${citizenName}. This action cannot be undone.`}
+              confirmLabel="Yes, reject"
+              confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onConfirm={() => act(rejectConsultationRequest)}
+            />
           </div>
         )}
       </div>
