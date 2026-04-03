@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getMyArticles } from "@/api/services/articleService";
+import { getMyArticles, getPendingOthersArticles } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/PendingArticleCard";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
@@ -19,6 +20,7 @@ export default function AdminArticles() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState("own"); // 'own' | 'others'
 
   useEffect(() => {
     let mounted = true;
@@ -32,10 +34,16 @@ export default function AdminArticles() {
       setLoading(true);
       setError(null);
       try {
-        // Use /articles/me as requested — returns authenticated user's articles
-        const res = await getMyArticles();
+        let res;
+        if (tab === "own") {
+          // Use /articles/me — returns authenticated user's articles
+          res = await getMyArticles();
+        } else {
+          // Use /articles/pending/others to get other users' pending articles
+          res = await getPendingOthersArticles();
+        }
+
         if (!mounted) return;
-        // API returns { success, count, articles: [...] }
         setArticles(res?.data?.articles || []);
       } catch (err) {
         if (!mounted) return;
@@ -50,12 +58,21 @@ export default function AdminArticles() {
     return () => {
       mounted = false;
     };
-  }, [safeStatus]);
+  }, [safeStatus, tab]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold">Articles</h1>
       {/* <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p> */}
+
+      <div className="mt-3" aria-hidden={false}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v)}>
+          <TabsList variant="line">
+              <TabsTrigger value="own">Own</TabsTrigger>
+              <TabsTrigger value="others">Others</TabsTrigger>
+            </TabsList>
+        </Tabs>
+      </div>
 
       <div className="mt-6">
         {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
