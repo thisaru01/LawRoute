@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import ScheduleMeetingContent from "@/lawyer/components/ScheduleMeetingContent";
-import UploadDocumentContent from "@/lawyer/components/UploadDocumentContent";
+import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingContent";
+import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
 import {
   getCaseById,
   getCaseDocuments,
