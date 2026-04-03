@@ -21,3 +21,10 @@ export const getMyCivilIssues = () => {
 export const getPublicCivilIssues = () => {
   return axios.get("/civil-issues/public");
 };
+
+/**
+ * Get all civil issues assigned to the current authority.
+ */
+export const getAssignedCivilIssues = () => {
+  return axios.get("/civil-issues/assigned");
+};

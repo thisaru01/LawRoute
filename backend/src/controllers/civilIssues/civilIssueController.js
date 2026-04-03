@@ -5,7 +5,17 @@ import { cloudinary } from "../../config/cloudinary.js";
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
 export const submitCivilIssue = async (req, res, next) => {
   try {
-    const { category, district, description } = req.body;
+    const {
+      category,
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
     // FormData sends booleans as strings, so normalise explicitly.
     const isPublic = req.body.isPublic === "true" || req.body.isPublic === true;
 
@@ -15,8 +25,14 @@ export const submitCivilIssue = async (req, res, next) => {
     const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
+      subject,
       district,
-      description,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
       attachments,
       isPublic,
     });
@@ -88,16 +104,31 @@ export const getCivilIssueById = async (req, res, next) => {
 };
 
 // PATCH /api/civil-issues/:id
-// Citizen updates their own issue's description or district (only while pending).
+// Citizen updates their own issue fields (only while pending).
 export const updateCivilIssue = async (req, res, next) => {
   try {
-    const { description, district } = req.body;
+    const {
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
 
     const issue = await civilIssueService.updateIssue({
       issueId: req.params.id,
       reporterId: req.user._id,
-      description,
+      subject,
       district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
     });
 
     res.status(200).json({

@@ -65,7 +65,7 @@ router.patch(
   updateCivilIssueStatus,
 );
 
-// Citizen: update own issue description/district (only while pending)
+// Citizen: update own issue fields (only while pending)
 router.patch(
   "/:id",
   protect,
