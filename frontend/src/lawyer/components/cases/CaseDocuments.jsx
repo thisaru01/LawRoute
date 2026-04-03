@@ -28,7 +28,7 @@ function DocumentCard({ doc }) {
       </div>
 
       {/* File name */}
-      <p className="text-sm font-medium text-foreground leading-snug break-words line-clamp-2">
+      <p className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2">
         {fileName}
       </p>
 

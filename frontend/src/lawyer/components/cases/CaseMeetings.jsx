@@ -64,7 +64,7 @@ function MeetingCard({ meeting }) {
               {locationText}
             </a>
           ) : (
-            <span className="text-muted-foreground break-words leading-snug">
+            <span className="text-muted-foreground wrap-break-words leading-snug">
               {locationText}
             </span>
           )}
