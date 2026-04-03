@@ -73,43 +73,47 @@ export default function RelatedArticlesSidebar({
     fetchRelated();
   }, [fetchRelated]);
 
-  if (!related.length) return null;
-
   return (
     <aside className="lg:col-span-3 lg:pl-1">
       <h3 className="text-lg font-semibold mb-4">Related Articles</h3>
       <div className="space-y-4">
-        {related.map((r) => (
-          <Card key={r._id || r.id} className="p-0 py-0">
-            <Link
-              to={`/admin/articles/${status}/${r._id || r.id}`}
-              className="block w-full p-4 flex items-stretch gap-4 h-28"
-            >
-              <img
-                src={r.imagecardUrl || r.imageUrl}
-                alt={r.title}
-                className="w-28 h-full object-cover rounded-lg flex-shrink-0"
-              />
-
-              <div className="flex-1 min-w-0">
-                <div
-                  className="text-sm font-medium leading-tight"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
-                >
-                  {r.title}
-                </div>
-                {r.category && (
-                  <div className="text-xs text-muted-foreground mt-1">{r.category}</div>
-                )}
-              </div>
-            </Link>
+        {related.length === 0 ? (
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">No related articles.</div>
           </Card>
-        ))}
+        ) : (
+          related.map((r) => (
+            <Card key={r._id || r.id} className="p-0 py-0">
+              <Link
+                to={`/admin/articles/${status}/${r._id || r.id}`}
+                className="block w-full p-4 flex items-stretch gap-4 h-28"
+              >
+                <img
+                  src={r.imagecardUrl || r.imageUrl}
+                  alt={r.title}
+                  className="w-28 h-full object-cover rounded-lg flex-shrink-0"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <div
+                    className="text-sm font-medium leading-tight"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {r.title}
+                  </div>
+                  {r.category && (
+                    <div className="text-xs text-muted-foreground mt-1">{r.category}</div>
+                  )}
+                </div>
+              </Link>
+            </Card>
+          ))
+        )}
       </div>
     </aside>
   );
