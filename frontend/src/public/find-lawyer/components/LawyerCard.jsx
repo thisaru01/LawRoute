@@ -3,7 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "@/context/auth/useAuth";
+import RequestConsultationModal from "./RequestConsultationModal";
 
 //  Expertise display map 
 export const EXPERTISE_LABELS = {
@@ -62,6 +65,10 @@ function getPracticeAreaNames(areas = []) {
  * @param {{ lawyer: object }} props
  */
 export default function LawyerCard({ lawyer }) {
+  const { isAuthenticated, role } = useAuth();
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const name            = lawyer?.user?.name || "—";
   const photo           = lawyer?.user?.profilePhoto || "";
   const title           = lawyer?.basicInfo?.professionalTitle || "";
@@ -167,10 +174,26 @@ export default function LawyerCard({ lawyer }) {
         <Button variant="outline" className="w-full sm:w-auto" asChild>
           <Link to={`/lawyers/${lawyer?.id || ""}`}>View Profile</Link>
         </Button>
-        <Button className="w-full sm:w-auto" asChild>
-          <Link to={`/lawyers/${lawyer?.id || ""}/request`}>Request Consultation</Link>
+        <Button className="w-full sm:w-auto" onClick={() => {
+          if (!isAuthenticated) {
+            navigate("/auth?redirect=/find-a-lawyer");
+          } else if (role !== "user") {
+            // A more sophisticated toast could be used here; using basic alert for now
+            alert("Only citizens can request a consultation.");
+          } else {
+            setIsModalOpen(true);
+          }
+        }}>
+          Request Consultation
         </Button>
       </CardFooter>
+
+      <RequestConsultationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        lawyerId={lawyer?.user?._id || lawyer?.user?.id}
+        lawyerName={name}
+      />
     </Card>
   );
 }
