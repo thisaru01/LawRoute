@@ -6,7 +6,7 @@ const isObject = (value) =>
 const hasOnlyAllowedKeys = (obj, allowedFields) =>
   Object.keys(obj).every((key) => allowedFields.includes(key));
 
-// Validate payload for creating a post comment or reply comment. 
+// Validate payload for creating a post comment. 
 export const validateCreateComment = (req, res, next) => {
   const { body } = req;
 
@@ -17,7 +17,7 @@ export const validateCreateComment = (req, res, next) => {
     });
   }
 
-  const allowedFields = ["content", "parentComment"];
+  const allowedFields = ["content"];
 
   if (!hasOnlyAllowedKeys(body, allowedFields)) {
     return res.status(400).json({
@@ -30,16 +30,6 @@ export const validateCreateComment = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "content is required",
-    });
-  }
-
-  if (
-    body.parentComment &&
-    !mongoose.Types.ObjectId.isValid(body.parentComment)
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid parentComment id",
     });
   }
 
