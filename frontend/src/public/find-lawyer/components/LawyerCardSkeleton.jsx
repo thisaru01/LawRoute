@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 /**
  * Skeleton placeholder that matches LawyerCard's layout.
@@ -10,8 +10,6 @@ export default function LawyerCardSkeleton({ count = 6 }) {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="overflow-hidden border border-border bg-card shadow-sm">
-          {/* accent bar */}
-          <Skeleton className="h-1 w-full rounded-none" />
           <CardContent className="flex flex-col gap-4 p-5">
             {/* header */}
             <div className="flex items-start gap-3">
@@ -44,6 +42,10 @@ export default function LawyerCardSkeleton({ count = 6 }) {
               <Skeleton className="h-3 w-28" />
             </div>
           </CardContent>
+          <CardFooter className="mt-auto flex flex-col gap-2 border-t p-4 sm:flex-row sm:justify-end">
+             <Skeleton className="h-9 w-full rounded-md sm:w-28" />
+             <Skeleton className="h-9 w-full rounded-md sm:w-44" />
+          </CardFooter>
         </Card>
       ))}
     </div>

@@ -1,9 +1,11 @@
 import { MapPin, Clock, Star, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
-// ─── Expertise display map ────────────────────────────────────────────────────
+//  Expertise display map 
 export const EXPERTISE_LABELS = {
   general: "General",
   civil: "Civil Law",
@@ -36,7 +38,7 @@ const EXPERTISE_COLORS = {
   intellectual_property: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//  Helpers 
 function getInitials(name = "") {
   return name
     .split(" ")
@@ -54,7 +56,7 @@ function getPracticeAreaNames(areas = []) {
     .slice(0, 4);
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+//  Component 
 /**
  * Public-facing lawyer directory card.
  * @param {{ lawyer: object }} props
@@ -78,11 +80,8 @@ export default function LawyerCard({ lawyer }) {
 
   return (
     <Card className="flex flex-col gap-0 overflow-hidden border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
-      {/* ── Top accent bar — coloured by expertise ─────────────────────────── */}
-      <div className={`h-1 w-full ${expertiseColor.split(" ")[0]}`} />
-
       <CardContent className="flex flex-col gap-4 p-5">
-        {/* ── Header: avatar + name + badges ───────────────────────────────── */}
+        {/*  Header: avatar + name + badges  */}
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12 shrink-0 text-base">
             <AvatarImage src={photo} alt={name} />
@@ -107,7 +106,7 @@ export default function LawyerCard({ lawyer }) {
           </div>
         </div>
 
-        {/* ── Expertise + experience ────────────────────────────────────────── */}
+        {/*  Expertise + experience  */}
         <div className="flex flex-wrap items-center gap-2">
           <Badge className={`text-[11px] font-medium ${expertiseColor}`}>
             {expertiseLabel}
@@ -128,14 +127,14 @@ export default function LawyerCard({ lawyer }) {
           )}
         </div>
 
-        {/* ── Bio ───────────────────────────────────────────────────────────── */}
+        {/*  Bio  */}
         {bio && (
           <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {bio}
           </p>
         )}
 
-        {/* ── Practice areas ───────────────────────────────────────────────── */}
+        {/*  Practice areas  */}
         {practiceAreas.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {practiceAreas.map((area) => (
@@ -154,7 +153,7 @@ export default function LawyerCard({ lawyer }) {
           </div>
         )}
 
-        {/* ── Languages ────────────────────────────────────────────────────── */}
+        {/*  Languages  */}
         {languages.length > 0 && (
           <div className="flex items-center gap-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
             <Star className="h-3.5 w-3.5 shrink-0" />
@@ -162,6 +161,16 @@ export default function LawyerCard({ lawyer }) {
           </div>
         )}
       </CardContent>
+
+      {/*  Actions / Footer  */}
+      <CardFooter className="mt-auto flex flex-col gap-2 border-t p-4 sm:flex-row sm:justify-end">
+        <Button variant="outline" className="w-full sm:w-auto" asChild>
+          <Link to={`/lawyers/${lawyer?.id || ""}`}>View Profile</Link>
+        </Button>
+        <Button className="w-full sm:w-auto" asChild>
+          <Link to={`/lawyers/${lawyer?.id || ""}/request`}>Request Consultation</Link>
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

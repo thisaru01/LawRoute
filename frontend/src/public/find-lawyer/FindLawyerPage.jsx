@@ -22,11 +22,11 @@ import LawyerCard, { EXPERTISE_LABELS } from "./components/LawyerCard";
 import LawyerCardSkeleton from "./components/LawyerCardSkeleton";
 import { useFindLawyers } from "./hooks/useFindLawyers";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+//  Constants 
 const EXPERTISE_OPTIONS = Object.entries(EXPERTISE_LABELS); // [["general","General"], ...]
 const DEBOUNCE_MS = 350;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//  Helpers 
 function useDebounced(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -36,7 +36,7 @@ function useDebounced(value, delay) {
   return debounced;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+//  Component 
 export default function FindLawyerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -78,7 +78,7 @@ export default function FindLawyerPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* ── Page hero header & filters ─────────────────────────────────────────── */}
+      {/*  Page hero header & filters  */}
       <div className="border-b border-border bg-card pb-8 pt-10">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-6">
@@ -90,7 +90,7 @@ export default function FindLawyerPage() {
             </p>
           </div>
 
-          {/* ── Search + filters panel ───────────────────────────────────────────── */}
+          {/*  Search + filters panel  */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             {/* Search */}
             <div className="relative flex-1">
@@ -199,7 +199,7 @@ export default function FindLawyerPage() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-8">
-        {/* ── Results header ───────────────────────────────────────────────────── */}
+        {/*  Results header  */}
         {!isLoading && !error && (
           <p className="mb-4 text-sm text-muted-foreground">
             {lawyers.length === 0
@@ -208,10 +208,10 @@ export default function FindLawyerPage() {
           </p>
         )}
 
-        {/* ── Loading skeleton ─────────────────────────────────────────────────── */}
+        {/*  Loading skeleton  */}
         {isLoading && <LawyerCardSkeleton count={6} />}
 
-        {/* ── Error state ─────────────────────────────────────────────────── ─── */}
+        {/*  Error state  */}
         {!isLoading && error && (
           <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-destructive/40 bg-destructive/5 py-16 text-center">
             <AlertCircle className="h-8 w-8 text-destructive" />
@@ -227,7 +227,7 @@ export default function FindLawyerPage() {
           </div>
         )}
 
-        {/* ── Empty state ──────────────────────────────────────────────────────── */}
+        {/*  Empty state  */}
         {!isLoading && !error && lawyers.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-16 text-center text-muted-foreground">
             <Search className="h-8 w-8 opacity-40" />
@@ -243,7 +243,7 @@ export default function FindLawyerPage() {
           </div>
         )}
 
-        {/* ── Lawyer grid ──────────────────────────────────────────────────────── */}
+        {/*  Lawyer grid  */}
         {!isLoading && !error && lawyers.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {lawyers.map((lawyer) => (
