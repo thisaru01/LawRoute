@@ -23,9 +23,15 @@ export const getAllLawyerProfiles = async (req, res, next) => {
 };
 
 // Get approved lawyer profiles for public browsing.
+// Supports optional query params: search, expertise, isFree
 export const getApprovedLawyerProfiles = async (req, res, next) => {
   try {
-    const lawyerProfiles = await findApprovedLawyerProfiles();
+    const { search, expertise, isFree } = req.query;
+    const lawyerProfiles = await findApprovedLawyerProfiles({
+      search,
+      expertise,
+      isFree,
+    });
 
     return res.status(200).json({
       success: true,
