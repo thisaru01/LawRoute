@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes.js";
 import documentRoutes from "./routes/documents/documentRoutes.js";
 import socialRoutes from "./routes/social/socialRoutes.js";
 import caseRoutes from "./routes/case/caseRoutes.js";
+import locationRoutes from "./routes/locationRoutes.js";
 
 const app = express();
 
@@ -51,6 +52,9 @@ app.use("/api/lawyer-profile", lawyerProfileRoutes);
 
 // API legal social feed Routes
 app.use("/api/social", socialRoutes);
+
+// API location routes (Geoapify-backed autocomplete)
+app.use("/api/location", locationRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);

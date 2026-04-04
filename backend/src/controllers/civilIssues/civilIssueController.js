@@ -5,7 +5,19 @@ import { cloudinary } from "../../config/cloudinary.js";
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
 export const submitCivilIssue = async (req, res, next) => {
   try {
-    const { category, district, description } = req.body;
+    const {
+      category,
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
+    // FormData sends booleans as strings, so normalise explicitly.
+    const isPublic = req.body.isPublic === "true" || req.body.isPublic === true;
 
     // Cloudinary automatically provides the secure URLs in the `path` property of each file
     const attachments = req.files ? req.files.map((file) => file.path) : [];
@@ -13,9 +25,16 @@ export const submitCivilIssue = async (req, res, next) => {
     const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
+      subject,
       district,
-      description,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
       attachments,
+      isPublic,
     });
 
     res.status(201).json({
@@ -85,16 +104,31 @@ export const getCivilIssueById = async (req, res, next) => {
 };
 
 // PATCH /api/civil-issues/:id
-// Citizen updates their own issue's description or district (only while pending).
+// Citizen updates their own issue fields (only while pending).
 export const updateCivilIssue = async (req, res, next) => {
   try {
-    const { description, district } = req.body;
+    const {
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
 
     const issue = await civilIssueService.updateIssue({
       issueId: req.params.id,
       reporterId: req.user._id,
-      description,
+      subject,
       district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
     });
 
     res.status(200).json({
@@ -156,6 +190,36 @@ export const updateCivilIssueStatus = async (req, res, next) => {
         .status(error.statusCode)
         .json({ success: false, message: error.message });
     }
+    next(error);
+  }
+};
+
+// GET /api/civil-issues/public
+// Returns all publicly visible civil issues. No auth required.
+export const getPublicCivilIssues = async (req, res, next) => {
+  try {
+    const category = typeof req.query.category === "string" ? req.query.category.trim() : "";
+    const district = typeof req.query.district === "string" ? req.query.district.trim() : "";
+    const location = typeof req.query.location === "string" ? req.query.location.trim() : "";
+    const postcode = typeof req.query.postcode === "string" ? req.query.postcode.trim() : "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result = await civilIssueService.getPublicIssues({
+      category: category || undefined,
+      district: district || undefined,
+      location: location || undefined,
+      postcode: postcode || undefined,
+      page,
+      limit,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result.items,
+      pagination: result.pagination,
+    });
+  } catch (error) {
     next(error);
   }
 };

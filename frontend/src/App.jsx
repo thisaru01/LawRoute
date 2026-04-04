@@ -17,6 +17,7 @@ import CitizenDashboard from "./citizen/pages/CitizenDashboard.jsx";
 import CitizenConsultationRequests from "./citizen/pages/CitizenConsultationRequests.jsx";
 import CitizenCases from "./citizen/pages/CitizenCases.jsx";
 import CitizenCivilIssues from "./citizen/pages/CitizenCivilIssues.jsx";
+import CitizenCivilIssueSubmit from "./citizen/pages/CitizenCivilIssueSubmit.jsx";
 import CitizenProfile from "./citizen/pages/CitizenProfile.jsx";
 
 // Lawyer
@@ -28,6 +29,7 @@ import LawyerConsultationRequests from "./lawyer/pages/LawyerConsultationRequest
 import LawyerCases from "./lawyer/pages/LawyerCases.jsx";
 import LawyerArticles from "./lawyer/pages/LawyerArticles.jsx";
 import LawyerArticleCreate from "./lawyer/pages/LawyerArticleCreate.jsx";
+import LawyerCaseDetails from "./lawyer/pages/LawyerCaseView.jsx";
 
 // Authority
 import AuthorityRouteLayout from "./authority/AuthorityRouteLayout.jsx";
@@ -38,6 +40,7 @@ import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 // Public
 import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
+import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
 
 export default function App() {
   return (
@@ -45,6 +48,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
@@ -59,6 +63,7 @@ export default function App() {
           </Route>
           <Route path="civil-issues">
             <Route index element={<Navigate to="pending" replace />} />
+            <Route path="submit" element={<CitizenCivilIssueSubmit />} />
             <Route path=":status" element={<CitizenCivilIssues />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
@@ -78,6 +83,7 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<LawyerCases />} />
+            <Route path=":status/:caseId" element={<LawyerCaseDetails />} />
           </Route>
           <Route path="articles">
             <Route index element={<Navigate to="pending" replace />} />
