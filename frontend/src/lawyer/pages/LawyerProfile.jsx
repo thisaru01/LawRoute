@@ -4,9 +4,11 @@ import {
   getMyLawyerProfile,
   updateMyLawyerProfile,
 } from "@/api/services/lawyerProfileService";
+import { updateMe, updateProfilePhoto } from "@/api/services/userService";
 import LawyerProfileDetails from "@/lawyer/components/profile/LawyerProfileDetails";
 
 const DEFAULT_FORM = {
+  name: "",
   professionalTitle: "",
   bio: "",
   totalYearsExperience: "",
@@ -15,10 +17,13 @@ const DEFAULT_FORM = {
   phone: "",
   officeAddress: "",
   location: "",
-  languages: "",
-  practiceAreas: "",
+  languages: [],
+  practiceAreas: [],
   barRegistrationNumber: "",
   memberships: "",
+  education: [],
+  certifications: [],
+  workHistory: [],
 };
 
 const listToCsv = (list) => {
@@ -53,8 +58,10 @@ const toFormState = (profile) => {
   const basicInfo = profile?.basicInfo || {};
   const experience = profile?.experience || {};
   const contactInfo = basicInfo.contactInfo || {};
+  const educationQualifications = profile?.educationQualifications || {};
 
   return {
+    name: profile?.user?.name || "",
     professionalTitle: basicInfo.professionalTitle || "",
     bio: basicInfo.bio || "",
     totalYearsExperience:
@@ -69,10 +76,17 @@ const toFormState = (profile) => {
     phone: contactInfo.phone || "",
     officeAddress: contactInfo.officeAddress || "",
     location: contactInfo.location || "",
-    languages: listToCsv(basicInfo.languages),
-    practiceAreas: listToCsv(basicInfo.practiceAreas),
+    languages: Array.isArray(basicInfo.languages) ? basicInfo.languages : [],
+    practiceAreas: Array.isArray(basicInfo.practiceAreas) ? basicInfo.practiceAreas : [],
     barRegistrationNumber: profile?.barRegistrationNumber || "",
     memberships: listToCsv(profile?.memberships),
+    education: Array.isArray(educationQualifications.education) 
+      ? educationQualifications.education 
+      : [],
+    certifications: Array.isArray(educationQualifications.certifications) 
+      ? educationQualifications.certifications 
+      : [],
+    workHistory: Array.isArray(experience.workHistory) ? experience.workHistory : [],
   };
 };
 
@@ -91,20 +105,22 @@ const toSectionPayload = (form, section) => {
           ? { totalYearsExperience: yearsValue }
           : {}),
       },
+      expertise: form.expertise || "general",
+      barRegistrationNumber: form.barRegistrationNumber.trim() || null,
+      memberships: csvToList(form.memberships),
     };
   }
 
   if (section === "skills") {
     return {
-      isFree: Boolean(form.isFree),
-      expertise: form.expertise || "general",
       basicInfo: {
-        languages: csvToList(form.languages),
-        practiceAreas: csvToList(form.practiceAreas).map((name) => ({
-          name,
-          level: "intermediate",
-        })),
+        languages: form.languages,
+        practiceAreas: form.practiceAreas,
       },
+      experience: {
+        workHistory: form.workHistory,
+      },
+      isFree: form.isFree,
     };
   }
 
@@ -124,6 +140,10 @@ const toSectionPayload = (form, section) => {
     return {
       barRegistrationNumber: form.barRegistrationNumber.trim() || null,
       memberships: csvToList(form.memberships),
+      educationQualifications: {
+        education: form.education,
+        certifications: form.certifications,
+      },
     };
   }
 
@@ -136,6 +156,7 @@ export default function LawyerProfile() {
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [savingSection, setSavingSection] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState("");
 
@@ -186,8 +207,16 @@ export default function LawyerProfile() {
       const payload = toSectionPayload(form, section);
       if (!payload) return;
 
-      const response = await updateMyLawyerProfile(payload);
-      const updatedProfile = response?.data?.lawyerProfile;
+      // If saving About section, also update user name via separate endpoint
+      if (section === "about" && form.name.trim()) {
+        await updateMe({ name: form.name.trim() });
+      }
+
+      await updateMyLawyerProfile(payload);
+
+      // Re-fetch to get fully populated profile (with user.name, etc.)
+      const refreshed = await getMyLawyerProfile();
+      const updatedProfile = refreshed?.data?.lawyerProfile;
 
       setProfile(updatedProfile || null);
       setForm(toFormState(updatedProfile));
@@ -200,6 +229,36 @@ export default function LawyerProfile() {
     }
   };
 
+  const onUploadPhoto = async (file) => {
+    if (!file) return;
+
+    setIsUploadingPhoto(true);
+    setError(null);
+    setSuccess("");
+
+    try {
+      const response = await updateProfilePhoto(file);
+      const updatedPhoto = response?.data?.user?.profilePhoto || "";
+
+      setProfile((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          user: {
+            ...(prev.user || {}),
+            profilePhoto: updatedPhoto,
+          },
+        };
+      });
+
+      setSuccess("Profile photo updated successfully.");
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   return (
     <LawyerProfileDetails
       profile={profile}
@@ -209,9 +268,11 @@ export default function LawyerProfile() {
       error={error}
       success={success}
       profileCompleted={profileCompleted}
+      isUploadingPhoto={isUploadingPhoto}
       onRetry={loadProfile}
       onChange={onChange}
       onSaveSection={onSaveSection}
+      onUploadPhoto={onUploadPhoto}
     />
   );
 }
