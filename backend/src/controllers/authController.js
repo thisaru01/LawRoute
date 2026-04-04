@@ -44,6 +44,7 @@ export const register = async (req, res, next) => {
     if (user.role === "lawyer") {
       await LawyerProfile.create({
         user: user._id,
+        verificationStatus: "pending",
         ...(expertise && { expertise }),
         ...(typeof isFree === "boolean" && { isFree }),
       });
