@@ -58,13 +58,22 @@ const ensureLawyerUser = async (authUser) => {
   return user;
 };
 
-// Ensure a lawyer profile exists for the given lawyer user id. 
-const ensureLawyerProfileExists = async (userId) => {
+// Ensure the lawyer has an approved profile before post activity actions.
+const ensureApprovedLawyerProfile = async (userId) => {
   const profile = await LawyerProfile.findOne({ user: userId });
 
   if (!profile) {
-    await LawyerProfile.create({ user: userId });
+    throw buildError("Lawyer profile not found", 404);
   }
+
+  if (profile.verificationStatus !== "approved") {
+    throw buildError(
+      "Only approved lawyers can create, update, or delete posts",
+      403,
+    );
+  }
+
+  return profile;
 };
 
 // Convert uploaded Cloudinary files into the Post.media structure. 
@@ -156,7 +165,7 @@ const buildPaginationQuery = (baseQuery, cursor) => {
 // Create a new post as a lawyer user. 
 export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) => {
   const user = await ensureLawyerUser(authUser);
-  await ensureLawyerProfileExists(user._id);
+  await ensureApprovedLawyerProfile(user._id);
 
   const media = mapUploadedFilesToMedia(uploadedFiles);
   const content =
@@ -313,6 +322,7 @@ export const updatePostByLawyer = async (
   uploadedFiles = [],
 ) => {
   const user = await ensureLawyerUser(authUser);
+  await ensureApprovedLawyerProfile(user._id);
   const post = await findOwnedPost(postId, user._id);
   const media = mapUploadedFilesToMedia(uploadedFiles);
   const hasReplaceMedia = payload.replaceMedia === true;
@@ -447,6 +457,7 @@ export const repostPostByUser = async (
 // Delete a lawyer-owned post and cleanup linked media from Cloudinary. 
 export const deletePostByLawyer = async (authUser, postId) => {
   const user = await ensureLawyerUser(authUser);
+  await ensureApprovedLawyerProfile(user._id);
   const post = await findOwnedPost(postId, user._id);
 
   const existingMediaPublicIds = (post.media || [])

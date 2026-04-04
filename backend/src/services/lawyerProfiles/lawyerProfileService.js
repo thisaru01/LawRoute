@@ -1,5 +1,8 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
+import mongoose from "mongoose";
+
+const VERIFICATION_STATUSES = ["pending", "approved", "rejected"];
 
 const ALLOWED_BASIC_FIELDS = [
   "professionalTitle",
@@ -9,13 +12,27 @@ const ALLOWED_BASIC_FIELDS = [
   "practiceAreas",
 ];
 
+const ALLOWED_EXPERTISE_VALUES = [
+  "general",
+  "civil",
+  "criminal",
+  "commercial",
+  "corporate",
+  "family",
+  "land",
+  "labour",
+  "tax",
+  "constitutional",
+  "administrative",
+  "environmental",
+  "intellectual_property",
+];
+
 const ALLOWED_EXPERIENCE_FIELDS = ["totalYearsExperience", "workHistory"];
 
 const ALLOWED_EDUCATION_FIELDS = [
   "education",
   "certifications",
-  "barRegistrationNumber",
-  "memberships",
 ];
 
 const LEGACY_BASIC_FIELD_MAP = {
@@ -105,6 +122,46 @@ const applyStructuredPayload = (lawyerProfile, body) => {
     applied = true;
   }
 
+  if (hasOwn(body, "barRegistrationNumber")) {
+    lawyerProfile.barRegistrationNumber = body.barRegistrationNumber;
+    applied = true;
+  }
+
+  if (hasOwn(body, "expertise")) {
+    lawyerProfile.expertise = body.expertise;
+    applied = true;
+  }
+
+  if (hasOwn(body, "memberships")) {
+    lawyerProfile.memberships = Array.isArray(body.memberships)
+      ? body.memberships
+      : [];
+    applied = true;
+  }
+
+  // Backward compatibility for clients still sending this under educationQualifications.
+  if (
+    educationQualifications &&
+    typeof educationQualifications === "object" &&
+    hasOwn(educationQualifications, "barRegistrationNumber")
+  ) {
+    lawyerProfile.barRegistrationNumber =
+      educationQualifications.barRegistrationNumber;
+    applied = true;
+  }
+
+  // Backward compatibility for old payloads that nested memberships under educationQualifications.
+  if (
+    educationQualifications &&
+    typeof educationQualifications === "object" &&
+    hasOwn(educationQualifications, "memberships")
+  ) {
+    lawyerProfile.memberships = Array.isArray(educationQualifications.memberships)
+      ? educationQualifications.memberships
+      : [];
+    applied = true;
+  }
+
   return applied;
 };
 
@@ -175,20 +232,35 @@ const applyLegacyPayload = (lawyerProfile, body) => {
 // Compute whether minimum profile details are complete. 
 const computeProfileCompleted = (lawyerProfile) => {
   const basic = lawyerProfile.basicInfo || {};
-  const exp = lawyerProfile.experience || {};
+  const education = lawyerProfile.educationQualifications || {};
   const hasPracticeAreas =
     Array.isArray(basic.practiceAreas) && basic.practiceAreas.length > 0;
+  const hasContactInfo =
+    basic.contactInfo &&
+    typeof basic.contactInfo === "object" &&
+    !Array.isArray(basic.contactInfo) &&
+    Object.keys(basic.contactInfo).length > 0;
+  const hasEducation =
+    Array.isArray(education.education) && education.education.length > 0;
+  const hasMemberships =
+    Array.isArray(lawyerProfile.memberships) && lawyerProfile.memberships.length > 0;
+  const hasValidExpertise =
+    typeof lawyerProfile.expertise === "string" &&
+    ALLOWED_EXPERTISE_VALUES.includes(lawyerProfile.expertise) &&
+    lawyerProfile.expertise !== "general";
 
   return Boolean(
     basic.professionalTitle &&
-    typeof exp.totalYearsExperience === "number" &&
-    exp.totalYearsExperience >= 0 &&
     basic.bio &&
-    hasPracticeAreas,
+    hasContactInfo &&
+    hasPracticeAreas &&
+    hasValidExpertise &&
+    hasEducation &&
+    hasMemberships &&
+    lawyerProfile.barRegistrationNumber,
   );
 };
 
-// Map internal profile document to API response shape. 
 const mapLawyerProfileResponse = (lawyerProfile) => ({
   id: lawyerProfile._id,
   user: lawyerProfile.user
@@ -201,7 +273,9 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
       }
     : null,
   expertise: lawyerProfile.expertise,
-  isVerified: lawyerProfile.isVerified,
+  verificationStatus: lawyerProfile.verificationStatus || "pending",
+  barRegistrationNumber: lawyerProfile.barRegistrationNumber || null,
+  memberships: lawyerProfile.memberships || [],
   isFree: lawyerProfile.isFree,
   basicInfo: lawyerProfile.basicInfo || {},
   experience: lawyerProfile.experience || {},
@@ -211,6 +285,45 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
   updatedAt: lawyerProfile.updatedAt,
 });
 
+const ensureValidUserId = (userId) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error("Invalid user id");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const ensureLawyerUserById = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.role !== "lawyer") {
+    const error = new Error("Selected user is not a lawyer");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return user;
+};
+
+const findOrCreateLawyerProfileByUserId = async (userId) => {
+  let lawyerProfile = await LawyerProfile.findOne({ user: userId });
+
+  if (!lawyerProfile) {
+    lawyerProfile = await LawyerProfile.create({
+      user: userId,
+      verificationStatus: "pending",
+    });
+  }
+
+  return lawyerProfile;
+};
+
 // Return all lawyer profiles for public listing.
 export const findAllLawyerProfiles = async () => {
   const lawyerProfiles = await LawyerProfile.find({})
@@ -219,6 +332,100 @@ export const findAllLawyerProfiles = async () => {
     .lean();
 
   return lawyerProfiles.map(mapLawyerProfileResponse);
+};
+
+// Return only approved lawyer profiles for public listing.
+export const findApprovedLawyerProfiles = async () => {
+  const lawyerProfiles = await LawyerProfile.find({
+    verificationStatus: "approved",
+  })
+    .populate({
+      path: "user",
+      select: "name email role profilePhoto",
+      match: { role: "lawyer" },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return lawyerProfiles
+    .filter((lawyerProfile) => Boolean(lawyerProfile.user))
+    .map(mapLawyerProfileResponse);
+};
+
+// Return lawyer profiles for admin review, optionally filtered by verification status.
+export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) => {
+  if (
+    verificationStatus !== undefined &&
+    !VERIFICATION_STATUSES.includes(verificationStatus)
+  ) {
+    const error = new Error("Invalid verificationStatus filter");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const filter = {};
+
+  if (verificationStatus) {
+    filter.verificationStatus = verificationStatus;
+  }
+
+  const lawyerProfiles = await LawyerProfile.find(filter)
+    .populate({
+      path: "user",
+      select: "name email role profilePhoto",
+      match: { role: "lawyer" },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return lawyerProfiles
+    .filter((lawyerProfile) => Boolean(lawyerProfile.user))
+    .map(mapLawyerProfileResponse);
+};
+
+// Update verification status for a lawyer profile after validating the target user is a lawyer.
+export const updateLawyerVerificationStatusByAdmin = async ({
+  userId,
+  verificationStatus,
+}) => {
+  ensureValidUserId(userId);
+
+  if (!VERIFICATION_STATUSES.includes(verificationStatus)) {
+    const error = new Error("Invalid verificationStatus value");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await ensureLawyerUserById(userId);
+
+  const lawyerProfile = await findOrCreateLawyerProfileByUserId(userId);
+
+  if (verificationStatus === "approved") {
+    if (!lawyerProfile.profileCompleted) {
+      const error = new Error(
+        "Cannot approve lawyer before completing profile",
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!lawyerProfile.barRegistrationNumber) {
+      const error = new Error(
+        "Cannot approve lawyer without bar registration number",
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  lawyerProfile.verificationStatus = verificationStatus;
+  await lawyerProfile.save();
+
+  const populatedLawyerProfile = await LawyerProfile.findById(lawyerProfile._id)
+    .populate("user", "name email role profilePhoto")
+    .lean();
+
+  return mapLawyerProfileResponse(populatedLawyerProfile);
 };
 
 // Return or auto-create the authenticated lawyer profile.
@@ -248,7 +455,10 @@ export const findLawyerProfileByUser = async (authUser) => {
     .lean();
 
   if (!lawyerProfile) {
-    const createdProfile = await LawyerProfile.create({ user: user._id });
+    const createdProfile = await LawyerProfile.create({
+      user: user._id,
+      verificationStatus: "pending",
+    });
     lawyerProfile = await LawyerProfile.findById(createdProfile._id)
       .populate("user", "name email role profilePhoto")
       .lean();
@@ -282,7 +492,10 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
   let lawyerProfile = await LawyerProfile.findOne({ user: user._id });
 
   if (!lawyerProfile) {
-    lawyerProfile = await LawyerProfile.create({ user: user._id });
+    lawyerProfile = await LawyerProfile.create({
+      user: user._id,
+      verificationStatus: "pending",
+    });
   }
 
   ensureProfileSections(lawyerProfile);
