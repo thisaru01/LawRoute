@@ -1,14 +1,42 @@
 import { CIVIL_ISSUE_CATEGORIES, CIVIL_ISSUE_STATUSES } from "../constants/civilIssueConstants.js";
 
+const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const POSTCODE_PATTERN = /^\d{5}$/;
+const CONTACT_NUMBER_PATTERN = /^\d{10}$/;
+
+const isValidDateOnly = (value) => {
+    if (!isNonEmptyString(value) || !DATE_ONLY_PATTERN.test(value)) {
+        return false;
+    }
+
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) {
+        return false;
+    }
+
+    return parsed.toISOString().slice(0, 10) === value;
+};
+
 // POST /api/civil-issues
 // Validates the request body when a citizen submits a new civil issue.
 export const validateSubmitCivilIssue = (req, res, next) => {
-    const { category, district, description } = req.body;
+    const {
+        category,
+        subject,
+        district,
+        exactLocation,
+        postalAreaOrZip,
+        whatHappened,
+        whenItHappened,
+        impactOnPeople,
+        contactNumber,
+    } = req.body;
 
-    if (!category || !district || !description) {
+    if (!category || !subject || !district) {
         return res.status(400).json({
             success: false,
-            message: "category, district, and description are required.",
+            message: "category, subject, and district are required.",
         });
     }
 
@@ -19,24 +47,66 @@ export const validateSubmitCivilIssue = (req, res, next) => {
         });
     }
 
-    if (typeof district !== "string" || district.trim().length === 0) {
+    if (!isNonEmptyString(subject)) {
+        return res.status(400).json({
+            success: false,
+            message: "subject must be a non-empty string.",
+        });
+    }
+
+    if (subject.length > 120) {
+        return res.status(400).json({
+            success: false,
+            message: "subject must not exceed 120 characters.",
+        });
+    }
+
+    if (!isNonEmptyString(district)) {
         return res.status(400).json({
             success: false,
             message: "district must be a non-empty string.",
         });
     }
 
-    if (typeof description !== "string" || description.trim().length === 0) {
+    if (!isNonEmptyString(exactLocation)) {
         return res.status(400).json({
             success: false,
-            message: "description must be a non-empty string.",
+            message: "exactLocation must be a non-empty string.",
         });
     }
 
-    if (description.length > 3000) {
+    if (!isNonEmptyString(postalAreaOrZip) || !POSTCODE_PATTERN.test(postalAreaOrZip.trim())) {
         return res.status(400).json({
             success: false,
-            message: "description must not exceed 3000 characters.",
+            message: "postalAreaOrZip must be exactly 5 digits.",
+        });
+    }
+
+    if (!isNonEmptyString(whatHappened)) {
+        return res.status(400).json({
+            success: false,
+            message: "whatHappened must be a non-empty string.",
+        });
+    }
+
+    if (!isValidDateOnly(whenItHappened)) {
+        return res.status(400).json({
+            success: false,
+            message: "whenItHappened must be a valid date in YYYY-MM-DD format.",
+        });
+    }
+
+    if (!isNonEmptyString(impactOnPeople)) {
+        return res.status(400).json({
+            success: false,
+            message: "impactOnPeople must be a non-empty string.",
+        });
+    }
+
+    if (!isNonEmptyString(contactNumber) || !CONTACT_NUMBER_PATTERN.test(contactNumber.trim())) {
+        return res.status(400).json({
+            success: false,
+            message: "contactNumber must be exactly 10 digits.",
         });
     }
 
@@ -46,8 +116,26 @@ export const validateSubmitCivilIssue = (req, res, next) => {
 // PATCH /api/civil-issues/:id
 // Validates the request body when a citizen updates their own civil issue.
 export const validateUpdateCivilIssue = (req, res, next) => {
-    const { description, district } = req.body;
-    const ALLOWED_FIELDS = ["description", "district"];
+    const {
+        subject,
+        district,
+        exactLocation,
+        postalAreaOrZip,
+        whatHappened,
+        whenItHappened,
+        impactOnPeople,
+        contactNumber,
+    } = req.body;
+    const ALLOWED_FIELDS = [
+        "subject",
+        "district",
+        "exactLocation",
+        "postalAreaOrZip",
+        "whatHappened",
+        "whenItHappened",
+        "impactOnPeople",
+        "contactNumber",
+    ];
 
     const unknownFields = Object.keys(req.body).filter(
         (key) => !ALLOWED_FIELDS.includes(key),
@@ -56,40 +144,95 @@ export const validateUpdateCivilIssue = (req, res, next) => {
     if (unknownFields.length > 0) {
         return res.status(400).json({
             success: false,
-            message: `Unknown fields: ${unknownFields.join(", ")}. Only description and district can be updated.`,
+            message: `Unknown fields: ${unknownFields.join(", ")}. Only subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople and contactNumber can be updated.`,
         });
     }
 
-    if (!description && !district) {
+    if (
+        subject === undefined &&
+        district === undefined &&
+        exactLocation === undefined &&
+        postalAreaOrZip === undefined &&
+        whatHappened === undefined &&
+        whenItHappened === undefined &&
+        impactOnPeople === undefined &&
+        contactNumber === undefined
+    ) {
         return res.status(400).json({
             success: false,
-            message: "Provide at least one field to update: description or district.",
+            message: "Provide at least one field to update.",
         });
     }
 
-    if (description !== undefined) {
-        if (typeof description !== "string" || description.trim().length === 0) {
+    if (subject !== undefined) {
+        if (!isNonEmptyString(subject)) {
             return res.status(400).json({
                 success: false,
-                message: "description must be a non-empty string.",
+                message: "subject must be a non-empty string.",
             });
         }
 
-        if (description.length > 3000) {
+        if (subject.length > 120) {
             return res.status(400).json({
                 success: false,
-                message: "description must not exceed 3000 characters.",
+                message: "subject must not exceed 120 characters.",
             });
         }
     }
 
-    if (district !== undefined) {
-        if (typeof district !== "string" || district.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "district must be a non-empty string.",
-            });
-        }
+    if (district !== undefined && !isNonEmptyString(district)) {
+        return res.status(400).json({
+            success: false,
+            message: "district must be a non-empty string.",
+        });
+    }
+
+    if (exactLocation !== undefined && !isNonEmptyString(exactLocation)) {
+        return res.status(400).json({
+            success: false,
+            message: "exactLocation must be a non-empty string.",
+        });
+    }
+
+    if (
+        postalAreaOrZip !== undefined
+        && (!isNonEmptyString(postalAreaOrZip) || !POSTCODE_PATTERN.test(postalAreaOrZip.trim()))
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "postalAreaOrZip must be exactly 5 digits.",
+        });
+    }
+
+    if (whatHappened !== undefined && !isNonEmptyString(whatHappened)) {
+        return res.status(400).json({
+            success: false,
+            message: "whatHappened must be a non-empty string.",
+        });
+    }
+
+    if (whenItHappened !== undefined && !isValidDateOnly(whenItHappened)) {
+        return res.status(400).json({
+            success: false,
+            message: "whenItHappened must be a valid date in YYYY-MM-DD format.",
+        });
+    }
+
+    if (impactOnPeople !== undefined && !isNonEmptyString(impactOnPeople)) {
+        return res.status(400).json({
+            success: false,
+            message: "impactOnPeople must be a non-empty string.",
+        });
+    }
+
+    if (
+        contactNumber !== undefined
+        && (!isNonEmptyString(contactNumber) || !CONTACT_NUMBER_PATTERN.test(contactNumber.trim()))
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "contactNumber must be exactly 10 digits.",
+        });
     }
 
     return next();

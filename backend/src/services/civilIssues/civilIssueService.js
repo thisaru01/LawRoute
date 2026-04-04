@@ -4,10 +4,62 @@ import User from "../../models/userModel.js";
 import { sendEmail } from "../email/emailService.js";
 import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const parseDateOnlyToUtcDate = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    if (value instanceof Date) {
+        return value;
+    }
+
+    return new Date(`${value}T00:00:00.000Z`);
+};
+
+const formatDateOnly = (value) => {
+    if (!value) {
+        return "";
+    }
+
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return "";
+    }
+
+    return parsed.toISOString().slice(0, 10);
+};
+
+const normalizeIssuePayload = ({
+    exactLocation,
+    postalAreaOrZip,
+    whatHappened,
+    whenItHappened,
+    impactOnPeople,
+    contactNumber,
+}) => ({
+    exactLocation: exactLocation ?? "",
+    postalAreaOrZip: postalAreaOrZip ?? "",
+    whatHappened: whatHappened ?? "",
+    whenItHappened: parseDateOnlyToUtcDate(whenItHappened),
+    impactOnPeople: impactOnPeople ?? "",
+    contactNumber: contactNumber ?? "",
+});
+
 // Create a new civil issue, auto-routing to the correct authority by category.
-export async function createIssue({ reporterId, category, district, description, attachments = [] }) {
+export async function createIssue({ reporterId, category, subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber, attachments = [], isPublic = false }) {
     const authorityProfile = await AuthorityProfile.findOne({
         managedCategory: category,
+    });
+
+    const structuredIssue = normalizeIssuePayload({
+        exactLocation,
+        postalAreaOrZip,
+        whatHappened,
+        whenItHappened,
+        impactOnPeople,
+        contactNumber,
     });
 
     if (!authorityProfile) {
@@ -19,16 +71,23 @@ export async function createIssue({ reporterId, category, district, description,
     const issue = await CivilIssue.create({
         reporterId,
         category,
+        subject,
         district,
-        description,
+        ...structuredIssue,
         attachments,
+        isPublic,
         assignedTo: authorityProfile.user,
     });
 
     // Send acknowledgement email to the citizen on successful submission.
     const reporter = await User.findById(reporterId, "email").lean();
     if (reporter?.email) {
-        const { subject, html } = issueSubmittedTemplate({ category, district, description });
+        const { subject, html } = issueSubmittedTemplate({
+            category,
+            district,
+            ...structuredIssue,
+            whenItHappened: formatDateOnly(structuredIssue.whenItHappened),
+        });
         sendEmail({ to: reporter.email, subject, html }).catch((err) =>
             console.error("[Email] Failed to send submission acknowledgement:", err.message)
         );
@@ -88,8 +147,8 @@ export async function getIssueById({ issueId, currentUserId }) {
     return issue;
 }
 
-// Update a civil issue's description or district (reporter only, pending status only).
-export async function updateIssue({ issueId, reporterId, description, district }) {
+// Update a civil issue (reporter only, pending status only).
+export async function updateIssue({ issueId, reporterId, subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber }) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email");
 
@@ -111,8 +170,14 @@ export async function updateIssue({ issueId, reporterId, description, district }
         throw error;
     }
 
-    if (description) issue.description = description;
-    if (district) issue.district = district;
+    if (subject !== undefined) issue.subject = subject;
+    if (district !== undefined) issue.district = district;
+    if (exactLocation !== undefined) issue.exactLocation = exactLocation;
+    if (postalAreaOrZip !== undefined) issue.postalAreaOrZip = postalAreaOrZip;
+    if (whatHappened !== undefined) issue.whatHappened = whatHappened;
+    if (whenItHappened !== undefined) issue.whenItHappened = parseDateOnlyToUtcDate(whenItHappened);
+    if (impactOnPeople !== undefined) issue.impactOnPeople = impactOnPeople;
+    if (contactNumber !== undefined) issue.contactNumber = contactNumber;
 
     await issue.save();
 
@@ -121,7 +186,12 @@ export async function updateIssue({ issueId, reporterId, description, district }
         const { subject, html } = issueUpdatedCitizenTemplate({
             category: issue.category,
             district: issue.district,
-            description: issue.description,
+            exactLocation: issue.exactLocation,
+            postalAreaOrZip: issue.postalAreaOrZip,
+            whatHappened: issue.whatHappened,
+            whenItHappened: formatDateOnly(issue.whenItHappened),
+            impactOnPeople: issue.impactOnPeople,
+            contactNumber: issue.contactNumber,
         });
 
         sendEmail({ to: issue.reporterId.email, subject, html }).catch((err) =>
@@ -192,4 +262,69 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
     }
 
     return issue;
+}
+
+// Get all publicly visible civil issues (no auth required).
+// Reporter identity is intentionally excluded to preserve anonymity.
+export async function getPublicIssues({ category, district, location, postcode, page = 1, limit = 10 }) {
+    const baseQuery = { isPublic: true };
+
+    if (category) {
+        baseQuery.category = category;
+    }
+
+    if (district) {
+        baseQuery.district = district;
+    }
+
+    const selectedFields = "category subject district exactLocation postalAreaOrZip whatHappened whenItHappened impactOnPeople status createdAt";
+
+    const safePage = Math.max(Number(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    const skip = (safePage - 1) * safeLimit;
+
+    let effectiveQuery = { ...baseQuery };
+
+    if (postcode) {
+        const postcodeQuery = {
+            ...baseQuery,
+            postalAreaOrZip: { $regex: new RegExp(escapeRegex(postcode), "i") },
+        };
+
+        const postcodeCount = await CivilIssue.countDocuments(postcodeQuery);
+
+        if (postcodeCount > 0 || !location) {
+            effectiveQuery = postcodeQuery;
+        } else {
+            effectiveQuery = {
+                ...baseQuery,
+                exactLocation: { $regex: new RegExp(escapeRegex(location), "i") },
+            };
+        }
+    } else if (location) {
+        effectiveQuery = {
+            ...baseQuery,
+            exactLocation: { $regex: new RegExp(escapeRegex(location), "i") },
+        };
+    }
+
+    const total = await CivilIssue.countDocuments(effectiveQuery);
+    const items = await CivilIssue.find(effectiveQuery)
+        .select(selectedFields)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit);
+
+    const totalPages = total > 0 ? Math.ceil(total / safeLimit) : 0;
+
+    return {
+        items,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            total,
+            totalPages,
+            hasNextPage: safePage < totalPages,
+        },
+    };
 }

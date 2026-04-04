@@ -10,10 +10,42 @@
     <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">District</td>
     <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 600;">{{formatText district}}</td>
   </tr>
+  {{#if exactLocation}}
   <tr class="responsive-row">
-    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Description</td>
-    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{description}}</td>
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Exact Location</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{exactLocation}}</td>
   </tr>
+  {{/if}}
+  {{#if postalAreaOrZip}}
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Postal Area / Zip</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{postalAreaOrZip}}</td>
+  </tr>
+  {{/if}}
+  {{#if whatHappened}}
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">What Happened</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{whatHappened}}</td>
+  </tr>
+  {{/if}}
+  {{#if whenItHappened}}
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">When It Happened</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{whenItHappened}}</td>
+  </tr>
+  {{/if}}
+  {{#if impactOnPeople}}
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Impact on People</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{impactOnPeople}}</td>
+  </tr>
+  {{/if}}
+  {{#if contactNumber}}
+  <tr class="responsive-row">
+    <td class="responsive-td responsive-label" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 500;">Contact Number</td>
+    <td class="responsive-td responsive-value" style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; color: #111827;">{{contactNumber}}</td>
+  </tr>
+  {{/if}}
 </table>
 
 <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; margin-top: 24px;">

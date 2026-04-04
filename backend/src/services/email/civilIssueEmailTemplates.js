@@ -39,8 +39,17 @@ function compileTemplate(fileName, data) {
 /**
  * Builds the acknowledgement email sent to a citizen after they submit a new civil issue.
  */
-export function issueSubmittedTemplate({ category, district, description }) {
-  const html = compileTemplate("issueSubmittedCitizen.hbs", { category, district, description });
+export function issueSubmittedTemplate({ category, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber }) {
+  const html = compileTemplate("issueSubmittedCitizen.hbs", {
+    category,
+    district,
+    exactLocation,
+    postalAreaOrZip,
+    whatHappened,
+    whenItHappened,
+    impactOnPeople,
+    contactNumber,
+  });
   return {
     subject: `Civil Issue Received — LawRoute`,
     html,
@@ -50,8 +59,17 @@ export function issueSubmittedTemplate({ category, district, description }) {
 /**
  * Builds the confirmation email sent to a citizen after they update their civil issue.
  */
-export function issueUpdatedCitizenTemplate({ category, district, description }) {
-  const html = compileTemplate("issueUpdatedCitizen.hbs", { category, district, description });
+export function issueUpdatedCitizenTemplate({ category, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber }) {
+  const html = compileTemplate("issueUpdatedCitizen.hbs", {
+    category,
+    district,
+    exactLocation,
+    postalAreaOrZip,
+    whatHappened,
+    whenItHappened,
+    impactOnPeople,
+    contactNumber,
+  });
   return {
     subject: `Your Civil Issue Has Been Updated — LawRoute`,
     html,

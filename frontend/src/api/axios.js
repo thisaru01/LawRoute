@@ -74,11 +74,13 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     // Let the browser set the correct `Content-Type` (with boundary) for multipart requests.
+    // Also extend the timeout to 30s for file uploads (PDFs can take longer on Cloudinary).
     if (typeof FormData !== "undefined" && config.data instanceof FormData) {
       if (config.headers) {
         delete config.headers["Content-Type"];
         delete config.headers["content-type"];
       }
+      config.timeout = 30000; // 30 seconds for file uploads
     }
     return config;
   },

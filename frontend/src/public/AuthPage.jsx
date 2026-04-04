@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { loginUser, registerUser } from "@/api/services/authService";
 
@@ -13,11 +13,18 @@ export default function AuthPage() {
   const { token, role, setToken } = useAuth();
   const [mode, setMode] = useState("signin");
   const isSignUp = mode === "signup";
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   useEffect(() => {
     if (!token) return;
-    navigate(getDashboardPathForRole(role), { replace: true });
-  }, [token, role, navigate]);
+
+    if (redirect) {
+      navigate(redirect, { replace: true });
+    } else {
+      navigate(getDashboardPathForRole(role), { replace: true });
+    }
+  }, [token, role, navigate, redirect]);
 
   const [signInValues, setSignInValues] = useState({
     email: "",
