@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 
 // Admin
 import AdminRouteLayout from "./admin/AdminRouteLayout.jsx";
@@ -47,6 +48,7 @@ import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
