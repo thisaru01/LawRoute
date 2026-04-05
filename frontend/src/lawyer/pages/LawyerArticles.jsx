@@ -52,7 +52,7 @@ export default function LawyerArticles() {
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((a) => (
-            <PendingArticleCard key={a._id || a.id} article={a} status="pending" />
+            <PendingArticleCard key={a._id || a.id} article={a} status="pending" routePrefix="/lawyer/articles" />
           ))}
         </div>
       </div>

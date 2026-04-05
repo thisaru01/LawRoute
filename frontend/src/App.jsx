@@ -84,6 +84,7 @@ export default function App() {
             <Route index element={<Navigate to="pending" replace />} />
             <Route path="create" element={<LawyerArticleCreate />} />
             <Route path=":status" element={<LawyerArticles />} />
+            <Route path=":status/:id" element={<AdminArticleView />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
         </Route>

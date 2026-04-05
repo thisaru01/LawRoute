@@ -21,9 +21,10 @@ function truncate(str, n = 200) {
   return s.length > n ? s.slice(0, n).trim() + '…' : s;
 }
 
-export default function PendingArticleCard({ article, status = "pending" }) {
+export default function PendingArticleCard({ article, status = "pending", routePrefix = "/admin/articles" }) {
+  const id = article?._id || article?.id;
   return (
-    <Link to={`/admin/articles/${status}/${article?._id || article?.id}`} className="block">
+    <Link to={`${routePrefix}/${status}/${id}`} className="block">
       <Card className="relative overflow-hidden group transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
       {article?.imagecardUrl && (
         <>
