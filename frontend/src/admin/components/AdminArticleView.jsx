@@ -132,7 +132,7 @@ export default function AdminArticleView() {
 
         <div className="flex items-center gap-2">
           {(() => {
-            if (isAuthor) {
+            if (isAuthor && !editing) {
               return (
                 <>
                   <button
@@ -155,29 +155,7 @@ export default function AdminArticleView() {
               );
             }
 
-            return (
-            <>
-              <button
-                type="button"
-                aria-label="Publish article"
-                onClick={() => handleChangeStatus("published")}
-                disabled={updatingStatus}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
-              >
-                Publish
-              </button>
-
-              <button
-                type="button"
-                aria-label="Reject article"
-                onClick={() => handleChangeStatus("rejected")}
-                disabled={updatingStatus}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
-              >
-                Reject
-              </button>
-            </>
-            );
+            return null;
           })()}
         </div>
         {statusError && (
