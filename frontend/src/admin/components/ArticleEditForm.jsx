@@ -75,7 +75,7 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium">Content (HTML or text)</label>
+        <label className="block text-sm font-medium">Content</label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}

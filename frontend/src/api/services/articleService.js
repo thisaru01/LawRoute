@@ -24,6 +24,10 @@ export const updateArticle = (id, data) => {
   return axios.put(`/articles/${id}`, data);
 };
 
+export const deleteArticle = (id) => {
+  return axios.delete(`/articles/${id}`);
+};
+
 export const getArticlesByStatus = (status) => {
   return axios.get("/articles", { params: { status } });
 };

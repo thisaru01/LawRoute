@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getArticle, updateArticleStatus } from "@/api/services/articleService";
+import { getArticle, updateArticleStatus, deleteArticle } from "@/api/services/articleService";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth/useAuth";
 import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
@@ -18,6 +18,7 @@ export default function AdminArticleView() {
   const [statusError, setStatusError] = useState("");
   const { userId } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -147,6 +148,20 @@ export default function AdminArticleView() {
                   <button
                     type="button"
                     aria-label="Delete article"
+                    disabled={deleting}
+                    onClick={async () => {
+                      if (!confirm("Delete this article? This cannot be undone.")) return;
+                      try {
+                        setDeleting(true);
+                        await deleteArticle(article._id || article.id);
+                        // Navigate back to previous page or list
+                        navigate(-1);
+                      } catch (e) {
+                        alert(e?.message || "Failed to delete article");
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 size={16} />
