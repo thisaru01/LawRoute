@@ -55,7 +55,7 @@ export default function LawyerProfileActivities() {
   const [successMessage, setSuccessMessage] = useState("");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [form, setForm] = useState(initialFormState);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
 
@@ -110,7 +110,7 @@ export default function LawyerProfileActivities() {
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-    
+
     setFetchError("");
     setSuccessMessage("");
     try {
@@ -129,7 +129,7 @@ export default function LawyerProfileActivities() {
 
     const content = form.content.trim();
     const tags = parseTags(form.tags);
-    
+
     // Grabbing media from the native form submission event target which is bound in the Modal
     const mediaFiles = Array.from(event.currentTarget.media?.files || []);
 
@@ -163,7 +163,7 @@ export default function LawyerProfileActivities() {
         const postId = editingPost._id || editingPost.id;
         const response = await updatePost(postId, payload);
         const updatedPost = response?.data?.post || response?.data;
-        
+
         if (updatedPost) {
           setPosts((currentPosts) => currentPosts.map(p => (p._id || p.id) === (updatedPost._id || updatedPost.id) ? updatedPost : p));
         } else {
@@ -184,11 +184,11 @@ export default function LawyerProfileActivities() {
 
       setForm(initialFormState);
       setFileInputKey((currentKey) => currentKey + 1);
-      
+
       // Close the modal upon success
       setIsModalOpen(false);
       setEditingPost(null);
-      
+
     } catch (error) {
       setFormError(error?.response?.data?.message || error?.message || "Unable to save your post.");
     } finally {
@@ -200,7 +200,7 @@ export default function LawyerProfileActivities() {
   const author = posts[0]?.author || {};
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {successMessage && !isModalOpen && (
         <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
           {successMessage}
@@ -214,7 +214,7 @@ export default function LawyerProfileActivities() {
             <AvatarImage src={author.profilePhoto || ""} alt={author.name || "Lawyer"} />
             <AvatarFallback className="font-semibold text-lg">{author.name ? author.name.charAt(0).toUpperCase() : "L"}</AvatarFallback>
           </Avatar>
-          <button 
+          <button
             onClick={openCreateModal}
             className="flex-1 rounded-full border border-border/70 px-5 py-3.5 text-left font-medium text-foreground/60 shadow-sm transition-all hover:bg-muted/60 hover:text-foreground hover:border-border cursor-text"
           >
@@ -222,14 +222,14 @@ export default function LawyerProfileActivities() {
           </button>
         </div>
         <div className="mt-3 flex justify-around sm:justify-start gap-4 pt-3 border-t border-border/40">
-            <Button variant="ghost" className="w-full h-11 rounded-lg font-semibold text-muted-foreground sm:w-auto hover:bg-blue-50 hover:text-blue-700" onClick={openCreateModal}>
-              <ImageIcon className="mr-2 size-[18px] text-blue-500" /> 
-              Photo
-            </Button>
-            <Button variant="ghost" className="w-full h-11 rounded-lg font-semibold text-muted-foreground sm:w-auto hover:bg-green-50 hover:text-green-700" onClick={openCreateModal}>
-              <Video className="mr-2 size-[18px] text-green-500" /> 
-              Video
-            </Button>
+          <Button variant="ghost" className="w-full h-11 rounded-lg font-semibold text-muted-foreground sm:w-auto hover:bg-blue-50 hover:text-blue-700" onClick={openCreateModal}>
+            <ImageIcon className="mr-2 size-[18px] text-blue-500" />
+            Photo
+          </Button>
+          <Button variant="ghost" className="w-full h-11 rounded-lg font-semibold text-muted-foreground sm:w-auto hover:bg-green-50 hover:text-green-700" onClick={openCreateModal}>
+            <Video className="mr-2 size-[18px] text-green-500" />
+            Video
+          </Button>
         </div>
       </Card>
 

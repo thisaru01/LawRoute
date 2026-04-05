@@ -42,7 +42,7 @@ export default function PublishedPostsList({
       <CardContent className="p-0">
         {isLoading ? (
           <div className="p-6">
-             <PostsSkeleton />
+            <PostsSkeleton />
           </div>
         ) : fetchError ? (
           <div className="p-6">
@@ -59,24 +59,24 @@ export default function PublishedPostsList({
             <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
               <p className="font-medium text-foreground">No posts yet</p>
               <p className="mt-1 text-xs">
-                Publish your first update using the form on the left.
+                Publish your first update using the form above.
               </p>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col">
-            <div className="flex gap-4 overflow-x-auto p-4 snap-x scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex flex-col w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
               {posts.map((post) => (
-                <div key={post._id || post.id} className="w-[360px] min-w-[360px] snap-center flex-shrink-0">
+                <div key={post._id || post.id} className="w-full h-full">
                   <PostPreview post={post} onEdit={onEdit} onDelete={onDelete} />
                 </div>
               ))}
             </div>
-            
+
             <div className="border-t border-border/60 text-center hover:bg-muted/30 transition-colors">
-               <button className="w-full font-semibold text-muted-foreground py-3 flex items-center justify-center gap-2 hover:text-foreground">
-                 Show all posts <ArrowRight className="size-4" />
-               </button>
+              <Link to="/lawyer/profile/activities" className="w-full font-semibold text-muted-foreground py-3 flex items-center justify-center gap-2 hover:text-foreground">
+                Show all posts <ArrowRight className="size-4" />
+              </Link>
             </div>
           </div>
         )}

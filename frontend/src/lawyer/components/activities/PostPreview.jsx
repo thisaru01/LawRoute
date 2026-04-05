@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,7 +24,7 @@ const getRelativeTime = (dateStr) => {
   if (isNaN(date)) return "1d";
   const now = new Date();
   const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays < 1) return "Today";
   if (diffDays < 30) return `${diffDays}d`;
   if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo`;
@@ -40,6 +41,10 @@ export default function PostPreview({ post, onEdit, onDelete }) {
   const author = post?.author || {};
   const media = Array.isArray(post?.media) ? post.media : [];
   const hasMedia = media.length > 0;
+  
+  const [isExpanded, setIsExpanded] = useState(false);
+  const content = post.content || "";
+  const isLongContent = content.length > 120 || content.split("\n").length > 3;
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card text-left text-card-foreground shadow-sm transition-shadow hover:shadow-md">
@@ -76,23 +81,43 @@ export default function PostPreview({ post, onEdit, onDelete }) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 border-border/80 bg-card text-foreground">
-             <DropdownMenuItem className="cursor-pointer gap-2 font-medium" onClick={() => onEdit && onEdit(post)}>
-                <Edit2 className="size-4 text-muted-foreground" />
-                <span>Edit Post</span>
-             </DropdownMenuItem>
-             <DropdownMenuItem className="cursor-pointer gap-2 font-medium text-red-600 focus:bg-red-500/10 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-500/20 dark:focus:text-red-400" onClick={() => onDelete && onDelete(post._id || post.id)}>
-                <Trash2 className="size-4" />
-                <span>Delete Post</span>
-             </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer gap-2 font-medium" onClick={() => onEdit && onEdit(post)}>
+              <Edit2 className="size-4 text-muted-foreground" />
+              <span>Edit Post</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer gap-2 font-medium text-red-600 focus:bg-red-500/10 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-500/20 dark:focus:text-red-400" onClick={() => onDelete && onDelete(post._id || post.id)}>
+              <Trash2 className="size-4" />
+              <span>Delete Post</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {/* Content Section */}
       <div className="px-4 pb-3">
-        <p className="line-clamp-3 whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90">
-          {post.content}
+        <p 
+          className={`whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90 ${
+            !isExpanded ? "line-clamp-3" : ""
+          }`}
+        >
+          {content}
         </p>
+        {isLongContent && !isExpanded && (
+          <button 
+            onClick={() => setIsExpanded(true)}
+            className="mt-1 text-[14px] font-semibold text-muted-foreground hover:text-blue-600 transition-colors"
+          >
+            ... more
+          </button>
+        )}
+        {isLongContent && isExpanded && (
+          <button 
+            onClick={() => setIsExpanded(false)}
+            className="mt-1 text-[14px] font-semibold text-muted-foreground hover:text-blue-600 transition-colors"
+          >
+            Show less
+          </button>
+        )}
       </div>
 
       {/* Media Section */}
@@ -102,11 +127,11 @@ export default function PostPreview({ post, onEdit, onDelete }) {
             const isImage =
               item.resourceType === "image" ||
               (typeof item.url === "string" && /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(item.url));
-            
+
             const isVideo =
               item.resourceType === "video" ||
               (typeof item.url === "string" && /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(item.url));
-            
+
             // Render only the first item in this view to match LinkedIn card style constraint
             if (index > 0) return null;
 
@@ -167,13 +192,13 @@ export default function PostPreview({ post, onEdit, onDelete }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <button className="flex flex-1 items-center justify-center gap-2 rounded-lg p-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-            <ThumbsUp className="size-4.5" strokeWidth={2.5} />
+        <div className="flex items-center justify-between gap-1 px-1 py-1.5 sm:gap-2 sm:px-2">
+          <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:gap-2 sm:p-3 sm:text-[14px]">
+            <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={2.5} />
             <span>Like</span>
           </button>
-          <button className="flex flex-1 items-center justify-center gap-2 rounded-lg p-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-            <MessageSquare className="size-4.5" strokeWidth={2.5} />
+          <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:gap-2 sm:p-3 sm:text-[14px]">
+            <MessageSquare className="size-4 sm:size-4.5" strokeWidth={2.5} />
             <span>Comment</span>
           </button>
         </div>
