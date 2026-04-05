@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 
 // Admin
 import AdminRouteLayout from "./admin/AdminRouteLayout.jsx";
@@ -42,14 +43,17 @@ import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
+import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
+        <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />

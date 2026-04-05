@@ -335,10 +335,19 @@ export const findAllLawyerProfiles = async () => {
 };
 
 // Return only approved lawyer profiles for public listing.
-export const findApprovedLawyerProfiles = async () => {
-  const lawyerProfiles = await LawyerProfile.find({
-    verificationStatus: "approved",
-  })
+// Accepts optional { search, expertise, isFree } for filtering.
+export const findApprovedLawyerProfiles = async ({ search, expertise, isFree } = {}) => {
+  const filter = { verificationStatus: "approved" };
+
+  if (expertise && ALLOWED_EXPERTISE_VALUES.includes(expertise)) {
+    filter.expertise = expertise;
+  }
+
+  if (isFree === true || isFree === "true") {
+    filter.isFree = true;
+  }
+
+  const lawyerProfiles = await LawyerProfile.find(filter)
     .populate({
       path: "user",
       select: "name email role profilePhoto",
@@ -347,9 +356,22 @@ export const findApprovedLawyerProfiles = async () => {
     .sort({ createdAt: -1 })
     .lean();
 
-  return lawyerProfiles
+  let results = lawyerProfiles
     .filter((lawyerProfile) => Boolean(lawyerProfile.user))
     .map(mapLawyerProfileResponse);
+
+  // Post-populate text search on name, title, and bio
+  if (search && typeof search === "string" && search.trim()) {
+    const query = search.trim().toLowerCase();
+    results = results.filter(
+      (p) =>
+        p.user?.name?.toLowerCase().includes(query) ||
+        p.basicInfo?.professionalTitle?.toLowerCase().includes(query) ||
+        p.basicInfo?.bio?.toLowerCase().includes(query),
+    );
+  }
+
+  return results;
 };
 
 // Return lawyer profiles for admin review, optionally filtered by verification status.
