@@ -5,7 +5,15 @@ const { Schema } = mongoose;
 const ArticleSchema = new Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  category: { type: String },
+  category: {
+    type: String,
+    required: true,
+    enum: ["Family", "Property", "Work", "Consumer", "Finance"],
+  },
+  // Card image (uploaded PNG/JPG) shown in article cards/listings
+  imagecardUrl: { type: String, default: null },
+  imagecardPublicId: { type: String, default: null },
+  // Main article image (optional upload)
   imageUrl: { type: String, default: null },
   imagePublicId: { type: String, default: null },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
