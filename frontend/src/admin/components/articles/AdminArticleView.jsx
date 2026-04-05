@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getArticle, updateArticleStatus, deleteArticle } from "@/api/services/articleService";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth/useAuth";
-import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
-import ArticleEditForm from "@/admin/components/ArticleEditForm";
+import RelatedArticlesSidebar from "@/admin/components/articles/RelatedArticlesSidebar";
+import ArticleEditForm from "@/admin/components/articles/ArticleEditForm";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
