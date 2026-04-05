@@ -108,73 +108,84 @@ export default function CaseMeetings() {
     timeOptions,
     handleScheduleChange,
     handleScheduleConfirm,
+    normalizedStatus,
   } = useCaseContext();
   const upcomingMeetings = meetings.filter((m) => !isPast(m));
   const pastMeetings = meetings.filter((m) => isPast(m));
 
+  const isAlreadyClosed = normalizedStatus === "closed";
+
   return (
     <AlertDialog>
       <div className="space-y-4">
-        {/* Schedule Meeting Banner */}
-        <div>
-          <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <CalendarPlus className="h-6 w-6 text-primary" />
+        {!isAlreadyClosed && (
+          <>
+            {/* Schedule Meeting Banner */}
+            <div>
+              <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <CalendarPlus className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">
+                    Schedule a Meeting
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Set up an online or in-person meeting with your client.
+                  </p>
+                </div>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={!caseId} className="gap-2">
+                    <CalendarPlus className="h-4 w-4" />
+                    Schedule meeting
+                  </Button>
+                </AlertDialogTrigger>
+              </CardContent>
             </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-foreground">
-                Schedule a Meeting
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Set up an online or in-person meeting with your client.
-              </p>
+
+            <Separator />
+          </>
+        )}
+
+        {!isAlreadyClosed && (
+          <>
+            {/* Upcoming Meetings */}
+            <div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Upcoming meetings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {meetingsError && (
+                  <p className="text-sm text-destructive mb-3">
+                    {meetingsError.message || "Failed to load meetings"}
+                  </p>
+                )}
+
+                {meetingsLoading ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MeetingCardSkeleton />
+                    <MeetingCardSkeleton />
+                    <MeetingCardSkeleton />
+                    <MeetingCardSkeleton />
+                  </div>
+                ) : upcomingMeetings.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
+                    <Calendar className="mb-2 h-7 w-7 opacity-30" />
+                    No upcoming meetings scheduled.
+                  </div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {upcomingMeetings.map((meeting) => (
+                      <MeetingCard key={meeting._id} meeting={meeting} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </div>
-            <AlertDialogTrigger asChild>
-              <Button disabled={!caseId} className="gap-2">
-                <CalendarPlus className="h-4 w-4" />
-                Schedule meeting
-              </Button>
-            </AlertDialogTrigger>
-          </CardContent>
-        </div>
 
-        <Separator />
-
-        {/* Upcoming Meetings */}
-        <div>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Upcoming meetings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {meetingsError && (
-              <p className="text-sm text-destructive mb-3">
-                {meetingsError.message || "Failed to load meetings"}
-              </p>
-            )}
-
-            {meetingsLoading ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MeetingCardSkeleton />
-                <MeetingCardSkeleton />
-                <MeetingCardSkeleton />
-                <MeetingCardSkeleton />
-              </div>
-            ) : upcomingMeetings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
-                <Calendar className="mb-2 h-7 w-7 opacity-30" />
-                No upcoming meetings scheduled.
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {upcomingMeetings.map((meeting) => (
-                  <MeetingCard key={meeting._id} meeting={meeting} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </div>
-
-        <Separator />
+            <Separator />
+          </>
+        )}
 
         {/* Meeting History */}
         <div>
