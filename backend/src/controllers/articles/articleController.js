@@ -168,6 +168,8 @@ export const updateArticle = async (req, res, next) => {
 
     const imagecardUrl = imagecardFile?.path || null;
     const imagecardPublicId = imagecardFile?.filename || null;
+    const removeImage = req.body?.removeImage === "true" || req.body?.removeImage === true;
+    const removeImagecard = req.body?.removeImagecard === "true" || req.body?.removeImagecard === true;
 
     const article = await articleService.updateArticle({
       id,
@@ -179,6 +181,8 @@ export const updateArticle = async (req, res, next) => {
       imagePublicId,
       imagecardUrl,
       imagecardPublicId,
+      removeImage,
+      removeImagecard,
     });
 
     return res.status(200).json({ success: true, article });

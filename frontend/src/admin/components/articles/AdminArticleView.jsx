@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getArticle, updateArticleStatus } from "@/api/services/articleService";
+import { getArticle, updateArticleStatus, deleteArticle } from "@/api/services/articleService";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth/useAuth";
-import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
+import RelatedArticlesSidebar from "@/admin/components/articles/RelatedArticlesSidebar";
+import ArticleEditForm from "@/admin/components/articles/ArticleEditForm";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
@@ -16,6 +17,8 @@ export default function AdminArticleView() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusError, setStatusError] = useState("");
   const { userId } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -130,20 +133,38 @@ export default function AdminArticleView() {
 
         <div className="flex items-center gap-2">
           {(() => {
-            if (isAuthor) {
+            const status = String(article.status || "").toLowerCase();
+            if (isAuthor && !editing) {
               return (
                 <>
-                  <button
-                    type="button"
-                    aria-label="Edit article"
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {status === "pending" && (
+                    <button
+                      type="button"
+                      aria-label="Edit article"
+                      onClick={() => setEditing(true)}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
 
                   <button
                     type="button"
                     aria-label="Delete article"
+                    disabled={deleting}
+                    onClick={async () => {
+                      if (!confirm("Delete this article? This cannot be undone.")) return;
+                      try {
+                        setDeleting(true);
+                        await deleteArticle(article._id || article.id);
+                        // Navigate back to previous page or list
+                        navigate(-1);
+                      } catch (e) {
+                        alert(e?.message || "Failed to delete article");
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 size={16} />
@@ -152,29 +173,32 @@ export default function AdminArticleView() {
               );
             }
 
-            return (
-            <>
-              <button
-                type="button"
-                aria-label="Publish article"
-                onClick={() => handleChangeStatus("published")}
-                disabled={updatingStatus}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
-              >
-                Publish
-              </button>
+            // Show publish/reject for non-authors when viewing pending articles
+            if (!isAuthor && status === "pending" && !editing) {
+              return (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeStatus("published")}
+                    disabled={updatingStatus}
+                    className="inline-flex items-center px-3 py-1 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                  >
+                    {updatingStatus ? "..." : "Publish"}
+                  </button>
 
-              <button
-                type="button"
-                aria-label="Reject article"
-                onClick={() => handleChangeStatus("rejected")}
-                disabled={updatingStatus}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
-              >
-                Reject
-              </button>
-            </>
-            );
+                  <button
+                    type="button"
+                    onClick={() => handleChangeStatus("rejected")}
+                    disabled={updatingStatus}
+                    className="inline-flex items-center px-3 py-1 rounded-md bg-destructive text-white text-sm hover:opacity-90"
+                  >
+                    {updatingStatus ? "..." : "Reject"}
+                  </button>
+                </>
+              );
+            }
+
+            return null;
           })()}
         </div>
         {statusError && (
@@ -182,21 +206,36 @@ export default function AdminArticleView() {
         )}
       </div>
 
-      {/** Use main image if available, otherwise fall back to imagecardUrl */}
-      {(article.imageUrl || article.imagecardUrl) && (
-        <img
-          src={article.imageUrl || article.imagecardUrl}
-          alt={article.title}
-          className="w-full h-96 object-cover rounded-lg mb-6"
+      {editing && (
+        <ArticleEditForm
+          article={article}
+          onCancel={() => setEditing(false)}
+          onUpdated={(updated) => {
+            setArticle(updated);
+            setEditing(false);
+          }}
         />
       )}
 
-      {article.subtitle && <p className="text-muted-foreground mb-4">{article.subtitle}</p>}
+      {!editing && (
+        <>
+          {/** Use main image if available, otherwise fall back to imagecardUrl */}
+          {(article.imageUrl || article.imagecardUrl) && (
+            <img
+              src={article.imageUrl || article.imagecardUrl}
+              alt={article.title}
+              className="w-full h-96 object-cover rounded-lg mb-6"
+            />
+          )}
 
-      {article.content ? (
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
-      ) : (
-        <p>{article.excerpt || article.description}</p>
+          {article.subtitle && <p className="text-muted-foreground mb-4">{article.subtitle}</p>}
+
+          {article.content ? (
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+          ) : (
+            <p>{article.excerpt || article.description}</p>
+          )}
+        </>
       )}
         </div>
 

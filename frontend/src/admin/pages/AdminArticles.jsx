@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArticlesByStatus } from "@/api/services/articleService";
-import PendingArticleCard from "@/admin/components/PendingArticleCard";
+import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth/useAuth";
 

@@ -252,7 +252,7 @@ export const updateArticleStatus = async ({ id, status, user }) => {
   return { deleted: false, article };
 };
 
-export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId, imagecardUrl, imagecardPublicId }) => {
+export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId, imagecardUrl, imagecardPublicId, removeImage, removeImagecard }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
   if (!mongoose.Types.ObjectId.isValid(cleanId)) {
@@ -301,6 +301,33 @@ export const updateArticle = async ({ id, user, title, content, category, imageU
   if (title !== undefined) article.title = title;
   if (content !== undefined) article.content = content;
   if (category !== undefined) article.category = category;
+
+  // Handle explicit removal flags (delete existing assets if requested)
+  if (removeImage) {
+    if (article.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagePublicId);
+      } catch (e) {
+        console.error("Failed to delete article image from Cloudinary", e);
+      }
+    }
+
+    article.imageUrl = null;
+    article.imagePublicId = null;
+  }
+
+  if (removeImagecard) {
+    if (article.imagecardPublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagecardPublicId);
+      } catch (e) {
+        console.error("Failed to delete article imagecard from Cloudinary", e);
+      }
+    }
+
+    article.imagecardUrl = null;
+    article.imagecardPublicId = null;
+  }
 
   // Handle image replacement: if a new image is provided, remove the old one from Cloudinary
   if (imagePublicId) {
