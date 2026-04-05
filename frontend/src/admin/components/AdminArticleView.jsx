@@ -4,6 +4,7 @@ import { getArticle, updateArticleStatus } from "@/api/services/articleService";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth/useAuth";
 import RelatedArticlesSidebar from "@/admin/components/RelatedArticlesSidebar";
+import ArticleEditForm from "@/admin/components/ArticleEditForm";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
@@ -16,6 +17,7 @@ export default function AdminArticleView() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusError, setStatusError] = useState("");
   const { userId } = useAuth();
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -136,6 +138,7 @@ export default function AdminArticleView() {
                   <button
                     type="button"
                     aria-label="Edit article"
+                    onClick={() => setEditing(true)}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
                   >
                     <Pencil size={16} />
@@ -182,21 +185,36 @@ export default function AdminArticleView() {
         )}
       </div>
 
-      {/** Use main image if available, otherwise fall back to imagecardUrl */}
-      {(article.imageUrl || article.imagecardUrl) && (
-        <img
-          src={article.imageUrl || article.imagecardUrl}
-          alt={article.title}
-          className="w-full h-96 object-cover rounded-lg mb-6"
+      {editing && (
+        <ArticleEditForm
+          article={article}
+          onCancel={() => setEditing(false)}
+          onUpdated={(updated) => {
+            setArticle(updated);
+            setEditing(false);
+          }}
         />
       )}
 
-      {article.subtitle && <p className="text-muted-foreground mb-4">{article.subtitle}</p>}
+      {!editing && (
+        <>
+          {/** Use main image if available, otherwise fall back to imagecardUrl */}
+          {(article.imageUrl || article.imagecardUrl) && (
+            <img
+              src={article.imageUrl || article.imagecardUrl}
+              alt={article.title}
+              className="w-full h-96 object-cover rounded-lg mb-6"
+            />
+          )}
 
-      {article.content ? (
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
-      ) : (
-        <p>{article.excerpt || article.description}</p>
+          {article.subtitle && <p className="text-muted-foreground mb-4">{article.subtitle}</p>}
+
+          {article.content ? (
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+          ) : (
+            <p>{article.excerpt || article.description}</p>
+          )}
+        </>
       )}
         </div>
 
