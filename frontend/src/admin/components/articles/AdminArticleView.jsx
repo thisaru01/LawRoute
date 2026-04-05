@@ -173,6 +173,31 @@ export default function AdminArticleView() {
               );
             }
 
+            // Show publish/reject for non-authors when viewing pending articles
+            if (!isAuthor && status === "pending" && !editing) {
+              return (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeStatus("published")}
+                    disabled={updatingStatus}
+                    className="inline-flex items-center px-3 py-1 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                  >
+                    {updatingStatus ? "..." : "Publish"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleChangeStatus("rejected")}
+                    disabled={updatingStatus}
+                    className="inline-flex items-center px-3 py-1 rounded-md bg-destructive text-white text-sm hover:opacity-90"
+                  >
+                    {updatingStatus ? "..." : "Reject"}
+                  </button>
+                </>
+              );
+            }
+
             return null;
           })()}
         </div>
