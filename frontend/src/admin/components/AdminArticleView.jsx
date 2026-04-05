@@ -133,17 +133,20 @@ export default function AdminArticleView() {
 
         <div className="flex items-center gap-2">
           {(() => {
+            const status = String(article.status || "").toLowerCase();
             if (isAuthor && !editing) {
               return (
                 <>
-                  <button
-                    type="button"
-                    aria-label="Edit article"
-                    onClick={() => setEditing(true)}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {status === "pending" && (
+                    <button
+                      type="button"
+                      aria-label="Edit article"
+                      onClick={() => setEditing(true)}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
 
                   <button
                     type="button"
