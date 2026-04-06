@@ -6,6 +6,7 @@ import AdminRouteLayout from "./admin/AdminRouteLayout.jsx";
 import AdminDashboard from "./admin/pages/AdminDashboard.jsx";
 import AdminProfile from "./admin/pages/AdminProfile.jsx";
 import AdminUsers from "./admin/pages/AdminUsers.jsx";
+import AdminLawyerApprovals from "./admin/pages/AdminLawyerApprovals.jsx";
 import AdminCases from "./admin/pages/AdminCases.jsx";
 import AdminCivilIssues from "./admin/pages/AdminCivilIssues.jsx";
 import AdminArticles from "./admin/pages/AdminArticles.jsx";
@@ -114,6 +115,7 @@ export default function App() {
           <Route path="profile" element={<AdminProfile />} />
           <Route path="users">
             <Route index element={<Navigate to="authority" replace />} />
+            <Route path="lawyer" element={<AdminLawyerApprovals />} />
             <Route path=":type" element={<AdminUsers />} />
           </Route>
           <Route path="cases">
