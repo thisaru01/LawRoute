@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 
 // Admin
 import AdminRouteLayout from "./admin/AdminRouteLayout.jsx";
@@ -9,6 +10,7 @@ import AdminCases from "./admin/pages/AdminCases.jsx";
 import AdminCivilIssues from "./admin/pages/AdminCivilIssues.jsx";
 import AdminArticles from "./admin/pages/AdminArticles.jsx";
 import AdminArticleCreate from "./admin/pages/AdminArticleCreate.jsx";
+import AdminArticleView from "./admin/components/articles/AdminArticleView.jsx";
 import AdminDocuments from "./admin/pages/AdminDocuments.jsx";
 
 // Citizen
@@ -41,14 +43,17 @@ import AuthorityCivilIssues from "./authority/pages/AuthorityCivilIssues.jsx";
 import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
+import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
+        <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
@@ -89,6 +94,7 @@ export default function App() {
             <Route index element={<Navigate to="pending" replace />} />
             <Route path="create" element={<LawyerArticleCreate />} />
             <Route path=":status" element={<LawyerArticles />} />
+            <Route path=":status/:id" element={<AdminArticleView />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
         </Route>
@@ -122,6 +128,7 @@ export default function App() {
             <Route index element={<Navigate to="pending" replace />} />
             <Route path="create" element={<AdminArticleCreate />} />
             <Route path=":status" element={<AdminArticles />} />
+            <Route path=":status/:id" element={<AdminArticleView />} />
           </Route>
           <Route path="documents" element={<AdminDocuments />} />
           <Route path="*" element={<Navigate to="." replace />} />

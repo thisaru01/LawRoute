@@ -35,8 +35,8 @@ export default function LawyerCases() {
 
   const handleOpenCase = useCallback((caseItem) => {
     const id = caseItem?._id;
-    if (!id || backendStatus !== "open") return;
-    navigate(`/lawyer/cases/opened/${id}`, {
+    if (!id) return;
+    navigate(`/lawyer/cases/${safeStatus}/${id}`, {
       state: {
         caseId: id,
         citizenName: caseItem?.user?.name || "Citizen",
@@ -46,7 +46,7 @@ export default function LawyerCases() {
         status: caseItem?.status,
       },
     });
-  }, [backendStatus, navigate]);
+  }, [safeStatus, navigate]);
 
   const headerProps = {
     title: "Cases",
@@ -96,7 +96,7 @@ export default function LawyerCases() {
           <CaseCard
             key={caseItem?._id}
             caseItem={caseItem}
-            clickable={backendStatus === "open"}
+            clickable={true}
             onClick={() => handleOpenCase(caseItem)}
           />
         ))}

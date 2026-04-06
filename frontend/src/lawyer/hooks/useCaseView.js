@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import {
   closeCase,
@@ -134,8 +135,10 @@ export function useCaseView() {
       const res = await getCaseMeetings(caseId);
       const list = res?.data?.data;
       setMeetings(Array.isArray(list) ? list : []);
+      toast.success("Meeting scheduled successfully");
     } catch (err) {
       setMeetingsError(err);
+      toast.error("Failed to schedule meeting");
     } finally {
       setIsScheduling(false);
     }
@@ -154,8 +157,10 @@ export function useCaseView() {
       const res = await getCaseDocuments(caseId);
       const list = res?.data?.data;
       setDocuments(Array.isArray(list) ? list : []);
+      toast.success("Document uploaded successfully");
     } catch (err) {
       setDocumentsError(err);
+      toast.error("Failed to upload document");
     } finally {
       setIsUploading(false);
     }
@@ -170,8 +175,10 @@ export function useCaseView() {
       // Refresh case details so status badge updates immediately
       const res = await getCaseById(caseId);
       setCaseDetails(res?.data?.data || null);
+      toast.success("Case closed successfully");
     } catch (err) {
       setCloseError(err);
+      toast.error("Failed to close case");
     } finally {
       setIsClosing(false);
     }

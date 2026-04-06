@@ -78,32 +78,40 @@ export default function CaseDocuments() {
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    normalizedStatus,
   } = useCaseContext();
+
+  const isAlreadyClosed = normalizedStatus === "closed";
+
   return (
     <AlertDialog>
       <div className="space-y-4">
-        {/* Add Documents Banner */}
-        <div>
-          <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <FilePlus className="h-6 w-6 text-primary" />
+        {!isAlreadyClosed && (
+          <>
+            {/* Add Documents Banner */}
+            <div>
+              <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <FilePlus className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Add Documents</p>
+                  <p className="text-sm text-muted-foreground">
+                    Upload files relevant to this case for easy access.
+                  </p>
+                </div>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={isUploading || !caseId} className="gap-2">
+                    <FilePlus className="h-4 w-4" />
+                    {isUploading ? "Uploading..." : "Add document"}
+                  </Button>
+                </AlertDialogTrigger>
+              </CardContent>
             </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-foreground">Add Documents</p>
-              <p className="text-sm text-muted-foreground">
-                Upload files relevant to this case for easy access.
-              </p>
-            </div>
-            <AlertDialogTrigger asChild>
-              <Button disabled={isUploading || !caseId} className="gap-2">
-                <FilePlus className="h-4 w-4" />
-                {isUploading ? "Uploading..." : "Add document"}
-              </Button>
-            </AlertDialogTrigger>
-          </CardContent>
-        </div>
 
-        <Separator />
+            <Separator />
+          </>
+        )}
 
         {/* Documents list */}
         <div>
