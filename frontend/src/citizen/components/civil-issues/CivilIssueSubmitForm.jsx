@@ -10,6 +10,7 @@ import CivilIssueReportDetailsSection from "@/citizen/components/civil-issues/Ci
 import CivilIssueAttachmentsSection from "@/citizen/components/civil-issues/CivilIssueAttachmentsSection.jsx";
 import CivilIssueVisibilityToggle from "@/citizen/components/civil-issues/CivilIssueVisibilityToggle.jsx";
 import CivilIssueSubmitActions from "@/citizen/components/civil-issues/CivilIssueSubmitActions.jsx";
+import CivilIssueAwarenessDialog from "@/public/civil-issues/components/CivilIssueAwarenessDialog.jsx";
 
 export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} }) {
   const attachmentsInputRef = useRef(null);
@@ -65,6 +66,20 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
       )}
 
       <CivilIssueSubmitInfoBanner />
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-600 sm:text-sm">
+            Need category-specific reporting guidance before submitting?
+          </p>
+          <CivilIssueAwarenessDialog
+            selectedCategory={formData.category}
+            triggerLabel="Open Awareness Q&A"
+            triggerVariant="outline"
+            triggerClassName="h-8 text-xs sm:h-9 sm:text-sm"
+          />
+        </div>
+      </div>
 
       <CivilIssueCategoryField
         value={formData.category}

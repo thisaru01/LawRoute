@@ -7,6 +7,7 @@ import IssueFilters from "@/public/civil-issues/components/IssueFilters.jsx";
 import EmptyState from "@/public/civil-issues/components/EmptyState.jsx";
 import FloatingSubmitButton from "@/public/civil-issues/components/FloatingSubmitButton.jsx";
 import CivilIssueSubmitForm from "@/citizen/components/civil-issues/CivilIssueSubmitForm.jsx";
+import CivilIssueAwarenessDialog from "@/public/civil-issues/components/CivilIssueAwarenessDialog.jsx";
 import { usePublicCivilIssuesPage } from "@/public/civil-issues/hooks/usePublicCivilIssuesPage.js";
 
 export default function PublicCivilIssuesPage() {
@@ -51,6 +52,14 @@ export default function PublicCivilIssuesPage() {
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Community Issues Feed</h2>
                 <p className="text-sm sm:text-base text-slate-500">Explore concerns shared by fellow citizens across Sri Lanka.</p>
+                <div>
+                  <CivilIssueAwarenessDialog
+                    selectedCategory={filterCategory !== "all" ? filterCategory : ""}
+                    triggerLabel="Awareness Q&A"
+                    triggerVariant="outline"
+                    triggerClassName="h-9"
+                  />
+                </div>
               </div>
 
               <IssueFilters
