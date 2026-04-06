@@ -22,6 +22,7 @@ export default function PublicCivilIssuesPage() {
     hasNextPage,
     handleLocationQueryChange,
     handleLocationSelect,
+    handleDistrictChange,
     handleClearFilters,
     handleCloseForm,
     handleStartSubmission,
@@ -29,10 +30,10 @@ export default function PublicCivilIssuesPage() {
     loading,
     loadingMore,
     locationQuery,
+    locationMessage,
     openIssues,
     page,
     setFilterCategory,
-    setFilterDistrict,
     setOpenIssues,
     showForm,
     totalPages,
@@ -57,8 +58,9 @@ export default function PublicCivilIssuesPage() {
                 selectedCategory={filterCategory}
                 selectedDistrict={filterDistrict}
                 locationQuery={locationQuery}
+                locationMessage={locationMessage}
                 onCategoryChange={setFilterCategory}
-                onDistrictChange={setFilterDistrict}
+                onDistrictChange={handleDistrictChange}
                 onLocationQueryChange={handleLocationQueryChange}
                 onLocationSelect={handleLocationSelect}
               />

@@ -73,6 +73,7 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [submitAttemptCount, setSubmitAttemptCount] = useState(0);
 
   const { attachments, handleFileChange, removeFile } = useCivilIssueAttachments({
     maxFiles: MAX_FILES,
@@ -104,6 +105,7 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitAttempted(true);
+    setSubmitAttemptCount((count) => count + 1);
 
     if (hasAnyFieldError(fieldErrors)) {
       setError("Please review the highlighted fields and correct the invalid values.");
@@ -156,6 +158,7 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
     removeFile,
     setFormData,
     showValidationErrors,
+    submitAttemptCount,
     success,
     onSuccess,
   };

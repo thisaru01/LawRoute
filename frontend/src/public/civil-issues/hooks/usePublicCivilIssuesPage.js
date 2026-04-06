@@ -10,10 +10,28 @@ export const CATEGORY_LABELS = Object.fromEntries(
 
 export const DISTRICTS = CIVIL_ISSUE_DISTRICTS;
 const PAGE_LIMIT = 10;
+const DEFAULT_DISTRICT = "All Districts";
+
+const normalizeDistrictText = (value) =>
+  (typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, " ") : "");
+
+const toCanonicalDistrict = (value) => {
+  const normalized = normalizeDistrictText(value).replace(/\s+district$/, "").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const canonical = DISTRICTS.find((district) => normalizeDistrictText(district) === normalized);
+  return canonical || "";
+};
+
+const isSpecificDistrict = (value) =>
+  Boolean(value && normalizeDistrictText(value) !== normalizeDistrictText(DEFAULT_DISTRICT));
 
 export function usePublicCivilIssuesPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { token } = useAuth();
 
   const [issues, setIssues] = useState([]);
@@ -24,8 +42,9 @@ export function usePublicCivilIssuesPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [filterCategory, setFilterCategory] = useState("all");
-  const [filterDistrict, setFilterDistrict] = useState("All Districts");
+  const [filterDistrict, setFilterDistrict] = useState(DEFAULT_DISTRICT);
   const [locationQuery, setLocationQuery] = useState("");
+  const [locationMessage, setLocationMessage] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedPostcode, setSelectedPostcode] = useState("");
   const [openIssues, setOpenIssues] = useState({});
@@ -47,7 +66,7 @@ export function usePublicCivilIssuesPage() {
         params.category = filterCategory;
       }
 
-      if (filterDistrict !== "All Districts") {
+      if (filterDistrict !== DEFAULT_DISTRICT) {
         params.district = filterDistrict;
       }
 
@@ -89,13 +108,18 @@ export function usePublicCivilIssuesPage() {
   useEffect(() => {
     if (searchParams.get("action") === "submit" && token) {
       setShowForm(true);
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("action");
+      setSearchParams(nextParams, { replace: true });
     }
-  }, [searchParams, token]);
+  }, [searchParams, setSearchParams, token]);
 
   const filteredIssues = issues;
 
   const handleLocationQueryChange = (value) => {
     setLocationQuery(value);
+    setLocationMessage("");
 
     if (!value.trim()) {
       setSelectedLocation("");
@@ -104,7 +128,38 @@ export function usePublicCivilIssuesPage() {
   };
 
   const handleLocationSelect = (suggestion) => {
+    const isDistrictSuggestion = suggestion?.matchType === "district";
+    const districtFromSuggestion =
+      toCanonicalDistrict(suggestion?.district)
+      || toCanonicalDistrict(suggestion?.locationName);
+    const activeDistrict = isSpecificDistrict(filterDistrict)
+      ? toCanonicalDistrict(filterDistrict)
+      : "";
+
+    const suggestionLabel =
+      typeof suggestion?.locationName === "string" && suggestion.locationName.trim()
+        ? suggestion.locationName.trim()
+        : "The selected location";
+
+    if (activeDistrict && districtFromSuggestion && districtFromSuggestion !== activeDistrict) {
+      setLocationMessage(
+        `${suggestionLabel} is not in ${activeDistrict} District. Please select a location within the chosen district or clear the district filter.`
+      );
+      setSelectedLocation("");
+      setSelectedPostcode("");
+      return;
+    }
+
     setLocationQuery(suggestion.locationName);
+    setLocationMessage("");
+
+    if (isDistrictSuggestion && districtFromSuggestion) {
+      setFilterDistrict(districtFromSuggestion);
+      setSelectedLocation("");
+      setSelectedPostcode("");
+      return;
+    }
+
     setSelectedLocation(suggestion.locationName || "");
     setSelectedPostcode(suggestion.postcode || "");
   };
@@ -117,6 +172,11 @@ export function usePublicCivilIssuesPage() {
     }
   };
 
+  const handleDistrictChange = (districtValue) => {
+    setFilterDistrict(districtValue);
+    setLocationMessage("");
+  };
+
   const loadNextPage = () => {
     if (loading || loadingMore || !hasNextPage) {
       return;
@@ -125,11 +185,20 @@ export function usePublicCivilIssuesPage() {
     fetchIssues({ targetPage: page + 1, reset: false });
   };
 
-  const handleCloseForm = () => setShowForm(false);
+  const handleCloseForm = () => {
+    setShowForm(false);
+
+    if (searchParams.get("action") === "submit") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("action");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
   const handleClearFilters = () => {
     setFilterCategory("all");
-    setFilterDistrict("All Districts");
+    setFilterDistrict(DEFAULT_DISTRICT);
     setLocationQuery("");
+    setLocationMessage("");
     setSelectedLocation("");
     setSelectedPostcode("");
   };
@@ -145,6 +214,7 @@ export function usePublicCivilIssuesPage() {
     hasNextPage,
     handleLocationQueryChange,
     handleLocationSelect,
+    handleDistrictChange,
     handleClearFilters,
     handleCloseForm,
     handleStartSubmission,
@@ -152,10 +222,10 @@ export function usePublicCivilIssuesPage() {
     loading,
     loadingMore,
     locationQuery,
+    locationMessage,
     openIssues,
     page,
     setFilterCategory,
-    setFilterDistrict,
     setOpenIssues,
     showForm,
     totalPages,
