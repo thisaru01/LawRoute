@@ -156,23 +156,23 @@ export default function LawyerProfileDetails({
   if (!profile && error) {
     return (
       <Card className="mt-6">
-                  <CardHeader>
-                    <div className="flex items-start justify-between w-full">
-                      <div>
-                        <CardTitle>Unable to load profile</CardTitle>
-                        <CardDescription>There was a problem loading your lawyer profile.</CardDescription>
-                      </div>
-                      <div>
-                        <Button variant="ghost" size="sm" onClick={() => onRetry && onRetry()}>
-                          Retry
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-destructive">{error?.message || "Request failed"}</p>
-                  </CardContent>
-                </Card>
+        <CardHeader>
+          <div className="flex items-start justify-between w-full">
+            <div>
+              <CardTitle>Unable to load profile</CardTitle>
+              <CardDescription>There was a problem loading your lawyer profile.</CardDescription>
+            </div>
+            <div>
+              <Button variant="ghost" size="sm" onClick={() => onRetry && onRetry()}>
+                Retry
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">{error?.message || "Request failed"}</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -241,7 +241,7 @@ export default function LawyerProfileDetails({
                   className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 border border-gray-100 transition-all hover:scale-110 disabled:opacity-60 disabled:cursor-not-allowed group"
                   aria-label="Edit profile image"
                 >
-                   <svg className="w-4 h-4 text-blue-600 group-hover:text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-blue-600 group-hover:text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -306,15 +306,15 @@ export default function LawyerProfileDetails({
                   verificationStatus === "approved"
                     ? "bg-blue-50 text-blue-700 border-blue-200 px-3 py-1 text-xs font-semibold rounded-full"
                     : verificationStatus === "rejected"
-                    ? "bg-red-50 text-red-700 border-red-200 px-3 py-1 text-xs font-semibold rounded-full"
-                    : "bg-indigo-50 text-indigo-700 border-indigo-200 px-3 py-1 text-xs font-semibold rounded-full"
+                      ? "bg-red-50 text-red-700 border-red-200 px-3 py-1 text-xs font-semibold rounded-full"
+                      : "bg-indigo-50 text-indigo-700 border-indigo-200 px-3 py-1 text-xs font-semibold rounded-full"
                 }
               >
                 {verificationStatus === "approved"
                   ? "Verified Member"
                   : verificationStatus === "rejected"
-                  ? "Verification Failed"
-                  : "Verification Pending"}
+                    ? "Verification Failed"
+                    : "Verification Pending"}
               </Badge>
             </div>
           </div>

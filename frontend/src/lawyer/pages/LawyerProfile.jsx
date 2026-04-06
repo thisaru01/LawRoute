@@ -80,11 +80,11 @@ const toFormState = (profile) => {
     practiceAreas: Array.isArray(basicInfo.practiceAreas) ? basicInfo.practiceAreas : [],
     barRegistrationNumber: profile?.barRegistrationNumber || "",
     memberships: listToCsv(profile?.memberships),
-    education: Array.isArray(educationQualifications.education) 
-      ? educationQualifications.education 
+    education: Array.isArray(educationQualifications.education)
+      ? educationQualifications.education
       : [],
-    certifications: Array.isArray(educationQualifications.certifications) 
-      ? educationQualifications.certifications 
+    certifications: Array.isArray(educationQualifications.certifications)
+      ? educationQualifications.certifications
       : [],
     workHistory: Array.isArray(experience.workHistory) ? experience.workHistory : [],
   };
