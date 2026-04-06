@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar.jsx";
 import { getPublishedArticles } from "@/api/services/articleService";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 function formatDate(d) {
   try {
@@ -61,15 +62,14 @@ export default function PublicArticlesPage() {
         <section className="bg-slate-50 py-10 sm:py-14 border-b border-slate-200">
           <div className="mx-auto w-full max-w-6xl px-4 space-y-6">
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Legal Library
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 Articles & Guides
               </h1>
+              {/* <p className="mt-2 text-muted-foreground">
+                Articles & Guides
+              </p> */}
               <p className="text-sm sm:text-base text-slate-500 max-w-2xl">
-                Browse published legal articles written by verified lawyers and
-                authorities. These do not replace legal advice, but can help you
+                Browse published legal articles written by verified lawyers and authorities. These do not replace legal advice, but can help you
                 understand common topics and procedures.
               </p>
             </div>
@@ -138,42 +138,45 @@ export default function PublicArticlesPage() {
 function ArticleCard({ article }) {
   const hasImage = Boolean(article?.imagecardUrl || article?.imageUrl);
   const imageSrc = article?.imagecardUrl || article?.imageUrl || "";
+  const id = article?._id || article?.id;
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden border border-slate-200 bg-white shadow-sm">
-      {hasImage && (
-        <div className="relative w-full overflow-hidden bg-slate-100">
-          <img
-            src={imageSrc}
-            alt={article?.title || "Article image"}
-            className="h-40 w-full object-cover transition-transform duration-200 hover:scale-[1.02]"
-          />
+    <Link to={`/legal-library/articles/${id}`} className="block">
+      <Card className="relative overflow-hidden group transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
+        {hasImage && (
+          <>
+            <img
+              src={imageSrc}
+              alt={article?.title || "Article image"}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="h-64" />
+          </>
+        )}
+
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+          <div className="flex flex-col">
+            <h3 className="mb-2 text-2xl font-semibold">
+              {article?.title || "Untitled"}
+            </h3>
+
+            {(article?.excerpt || article?.content || article?.description) && (
+              <p className="max-w-3xl text-sm opacity-90">
+                {truncate(
+                  article?.excerpt || article?.content || article?.description,
+                  120,
+                )}
+              </p>
+            )}
+
+            {article?.createdAt && (
+              <div className="mt-3 text-right text-xs text-white/80">
+                {formatDate(article.createdAt)}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-
-      <div className="flex flex-1 flex-col p-4 space-y-2">
-        <h2 className="text-base font-semibold text-slate-900 line-clamp-2">
-          {article?.title || "Untitled article"}
-        </h2>
-
-        {article?.excerpt || article?.description || article?.content ? (
-          <p className="text-sm text-slate-600 line-clamp-4">
-            {truncate(article.excerpt || article.description || article.content, 160)}
-          </p>
-        ) : null}
-
-        <div className="mt-auto pt-3 flex items-center justify-between text-xs text-slate-500">
-          {article?.category && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-              {String(article.category).charAt(0).toUpperCase() + String(article.category).slice(1)}
-            </span>
-          )}
-
-          {article?.createdAt && (
-            <span>{formatDate(article.createdAt)}</span>
-          )}
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }
