@@ -51,49 +51,56 @@ export default function IssueCard({ issue, isOpen, onToggle, categoryLabels, sho
       open={isOpen}
       onOpenChange={onToggle}
     >
-      <Card className="overflow-hidden border-slate-200 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+      <Card className="overflow-hidden border-slate-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
         <CollapsibleTrigger asChild>
           <Button
             type="button"
             variant="ghost"
-            className="h-auto w-full items-start sm:items-center justify-between rounded-none p-4 sm:p-5 text-left hover:bg-slate-50/50"
+            className="h-auto w-full items-start justify-between rounded-none px-4 py-4 text-left hover:bg-slate-50/70 sm:px-5 sm:py-5"
           >
-            <div className="flex items-center gap-4 flex-1 overflow-hidden">
-              <div className="bg-primary/5 p-2.5 rounded-xl text-primary hidden sm:block">
-                <Info className="h-5 w-5" />
+            <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+              <div className="mt-0.5 hidden rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-500 sm:block">
+                <Info className="h-4.5 w-4.5" />
               </div>
-              <div className="space-y-1 overflow-hidden">
-                <h3 className="text-sm sm:text-base font-semibold text-slate-900 truncate leading-snug">
-                  {displayTitle}
-                </h3>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <User className="h-3 w-3" /> Anonymous Citizen
+              <div className="min-w-0 space-y-2 overflow-hidden">
+                <div className="flex items-start gap-2">
+                  <h3 className="truncate text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                    {displayTitle}
+                  </h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-600 sm:text-sm">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 sm:text-xs">
+                    <User className="h-3 w-3" />
+                    Anonymous Citizen
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
                     {issue.district}
                   </span>
                   {hasValue(issue.exactLocation) && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
                       {issue.exactLocation}
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> {new Date(issue.createdAt).toLocaleDateString()}
+                  <span className="inline-flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                    {new Date(issue.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-              <Badge variant="outline" className="capitalize bg-white text-[11px] sm:text-xs whitespace-nowrap">
+            <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-3">
+              <Badge
+                variant="outline"
+                className="whitespace-nowrap border-slate-300 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium capitalize text-slate-700 sm:text-xs"
+              >
                 {issue.status}
               </Badge>
-              <span className="text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="hidden text-xs font-medium text-slate-500 sm:inline">
                 {isOpen ? "Hide details" : "View details"}
               </span>
-              <ChevronDown className="h-5 w-5 text-slate-400 group-data-[state=open]:rotate-180 transition-transform" />
+              <ChevronDown className="h-4.5 w-4.5 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
             </div>
           </Button>
         </CollapsibleTrigger>

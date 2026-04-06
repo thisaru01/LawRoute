@@ -27,8 +27,9 @@ export default function PublicCivilIssuesPage() {
     handleCloseForm,
     handleStartSubmission,
     loadNextPage,
+    loadPreviousPage,
     loading,
-    loadingMore,
+    loadingPage,
     locationQuery,
     locationMessage,
     openIssues,
@@ -111,15 +112,26 @@ export default function PublicCivilIssuesPage() {
                       </p>
                     ) : null}
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={loadNextPage}
-                      disabled={!hasNextPage || loadingMore}
-                      className="h-11 min-w-40"
-                    >
-                      {loadingMore ? "Loading..." : hasNextPage ? "Next page" : "No more issues"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={loadPreviousPage}
+                        disabled={page <= 1 || loadingPage}
+                        className="h-11 min-w-28"
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={loadNextPage}
+                        disabled={!hasNextPage || loadingPage}
+                        className="h-11 min-w-28"
+                      >
+                        {loadingPage ? "Loading..." : hasNextPage ? "Next" : "No more"}
+                      </Button>
+                    </div>
                   </div>
                 </>
               ) : (

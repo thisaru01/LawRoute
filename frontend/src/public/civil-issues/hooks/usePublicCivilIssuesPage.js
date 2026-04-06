@@ -36,7 +36,7 @@ export function usePublicCivilIssuesPage() {
 
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -51,10 +51,10 @@ export function usePublicCivilIssuesPage() {
   const [showForm, setShowForm] = useState(false);
 
   const fetchIssues = async ({ targetPage = 1, reset = true } = {}) => {
-    if (reset) {
+    if (reset && targetPage === 1) {
       setLoading(true);
     } else {
-      setLoadingMore(true);
+      setLoadingPage(true);
     }
 
     setError(null);
@@ -85,7 +85,7 @@ export function usePublicCivilIssuesPage() {
       const incoming = Array.isArray(res?.data?.data) ? res.data.data : [];
       const pagination = res?.data?.pagination || {};
 
-      setIssues((prev) => (reset ? incoming : [...prev, ...incoming]));
+      setIssues(incoming);
       setPage(Number(pagination.page) || targetPage);
       setHasNextPage(Boolean(pagination.hasNextPage));
       setTotalPages(Number(pagination.totalPages) || 0);
@@ -93,10 +93,10 @@ export function usePublicCivilIssuesPage() {
       console.error("Failed to fetch public issues", err);
       setError(err.message || "Failed to load issues. Please try again.");
     } finally {
-      if (reset) {
+      if (reset && targetPage === 1) {
         setLoading(false);
       } else {
-        setLoadingMore(false);
+        setLoadingPage(false);
       }
     }
   };
@@ -178,11 +178,19 @@ export function usePublicCivilIssuesPage() {
   };
 
   const loadNextPage = () => {
-    if (loading || loadingMore || !hasNextPage) {
+    if (loading || loadingPage || !hasNextPage) {
       return;
     }
 
-    fetchIssues({ targetPage: page + 1, reset: false });
+    fetchIssues({ targetPage: page + 1, reset: true });
+  };
+
+  const loadPreviousPage = () => {
+    if (loading || loadingPage || page <= 1) {
+      return;
+    }
+
+    fetchIssues({ targetPage: page - 1, reset: true });
   };
 
   const handleCloseForm = () => {
@@ -219,8 +227,9 @@ export function usePublicCivilIssuesPage() {
     handleCloseForm,
     handleStartSubmission,
     loadNextPage,
+    loadPreviousPage,
     loading,
-    loadingMore,
+    loadingPage,
     locationQuery,
     locationMessage,
     openIssues,
