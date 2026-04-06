@@ -8,13 +8,31 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSriLankaLocationAutocomplete } from "@/hooks/useSriLankaLocationAutocomplete";
+import { CIVIL_ISSUE_DISTRICTS } from "@/constants/civilIssueConstants.js";
 
-const MAX_EXACT_LOCATION_LENGTH = 180;
+const MAX_EXACT_LOCATION_LENGTH = 120;
 const MAX_POSTAL_AREA_LENGTH = 5;
 const MAX_WHAT_HAPPENED_LENGTH = 1200;
 const MAX_IMPACT_LENGTH = 1200;
 const MAX_CONTACT_LENGTH = 10;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const normalizeDistrictText = (value) =>
+  (typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, " ") : "");
+
+const toCanonicalDistrict = (value) => {
+  const normalized = normalizeDistrictText(value).replace(/\s+district$/, "").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const canonical = CIVIL_ISSUE_DISTRICTS.find(
+    (district) => normalizeDistrictText(district) === normalized
+  );
+
+  return canonical || "";
+};
 
 const parseDateOnly = (value) => {
   if (!DATE_ONLY_PATTERN.test(value || "")) {
@@ -75,6 +93,8 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
     query: value.exactLocation,
   });
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
+  const [locationSelectionHint, setLocationSelectionHint] = useState("");
 
   const setField = (field) => (event) => {
     const nextValue = event.target.value;
@@ -85,6 +105,7 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
     }));
 
     if (field === "exactLocation") {
+      setLocationSelectionHint("");
       setShowLocationSuggestions(true);
     }
   };
@@ -101,15 +122,112 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
 
   const hasLocationSuggestions = showLocationSuggestions && suggestions.length > 0;
 
+  const isSuggestionNameAmbiguousAcrossDistricts = (item) => {
+    const targetName = typeof item?.locationName === "string" ? item.locationName.trim().toLowerCase() : "";
+    const targetDistrict = typeof item?.district === "string" ? item.district.trim().toLowerCase() : "";
+
+    if (!targetName) {
+      return false;
+    }
+
+    const districtSet = new Set(
+      suggestions
+        .filter((entry) => {
+          const name = typeof entry?.locationName === "string" ? entry.locationName.trim().toLowerCase() : "";
+          return name === targetName;
+        })
+        .map((entry) => (typeof entry?.district === "string" ? entry.district.trim().toLowerCase() : ""))
+        .filter(Boolean)
+    );
+
+    if (!targetDistrict) {
+      return districtSet.size > 1;
+    }
+
+    return districtSet.size > 1 && districtSet.has(targetDistrict);
+  };
+
   const applyLocationSuggestion = (item) => {
+    const selectedDistrict = toCanonicalDistrict(item?.district);
+    const districtChanged = Boolean(selectedDistrict) && selectedDistrict !== value.district;
+
     onChange((prev) => ({
       ...prev,
       exactLocation: item.locationName || prev.exactLocation,
       postalAreaOrZip: item.postcode || prev.postalAreaOrZip,
+      district: selectedDistrict || prev.district,
       exactLocationSelected: true,
     }));
+
+    if (districtChanged) {
+      setLocationSelectionHint(`District changed to ${selectedDistrict} based on selected location.`);
+    } else {
+      setLocationSelectionHint("");
+    }
+
     setShowLocationSuggestions(false);
+    setHighlightedSuggestionIndex(-1);
   };
+
+  const handleLocationKeyDown = (event) => {
+    if (event.key === "ArrowDown") {
+      if (!showLocationSuggestions) {
+        setShowLocationSuggestions(true);
+      }
+
+      if (suggestions.length > 0) {
+        event.preventDefault();
+        setHighlightedSuggestionIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+      }
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      if (suggestions.length > 0) {
+        event.preventDefault();
+        setHighlightedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setShowLocationSuggestions(false);
+      setHighlightedSuggestionIndex(-1);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      if (hasLocationSuggestions) {
+        event.preventDefault();
+        const targetIndex = highlightedSuggestionIndex >= 0 ? highlightedSuggestionIndex : 0;
+        const targetSuggestion = suggestions[targetIndex];
+
+        if (isSuggestionNameAmbiguousAcrossDistricts(targetSuggestion)) {
+          const selectedName =
+            typeof targetSuggestion?.locationName === "string" && targetSuggestion.locationName.trim()
+              ? targetSuggestion.locationName.trim()
+              : "this location";
+          setLocationSelectionHint(
+            `Multiple results found for ${selectedName} in different districts. Please click the exact district from the list.`
+          );
+          return;
+        }
+
+        applyLocationSuggestion(targetSuggestion);
+      } else {
+        event.preventDefault();
+        setShowLocationSuggestions(false);
+      }
+    }
+  };
+
+  const highlightedSuggestion =
+    highlightedSuggestionIndex >= 0 && highlightedSuggestionIndex < suggestions.length
+      ? suggestions[highlightedSuggestionIndex]
+      : null;
+
+  const isHighlightedSuggestionAmbiguous =
+    Boolean(highlightedSuggestion) && isSuggestionNameAmbiguousAcrossDistricts(highlightedSuggestion);
 
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
@@ -137,12 +255,7 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
                 // Allow suggestion click handlers to run before closing.
                 setTimeout(() => setShowLocationSuggestions(false), 120);
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  setShowLocationSuggestions(false);
-                }
-              }}
+              onKeyDown={handleLocationKeyDown}
               maxLength={MAX_EXACT_LOCATION_LENGTH}
               placeholder="Type town or area to search suggestions"
               className="h-11 text-sm"
@@ -164,6 +277,16 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
               </p>
             ) : null}
 
+            {locationSelectionHint ? (
+              <p className="mt-2 text-xs text-slate-600">{locationSelectionHint}</p>
+            ) : null}
+
+            {hasLocationSuggestions && isHighlightedSuggestionAmbiguous ? (
+              <p className="mt-2 text-xs text-amber-600">
+                This location name exists in multiple districts. Please click the exact district from the list.
+              </p>
+            ) : null}
+
             {hasLocationSuggestions ? (
               <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
                 <ul className="max-h-60 overflow-auto py-1">
@@ -171,7 +294,10 @@ export default function CivilIssueReportDetailsSection({ value, onChange, errors
                     <li key={`${item.formatted}-${index}`}>
                       <button
                         type="button"
-                        className="w-full px-3 py-2 text-left transition-colors hover:bg-slate-50"
+                        className={`w-full px-3 py-2 text-left transition-colors ${
+                          highlightedSuggestionIndex === index ? "bg-slate-100" : "hover:bg-slate-50"
+                        }`}
+                        onMouseEnter={() => setHighlightedSuggestionIndex(index)}
                         onMouseDown={(event) => {
                           event.preventDefault();
                           applyLocationSuggestion(item);
