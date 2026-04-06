@@ -132,29 +132,16 @@ export function usePublicCivilIssuesPage() {
     const districtFromSuggestion =
       toCanonicalDistrict(suggestion?.district)
       || toCanonicalDistrict(suggestion?.locationName);
-    const activeDistrict = isSpecificDistrict(filterDistrict)
-      ? toCanonicalDistrict(filterDistrict)
-      : "";
-
-    const suggestionLabel =
-      typeof suggestion?.locationName === "string" && suggestion.locationName.trim()
-        ? suggestion.locationName.trim()
-        : "The selected location";
-
-    if (activeDistrict && districtFromSuggestion && districtFromSuggestion !== activeDistrict) {
-      setLocationMessage(
-        `${suggestionLabel} is not in ${activeDistrict} District. Please select a location within the chosen district or clear the district filter.`
-      );
-      setSelectedLocation("");
-      setSelectedPostcode("");
-      return;
-    }
 
     setLocationQuery(suggestion.locationName);
     setLocationMessage("");
 
-    if (isDistrictSuggestion && districtFromSuggestion) {
+    if (districtFromSuggestion && districtFromSuggestion !== filterDistrict) {
       setFilterDistrict(districtFromSuggestion);
+      setLocationMessage(`District changed to ${districtFromSuggestion} based on selected location.`);
+    }
+
+    if (isDistrictSuggestion && districtFromSuggestion) {
       setSelectedLocation("");
       setSelectedPostcode("");
       return;

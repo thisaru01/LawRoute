@@ -28,6 +28,7 @@ export default function IssueFilters({
   const locationContainerRef = useRef(null);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
+  const [locationSelectionHint, setLocationSelectionHint] = useState("");
 
   const {
     suggestions,
@@ -42,6 +43,31 @@ export default function IssueFilters({
   const shouldShowSuggestionPanel = showLocationSuggestions && normalizedQuery.length >= 2;
   const hasLocationSuggestions = showLocationSuggestions && suggestions.length > 0;
 
+  const isSuggestionNameAmbiguousAcrossDistricts = (item) => {
+    const targetName = typeof item?.locationName === "string" ? item.locationName.trim().toLowerCase() : "";
+    const targetDistrict = typeof item?.district === "string" ? item.district.trim().toLowerCase() : "";
+
+    if (!targetName) {
+      return false;
+    }
+
+    const districtSet = new Set(
+      suggestions
+        .filter((entry) => {
+          const name = typeof entry?.locationName === "string" ? entry.locationName.trim().toLowerCase() : "";
+          return name === targetName;
+        })
+        .map((entry) => (typeof entry?.district === "string" ? entry.district.trim().toLowerCase() : ""))
+        .filter(Boolean)
+    );
+
+    if (!targetDistrict) {
+      return districtSet.size > 1;
+    }
+
+    return districtSet.size > 1 && districtSet.has(targetDistrict);
+  };
+
   const helperText = useMemo(() => {
     if (normalizedQuery.length < 2) {
       return "Type at least 2 characters to search by town or postcode.";
@@ -53,6 +79,10 @@ export default function IssueFilters({
 
     if (locationMessage) {
       return locationMessage;
+    }
+
+    if (locationSelectionHint) {
+      return locationSelectionHint;
     }
 
     if (autocompleteMode === "district" && matchedDistrict && suggestions.length > 0) {
@@ -73,6 +103,7 @@ export default function IssueFilters({
     loading,
     matchedDistrict,
     locationMessage,
+    locationSelectionHint,
     normalizedQuery.length,
     shouldShowSuggestionPanel,
     suggestions.length,
@@ -108,6 +139,7 @@ export default function IssueFilters({
 
   const handleSuggestionSelect = (item) => {
     onLocationSelect(item);
+    setLocationSelectionHint("");
     setShowLocationSuggestions(false);
     setHighlightedSuggestionIndex(-1);
   };
@@ -141,7 +173,20 @@ export default function IssueFilters({
       if (suggestions.length > 0) {
         event.preventDefault();
         const targetIndex = highlightedSuggestionIndex >= 0 ? highlightedSuggestionIndex : 0;
-        handleSuggestionSelect(suggestions[targetIndex]);
+        const targetSuggestion = suggestions[targetIndex];
+
+        if (isSuggestionNameAmbiguousAcrossDistricts(targetSuggestion)) {
+          const selectedName =
+            typeof targetSuggestion?.locationName === "string" && targetSuggestion.locationName.trim()
+              ? targetSuggestion.locationName.trim()
+              : "this location";
+          setLocationSelectionHint(
+            `Multiple results found for ${selectedName} in different districts. Please click the exact district from the list.`
+          );
+          return;
+        }
+
+        handleSuggestionSelect(targetSuggestion);
       }
       return;
     }
@@ -169,6 +214,7 @@ export default function IssueFilters({
             value={locationQuery}
             onChange={(event) => {
               onLocationQueryChange(event.target.value);
+              setLocationSelectionHint("");
               setShowLocationSuggestions(true);
             }}
             onFocus={() => setShowLocationSuggestions(true)}
