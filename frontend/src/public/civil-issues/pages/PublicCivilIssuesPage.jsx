@@ -52,7 +52,7 @@ export default function PublicCivilIssuesPage() {
           <div className="max-w-5xl mx-auto px-4 space-y-12">
             <div className="space-y-4">
               <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Community Issues Feed</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Public Civil Issues Feed</h2>
                 <p className="text-sm sm:text-base text-slate-500">Explore concerns shared by fellow citizens across Sri Lanka.</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <CivilIssueAwarenessDialog
