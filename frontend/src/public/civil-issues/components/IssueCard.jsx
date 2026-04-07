@@ -39,11 +39,21 @@ function DetailRow({ label, value, icon: Icon }) {
   );
 }
 
-export default function IssueCard({ issue, isOpen, onToggle, categoryLabels, showContactNumber = false }) {
+export default function IssueCard({
+  issue,
+  isOpen,
+  onToggle,
+  categoryLabels,
+  showContactNumber = false,
+  reporterLabel = "Anonymous Citizen",
+}) {
   const displayTitle =
     typeof issue.subject === "string" && issue.subject.trim().length > 0
       ? issue.subject
       : `${categoryLabels?.[issue.category] || issue.category || "Civil Issue"} - ${issue.district || "Unknown location"}`;
+
+  const shouldShowReporterLabel =
+    typeof reporterLabel === "string" && reporterLabel.trim().length > 0;
 
   return (
     <Collapsible
@@ -69,10 +79,12 @@ export default function IssueCard({ issue, isOpen, onToggle, categoryLabels, sho
                   </h3>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-600 sm:text-sm">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 sm:text-xs">
-                    <User className="h-3 w-3" />
-                    Anonymous Citizen
-                  </span>
+                  {shouldShowReporterLabel ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 sm:text-xs">
+                      <User className="h-3 w-3" />
+                      {reporterLabel}
+                    </span>
+                  ) : null}
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
                     {issue.district}
