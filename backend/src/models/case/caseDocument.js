@@ -9,6 +9,15 @@ const CaseDocumentSchema = new Schema(
       ref: "Case",
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
     uploadedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",

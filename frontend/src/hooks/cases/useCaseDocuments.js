@@ -40,11 +40,11 @@ export function useCaseDocuments(caseId) {
     setSelectedFile(event.target.files?.[0] || null);
   }, []);
 
-  const handleUploadDocumentConfirm = useCallback(async () => {
-    if (!caseId || !selectedFile) return;
+  const handleUploadDocumentConfirm = useCallback(async ({ title, description }) => {
+    if (!caseId || !selectedFile || !title?.trim()) return;
     setIsUploading(true);
     try {
-      await uploadCaseDocument(caseId, selectedFile);
+      await uploadCaseDocument(caseId, selectedFile, title.trim(), description?.trim());
       setSelectedFile(null);
       const res = await getCaseDocuments(caseId);
       const list = res?.data?.data;

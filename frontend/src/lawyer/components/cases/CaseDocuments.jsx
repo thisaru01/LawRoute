@@ -50,11 +50,31 @@ function DocumentCard({ doc }) {
           {extension}
         </span>
       </div>
+      {/* Title & File name */}
+      <div className="mt-1">
+        <p
+          className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2"
+          title={doc.title || fileName}
+        >
+          {doc.title || fileName}
+        </p>
+        <p
+          className="text-[11px] text-muted-foreground truncate mt-0.5"
+          title={fileName}
+        >
+          {fileName}
+        </p>
+      </div>
 
-      {/* File name */}
-      <p className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2">
-        {fileName}
-      </p>
+      {/* Description */}
+      {doc.description && (
+        <p
+          className="text-xs text-muted-foreground mt-1.5 wrap-break-word line-clamp-2"
+          title={doc.description}
+        >
+          {doc.description}
+        </p>
+      )}
 
       {/* Date */}
       {doc.createdAt && (

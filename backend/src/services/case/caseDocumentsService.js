@@ -5,6 +5,8 @@ import { cloudinary } from "../../config/cloudinary.js";
 // Create a new document for a case (citizen or lawyer associated with the case)
 export async function uploadCaseDocument({
   caseId,
+  title,
+  description,
   uploadedBy,
   fileUrl,
   fileType,
@@ -54,6 +56,8 @@ export async function uploadCaseDocument({
 
   const document = await CaseDocument.create({
     caseId: caseDoc._id,
+    title,
+    description,
     uploadedBy,
     fileUrl,
     fileType,

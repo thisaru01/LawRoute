@@ -23,8 +23,19 @@ export const uploadCaseDocument = async (req, res, next) => {
     const fileType = req.file.mimetype;
     const filePublicId = req.file.filename;
 
+    const { title, description } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Document title is required",
+      });
+    }
+
     const document = await caseDocumentsService.uploadCaseDocument({
       caseId: id,
+      title,
+      description,
       uploadedBy: req.user._id,
       fileUrl,
       fileType,
