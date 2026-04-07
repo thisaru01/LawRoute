@@ -71,9 +71,14 @@ export default function AdminArticleView() {
       const updated = res?.data?.article;
       if (updated) {
         setArticle(updated);
+        if (nextStatus === "published") toast.success("Article published");
+        else if (nextStatus === "rejected") toast.success("Article rejected");
+        else toast.success("Article status updated");
       }
     } catch (e) {
-      setStatusError(e?.message || "Failed to update article status");
+      const msg = e?.message || "Failed to update article status";
+      setStatusError(msg);
+      toast.error(msg);
     } finally {
       setUpdatingStatus(false);
     }
