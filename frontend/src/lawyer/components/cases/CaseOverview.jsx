@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
-import ConfirmDialog from "@/lawyer/components/shared/ConfirmDialog";
+import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
 export default function CaseOverview() {
   const {

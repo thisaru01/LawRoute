@@ -4,11 +4,11 @@ import { useParams } from "react-router-dom";
 import { getMyConsultationRequests } from "@/api/services/consultationRequestService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useFetchList } from "@/lawyer/hooks/useFetchList";
-import PageHeader from "@/lawyer/components/shared/PageHeader";
-import CardGridSkeleton from "@/lawyer/components/shared/CardGridSkeleton";
-import EmptyState from "@/lawyer/components/shared/EmptyState";
-import ConsultationRequestCard from "@/lawyer/components/consultationRequests/ConsultationRequestCard";
+import { useFetchList } from "@/hooks/useFetchList";
+import PageHeader from "@/components/consultation-requests/PageHeader";
+import CardGridSkeleton from "@/components/consultation-requests/CardGridSkeleton";
+import EmptyState from "@/components/consultation-requests/EmptyState";
+import ConsultationRequestCard from "@/lawyer/components/consultation-requests/ConsultationRequestCard";
 
 const allowedStatuses = new Set(["pending", "accepted", "rejected"]);
 

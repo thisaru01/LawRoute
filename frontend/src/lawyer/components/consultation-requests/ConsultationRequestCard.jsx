@@ -7,7 +7,7 @@ import {
   acceptConsultationRequest,
   rejectConsultationRequest,
 } from "@/api/services/consultationRequestService";
-import ConfirmDialog from "@/lawyer/components/shared/ConfirmDialog";
+import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
 const STATUS_BADGE = {
   accepted: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",

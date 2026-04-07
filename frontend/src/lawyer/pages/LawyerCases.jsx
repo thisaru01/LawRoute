@@ -4,10 +4,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getMyCases } from "@/api/services/caseService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useFetchList } from "@/lawyer/hooks/useFetchList";
-import PageHeader from "@/lawyer/components/shared/PageHeader";
-import CardGridSkeleton from "@/lawyer/components/shared/CardGridSkeleton";
-import EmptyState from "@/lawyer/components/shared/EmptyState";
+import { useFetchList } from "@/hooks/useFetchList";
+import PageHeader from "@/components/consultation-requests/PageHeader";
+import CardGridSkeleton from "@/components/consultation-requests/CardGridSkeleton";
+import EmptyState from "@/components/consultation-requests/EmptyState";
 import CaseCard from "@/lawyer/components/cases/CaseCard";
 
 const allowedStatuses = new Set(["opened", "closed"]);
