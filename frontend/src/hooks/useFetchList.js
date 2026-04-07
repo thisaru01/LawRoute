@@ -13,37 +13,41 @@ export function useFetchList(fetcher) {
   const [error, setError] = useState(null);
 
   const load = useCallback(
-    (signal) => {
-      setIsLoading(true);
-      setError(null);
-      fetcher()
-        .then((res) => {
+    (signal, { setLoading = true } = {}) => {
+      const run = async () => {
+        if (setLoading) {
+          setIsLoading(true);
+          setError(null);
+        }
+
+        try {
+          const res = await fetcher();
           if (signal?.cancelled) return;
           const list = res?.data?.data;
           setData(Array.isArray(list) ? list : []);
-        })
-        .catch((err) => {
+        } catch (err) {
           if (signal?.cancelled) return;
           setError(err);
           setData([]);
-        })
-        .finally(() => {
+        } finally {
           if (!signal?.cancelled) setIsLoading(false);
-        });
+        }
+      };
+      Promise.resolve().then(run);
     },
-    [fetcher]
+    [fetcher],
   );
 
   useEffect(() => {
     const signal = { cancelled: false };
-    load(signal);
+    load(signal, { setLoading: false });
     return () => {
       signal.cancelled = true;
     };
   }, [load]);
 
   // Manual refresh (fire-and-forget, no cancellation needed)
-  const refresh = useCallback(() => load({}), [load]);
+  const refresh = useCallback(() => load({}, { setLoading: true }), [load]);
 
   return { data, isLoading, error, refresh };
 }

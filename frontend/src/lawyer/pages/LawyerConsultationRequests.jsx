@@ -2,7 +2,13 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
 import { getMyConsultationRequests } from "@/api/services/consultationRequestService";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFetchList } from "@/hooks/useFetchList";
 import PageHeader from "@/components/consultation-requests/PageHeader";
@@ -21,14 +27,22 @@ const STATUS_BADGE = {
 export default function LawyerConsultationRequests() {
   const { status } = useParams();
   const normalizedStatus = (status ?? "pending").toLowerCase();
-  const safeStatus = allowedStatuses.has(normalizedStatus) ? normalizedStatus : "pending";
+  const safeStatus = allowedStatuses.has(normalizedStatus)
+    ? normalizedStatus
+    : "pending";
   const label = safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 
-  const { data: requests, isLoading, error, refresh } = useFetchList(getMyConsultationRequests);
+  const {
+    data: requests,
+    isLoading,
+    error,
+    refresh,
+  } = useFetchList(getMyConsultationRequests);
 
   const filteredRequests = useMemo(
-    () => requests.filter((r) => (r?.status || "").toLowerCase() === safeStatus),
-    [requests, safeStatus]
+    () =>
+      requests.filter((r) => (r?.status || "").toLowerCase() === safeStatus),
+    [requests, safeStatus],
   );
 
   const headerProps = {
@@ -37,39 +51,44 @@ export default function LawyerConsultationRequests() {
     badgeClass: STATUS_BADGE[safeStatus],
   };
 
-  if (isLoading) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <CardGridSkeleton count={4} />
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <CardGridSkeleton count={4} />
+      </div>
+    );
 
-  if (error) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <Card>
-        <CardHeader>
-          <CardTitle>Couldn't load requests</CardTitle>
-          <CardDescription className="text-destructive">
-            {error.message || "Request failed"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={refresh}>Retry</Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Couldn't load requests</CardTitle>
+            <CardDescription className="text-destructive">
+              {error.message || "Request failed"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={refresh}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
 
-  if (filteredRequests.length === 0) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <EmptyState
-        title={`No ${safeStatus} requests`}
-        message="Requests will appear here once received."
-      />
-    </div>
-  );
+  if (filteredRequests.length === 0)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <EmptyState
+          title={`No ${safeStatus} requests`}
+          message="Requests will appear here once received."
+        />
+      </div>
+    );
 
   return (
     <div className="space-y-4">

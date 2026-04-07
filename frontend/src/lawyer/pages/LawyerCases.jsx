@@ -2,7 +2,13 @@ import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { getMyCases } from "@/api/services/caseService";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFetchList } from "@/hooks/useFetchList";
 import PageHeader from "@/components/consultation-requests/PageHeader";
@@ -22,31 +28,37 @@ export default function LawyerCases() {
   const navigate = useNavigate();
 
   const normalizedStatus = (status ?? "opened").toLowerCase();
-  const safeStatus = allowedStatuses.has(normalizedStatus) ? normalizedStatus : "opened";
+  const safeStatus = allowedStatuses.has(normalizedStatus)
+    ? normalizedStatus
+    : "opened";
   const backendStatus = safeStatus === "opened" ? "open" : "closed";
   const label = safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 
   const { data: cases, isLoading, error, refresh } = useFetchList(getMyCases);
 
   const filteredCases = useMemo(
-    () => cases.filter((c) => (c?.status || "").toLowerCase() === backendStatus),
-    [cases, backendStatus]
+    () =>
+      cases.filter((c) => (c?.status || "").toLowerCase() === backendStatus),
+    [cases, backendStatus],
   );
 
-  const handleOpenCase = useCallback((caseItem) => {
-    const id = caseItem?._id;
-    if (!id) return;
-    navigate(`/lawyer/cases/${safeStatus}/${id}`, {
-      state: {
-        caseId: id,
-        citizenName: caseItem?.user?.name || "Citizen",
-        citizenEmail: caseItem?.user?.email,
-        createdAt: caseItem?.createdAt,
-        summary: caseItem?.consultationRequest?.summary || "(No summary)",
-        status: caseItem?.status,
-      },
-    });
-  }, [safeStatus, navigate]);
+  const handleOpenCase = useCallback(
+    (caseItem) => {
+      const id = caseItem?._id;
+      if (!id) return;
+      navigate(`/lawyer/cases/${safeStatus}/${id}`, {
+        state: {
+          caseId: id,
+          citizenName: caseItem?.user?.name || "Citizen",
+          citizenEmail: caseItem?.user?.email,
+          createdAt: caseItem?.createdAt,
+          summary: caseItem?.consultationRequest?.summary || "(No summary)",
+          status: caseItem?.status,
+        },
+      });
+    },
+    [safeStatus, navigate],
+  );
 
   const headerProps = {
     title: "Cases",
@@ -54,39 +66,44 @@ export default function LawyerCases() {
     badgeClass: STATUS_BADGE[safeStatus] ?? STATUS_BADGE.opened,
   };
 
-  if (isLoading) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <CardGridSkeleton count={4} />
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <CardGridSkeleton count={4} />
+      </div>
+    );
 
-  if (error) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <Card>
-        <CardHeader>
-          <CardTitle>Couldn't load cases</CardTitle>
-          <CardDescription className="text-destructive">
-            {error.message || "Request failed"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={refresh}>Retry</Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Couldn't load cases</CardTitle>
+            <CardDescription className="text-destructive">
+              {error.message || "Request failed"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={refresh}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
 
-  if (filteredCases.length === 0) return (
-    <div className="space-y-4">
-      <PageHeader {...headerProps} />
-      <EmptyState
-        title={`No ${backendStatus} cases`}
-        message="Cases will appear here once assigned."
-      />
-    </div>
-  );
+  if (filteredCases.length === 0)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <EmptyState
+          title={`No ${backendStatus} cases`}
+          message="Cases will appear here once assigned."
+        />
+      </div>
+    );
 
   return (
     <div className="space-y-4">

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { useCaseView } from "@/lawyer/hooks/useCaseView";
+import { useCaseView } from "@/hooks/cases/useCaseView";
 import { CaseProvider } from "@/lawyer/components/cases/CaseContext";
 import CaseOverview from "@/lawyer/components/cases/CaseOverview";
 import CaseMeetings from "@/lawyer/components/cases/CaseMeetings";
