@@ -45,6 +45,7 @@ import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
 import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
+import PublicLawyerProfilePage from "@/public/find-lawyer/PublicLawyerProfilePage.jsx";
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
         <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
+        <Route path="/lawyers/:id" element={<PublicLawyerProfilePage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
