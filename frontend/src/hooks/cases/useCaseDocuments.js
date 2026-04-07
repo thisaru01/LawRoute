@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { getCaseDocuments, uploadCaseDocument, updateCaseDocument } from "@/api/services/caseService";
+import { getCaseDocuments, uploadCaseDocument, updateCaseDocument, deleteCaseDocument } from "@/api/services/caseService";
 
 export function useCaseDocuments(caseId) {
   const [documents, setDocuments] = useState([]);
@@ -9,6 +9,7 @@ export function useCaseDocuments(caseId) {
   const [documentsError, setDocumentsError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
@@ -77,15 +78,35 @@ export function useCaseDocuments(caseId) {
     }
   }, [caseId]);
 
+  const handleDeleteDocument = useCallback(async (docId) => {
+    if (!caseId || !docId) return;
+    setIsDeleting(true);
+    try {
+      await deleteCaseDocument(docId);
+      const res = await getCaseDocuments(caseId);
+      const list = res?.data?.data;
+      setDocuments(Array.isArray(list) ? list : []);
+      toast.success("Document deleted successfully");
+      return true;
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete document");
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [caseId]);
+
   return {
     documents,
     documentsLoading,
     documentsError,
     isUploading,
     isUpdating,
+    isDeleting,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleUpdateDocument,
+    handleDeleteDocument,
   };
 }

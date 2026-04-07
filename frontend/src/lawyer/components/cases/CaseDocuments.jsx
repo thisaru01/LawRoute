@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FilePlus, FileText, ExternalLink, Pencil } from "lucide-react";
+import { FilePlus, FileText, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -8,11 +8,20 @@ import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDateTime } from "@/lib/formatDateTime";
 import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
 import EditDocumentDialog from "@/lawyer/components/cases/EditDocumentDialog";
+import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 import { useAuth } from "@/context/auth/useAuth";
 
-function DocumentCard({ doc, userId, isAlreadyClosed, onEditClick }) {
-  const uploaderId = typeof doc.uploadedBy === 'object' ? doc.uploadedBy?._id : doc.uploadedBy;
+function DocumentCard({
+  doc,
+  userId,
+  isAlreadyClosed,
+  onEditClick,
+  onDeleteConfirm,
+  isDeleting,
+}) {
+  const uploaderId =
+    typeof doc.uploadedBy === "object" ? doc.uploadedBy?._id : doc.uploadedBy;
   const isOwner = String(uploaderId) === String(userId);
 
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
@@ -90,7 +99,7 @@ function DocumentCard({ doc, userId, isAlreadyClosed, onEditClick }) {
       )}
 
       {/* Actions */}
-      <div className="mt-auto flex items-center justify-between">
+      <div className="mt-auto flex items-center justify-between gap-1">
         {doc.fileUrl && (
           <a
             href={doc.fileUrl}
@@ -103,17 +112,40 @@ function DocumentCard({ doc, userId, isAlreadyClosed, onEditClick }) {
           </a>
         )}
 
-        {isOwner && !isAlreadyClosed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={() => onEditClick(doc)}
-          >
-            <Pencil className="h-3 w-3" />
-            <span className="sr-only">Edit Document</span>
-          </Button>
-        )}
+        <div className="flex gap-1 ml-auto">
+          {isOwner && !isAlreadyClosed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              onClick={() => onEditClick(doc)}
+            >
+              <Pencil className="h-3 w-3" />
+              <span className="sr-only">Edit Document</span>
+            </Button>
+          )}
+
+          {isOwner && !isAlreadyClosed && (
+            <ConfirmDialog
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span className="sr-only">Delete Document</span>
+                </Button>
+              }
+              title="Delete Document?"
+              description={`Are you sure you want to delete "${doc.title || fileName}"? This action cannot be undone.`}
+              confirmLabel="Delete"
+              confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onConfirm={() => onDeleteConfirm(doc._id)}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -144,10 +176,12 @@ export default function CaseDocuments() {
     documentsError,
     isUploading,
     isUpdating,
+    isDeleting,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleUpdateDocument,
+    handleDeleteDocument,
     normalizedStatus,
   } = useCaseContext();
 
@@ -218,6 +252,8 @@ export default function CaseDocuments() {
                     userId={userId}
                     isAlreadyClosed={isAlreadyClosed}
                     onEditClick={setEditingDoc}
+                    onDeleteConfirm={handleDeleteDocument}
+                    isDeleting={isDeleting}
                   />
                 ))}
               </div>

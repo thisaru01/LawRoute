@@ -112,3 +112,29 @@ export const updateCaseDocument = async (req, res, next) => {
     return next(error);
   }
 };
+
+// Delete a document for a case
+export const deleteCaseDocument = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { docId } = req.params;
+
+    await caseDocumentsService.deleteCaseDocument({
+      docId,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Document deleted successfully",
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -50,6 +50,8 @@ export default function CitizenCaseDetails() {
       caseViewData.handleUploadDocumentConfirm,
       caseViewData.isUpdating,
       caseViewData.handleUpdateDocument,
+      caseViewData.isDeleting,
+      caseViewData.handleDeleteDocument,
       caseViewData.isClosing,
       caseViewData.closeError,
       caseViewData.handleCloseCase,

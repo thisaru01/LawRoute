@@ -37,3 +37,7 @@ export const uploadCaseDocument = (caseId, file, title, description) => {
 export const updateCaseDocument = (docId, title, description) => {
   return axios.patch(`/cases/documents/${docId}`, { title, description });
 };
+
+export const deleteCaseDocument = (docId) => {
+  return axios.delete(`/cases/documents/${docId}`);
+};

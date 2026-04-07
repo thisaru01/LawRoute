@@ -48,10 +48,12 @@ export function useCaseView() {
     documentsError,
     isUploading,
     isUpdating,
+    isDeleting,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleUpdateDocument,
+    handleDeleteDocument,
   } = useCaseDocuments(caseId);
 
   //  Fallbacks from navigation state while API loads
@@ -116,10 +118,12 @@ export function useCaseView() {
     documentsError,
     isUploading,
     isUpdating,
+    isDeleting,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleUpdateDocument,
+    handleDeleteDocument,
     // Close case
     isClosing,
     closeError,
