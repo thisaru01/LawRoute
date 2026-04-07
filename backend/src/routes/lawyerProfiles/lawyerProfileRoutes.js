@@ -7,6 +7,7 @@ import {
   getMyLawyerProfile,
   updateLawyerVerificationStatus,
   updateLawyerProfile,
+  getLawyerProfileById,
 } from "../../controllers/lawyerProfiles/lawyerProfileController.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 import {
@@ -21,6 +22,9 @@ router.get("/", getAllLawyerProfiles);
 
 // Get approved lawyer profiles with details
 router.get("/approved", getApprovedLawyerProfiles);
+
+// Get a single lawyer profile by ID
+router.get("/:id", getLawyerProfileById);
 
 // Get logged-in lawyer profile
 router.get("/me", protect, authorizeRoles("lawyer"), getMyLawyerProfile);
