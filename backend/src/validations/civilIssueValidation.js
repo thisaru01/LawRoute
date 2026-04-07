@@ -18,7 +18,7 @@ const normalizeText = (value) => (typeof value === "string" ? value.trim().repla
 const isValidDistrict = (value) => SRI_LANKA_DISTRICTS.includes(normalizeText(value));
 const isLowSignalSubject = (value) => {
     const compact = normalizeText(value).replace(/[\s.,:;()'"/&%+!?-]/g, "");
-    return compact.length >= 5 && /^([\p{L}\p{N}])\1+$/u.test(compact);
+    return /([\p{L}\p{N}])\1{3,}/u.test(compact);
 };
 
 const isValidDateOnly = (value) => {
