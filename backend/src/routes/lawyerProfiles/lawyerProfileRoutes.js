@@ -23,9 +23,6 @@ router.get("/", getAllLawyerProfiles);
 // Get approved lawyer profiles with details
 router.get("/approved", getApprovedLawyerProfiles);
 
-// Get a single lawyer profile by ID
-router.get("/:id", getLawyerProfileById);
-
 // Get logged-in lawyer profile
 router.get("/me", protect, authorizeRoles("lawyer"), getMyLawyerProfile);
 
@@ -37,6 +34,9 @@ router.put(
   validateUpdateLawyerProfile,
   updateLawyerProfile,
 );
+
+// Get a single lawyer profile by ID
+router.get("/:id", getLawyerProfileById);
 
 // Admin: review lawyer profiles (optionally filter by verificationStatus)
 router.get(
