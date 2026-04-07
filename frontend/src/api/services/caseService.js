@@ -33,3 +33,7 @@ export const uploadCaseDocument = (caseId, file, title, description) => {
   }
   return axios.post(`/cases/${caseId}/documents`, formData);
 };
+
+export const updateCaseDocument = (docId, title, description) => {
+  return axios.patch(`/cases/documents/${docId}`, { title, description });
+};

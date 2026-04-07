@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { getCaseDocuments, uploadCaseDocument } from "@/api/services/caseService";
+import { getCaseDocuments, uploadCaseDocument, updateCaseDocument } from "@/api/services/caseService";
 
 export function useCaseDocuments(caseId) {
   const [documents, setDocuments] = useState([]);
   const [documentsLoading, setDocumentsLoading] = useState(Boolean(caseId));
   const [documentsError, setDocumentsError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
@@ -58,13 +59,33 @@ export function useCaseDocuments(caseId) {
     }
   }, [caseId, selectedFile]);
 
+  const handleUpdateDocument = useCallback(async (docId, title, description) => {
+    if (!caseId || !docId || !title?.trim()) return;
+    setIsUpdating(true);
+    try {
+      await updateCaseDocument(docId, title.trim(), description?.trim());
+      const res = await getCaseDocuments(caseId);
+      const list = res?.data?.data;
+      setDocuments(Array.isArray(list) ? list : []);
+      toast.success("Document updated successfully");
+      return true; // Return true to indicate success
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to update document");
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [caseId]);
+
   return {
     documents,
     documentsLoading,
     documentsError,
     isUploading,
+    isUpdating,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    handleUpdateDocument,
   };
 }

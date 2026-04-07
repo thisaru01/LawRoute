@@ -7,6 +7,7 @@ import {
 import {
   uploadCaseDocument,
   getCaseDocuments,
+  updateCaseDocument,
 } from "../../controllers/case/caseDocumentController.js";
 import {
   scheduleCaseMeeting,
@@ -69,6 +70,14 @@ router.get(
   protect,
   authorizeRoles("user", "lawyer"),
   getCaseDocuments,
+);
+
+// Update a case document
+router.patch(
+  "/documents/:docId",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  updateCaseDocument,
 );
 
 // Close case (lawyer only)

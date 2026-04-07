@@ -1,4 +1,5 @@
-import { FilePlus, FileText, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { FilePlus, FileText, ExternalLink, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -6,9 +7,14 @@ import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDateTime } from "@/lib/formatDateTime";
 import UploadDocumentContent from "@/lawyer/components/cases/UploadDocumentContent";
+import EditDocumentDialog from "@/lawyer/components/cases/EditDocumentDialog";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
+import { useAuth } from "@/context/auth/useAuth";
 
-function DocumentCard({ doc }) {
+function DocumentCard({ doc, userId, isAlreadyClosed, onEditClick }) {
+  const uploaderId = typeof doc.uploadedBy === 'object' ? doc.uploadedBy?._id : doc.uploadedBy;
+  const isOwner = String(uploaderId) === String(userId);
+
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
   const extension =
     doc.fileType?.toUpperCase() ||
@@ -83,18 +89,32 @@ function DocumentCard({ doc }) {
         </p>
       )}
 
-      {/* View link */}
-      {doc.fileUrl && (
-        <a
-          href={doc.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-auto flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
-        >
-          <ExternalLink className="h-3 w-3" />
-          View file
-        </a>
-      )}
+      {/* Actions */}
+      <div className="mt-auto flex items-center justify-between">
+        {doc.fileUrl && (
+          <a
+            href={doc.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View file
+          </a>
+        )}
+
+        {isOwner && !isAlreadyClosed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            onClick={() => onEditClick(doc)}
+          >
+            <Pencil className="h-3 w-3" />
+            <span className="sr-only">Edit Document</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -113,15 +133,21 @@ function DocumentCardSkeleton() {
 }
 
 export default function CaseDocuments() {
+  const { userId: authUserId, user } = useAuth();
+  const userId = authUserId || user?.id || user?._id;
+  const [editingDoc, setEditingDoc] = useState(null);
+
   const {
     caseId,
     documents,
     documentsLoading,
     documentsError,
     isUploading,
+    isUpdating,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    handleUpdateDocument,
     normalizedStatus,
   } = useCaseContext();
 
@@ -186,7 +212,13 @@ export default function CaseDocuments() {
             ) : (
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {documents.map((doc) => (
-                  <DocumentCard key={doc._id} doc={doc} />
+                  <DocumentCard
+                    key={doc._id}
+                    doc={doc}
+                    userId={userId}
+                    isAlreadyClosed={isAlreadyClosed}
+                    onEditClick={setEditingDoc}
+                  />
                 ))}
               </div>
             )}
@@ -199,6 +231,14 @@ export default function CaseDocuments() {
         onSelectFile={handleSelectFile}
         onConfirm={handleUploadDocumentConfirm}
         isUploading={isUploading}
+      />
+
+      <EditDocumentDialog
+        doc={editingDoc}
+        isOpen={!!editingDoc}
+        onClose={() => setEditingDoc(null)}
+        onConfirm={handleUpdateDocument}
+        isUpdating={isUpdating}
       />
     </AlertDialog>
   );

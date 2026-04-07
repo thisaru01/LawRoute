@@ -76,3 +76,39 @@ export const getCaseDocuments = async (req, res, next) => {
     return next(error);
   }
 };
+
+// Update a document for a case
+export const updateCaseDocument = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { docId } = req.params;
+    const { title, description } = req.body;
+
+    if (!title && description === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Nothing to update",
+      });
+    }
+
+    const document = await caseDocumentsService.updateCaseDocument({
+      docId,
+      title,
+      description,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: document,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

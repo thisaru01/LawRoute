@@ -48,6 +48,8 @@ export default function LawyerCaseDetails() {
       caseViewData.selectedFile,
       caseViewData.handleSelectFile,
       caseViewData.handleUploadDocumentConfirm,
+      caseViewData.isUpdating,
+      caseViewData.handleUpdateDocument,
       caseViewData.isClosing,
       caseViewData.closeError,
       caseViewData.handleCloseCase,
