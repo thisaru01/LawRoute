@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/api/axios";
+import { toast } from "sonner";
 
 export function useAdminDocuments() {
   const [documents, setDocuments] = useState([]);
@@ -31,7 +32,10 @@ export function useAdminDocuments() {
 
   const handleUploadDocumentConfirm = useCallback(
     async ({ title, description }) => {
-      if (!selectedFile || !title?.trim()) return;
+      if (!selectedFile || !title?.trim()) {
+        toast.error("Please select a file and provide a title");
+        return;
+      }
       setIsUploading(true);
       setError(null);
       try {
@@ -44,10 +48,13 @@ export function useAdminDocuments() {
         const newDoc = res?.data?.document;
         if (newDoc) {
           setDocuments((prev) => [newDoc, ...prev]);
+          toast.success("Document uploaded successfully");
         }
         setSelectedFile(null);
       } catch (err) {
-        setError(err?.message || "Failed to upload document");
+        const msg = err?.message || "Failed to upload document";
+        setError(msg);
+        toast.error(msg);
       } finally {
         setIsUploading(false);
       }
@@ -57,12 +64,13 @@ export function useAdminDocuments() {
 
   const handleDelete = useCallback(
     async (id) => {
-      if (!window.confirm("Delete this document?")) return;
       try {
         await axios.delete(`/documents/${id}`);
         setDocuments((prev) => prev.filter((doc) => (doc._id || doc.id) !== id));
+        return true;
       } catch (err) {
         setError(err?.message || "Failed to delete document");
+        return false;
       }
     },
     [],

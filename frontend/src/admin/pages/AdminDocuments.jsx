@@ -3,8 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { FilePlus, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
 import AdminUploadDocumentContent from "@/admin/components/documents/AdminUploadDocumentContent";
@@ -101,14 +112,43 @@ function DocumentCard({ doc, onDelete }) {
           </a>
 
           {isPdf && onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(id)}
-              className="flex items-center gap-1 text-destructive hover:text-destructive/80"
-              aria-label="Delete document"
-            >
-              <Trash2 className="h-3 w-3" />
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-destructive hover:text-destructive/80"
+                  aria-label="Delete document"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete document?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. The document will be permanently
+                    removed from the library.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      const ok = await onDelete(id);
+                      if (ok) {
+                        toast.success("Document deleted successfully");
+                      } else {
+                        toast.error("Failed to delete document");
+                      }
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       )}
