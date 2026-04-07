@@ -28,7 +28,7 @@ function DocumentCard({ doc }) {
   const previewUrl = isPdf ? doc.thumbnailUrl : isImage ? doc.fileUrl : null;
 
   return (
-    <div className="group flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/40">
+    <div className="group flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm transition-colors hover:bg-muted/40">
       {/* Preview thumbnail for PDFs and images */}
       {previewUrl && (
         <div className="mb-2 overflow-hidden rounded-md border bg-muted/50 aspect-4/3">
@@ -43,8 +43,8 @@ function DocumentCard({ doc }) {
 
       {/* Icon + extension */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
-          <FileText className="h-5 w-5 text-primary" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+          <FileText className="h-4 w-4 text-primary" />
         </div>
         <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           {extension}
@@ -59,7 +59,7 @@ function DocumentCard({ doc }) {
           {doc.title || fileName}
         </p>
         <p
-          className="text-[11px] text-muted-foreground truncate mt-0.5"
+          className="text-[10px] text-muted-foreground truncate mt-0.5"
           title={fileName}
         >
           {fileName}
@@ -78,7 +78,7 @@ function DocumentCard({ doc }) {
 
       {/* Date */}
       {doc.createdAt && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground">
           {formatDateTime(doc.createdAt)}
         </p>
       )}
@@ -89,7 +89,7 @@ function DocumentCard({ doc }) {
           href={doc.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-auto flex items-center gap-1 text-xs text-primary underline underline-offset-2 opacity-0 transition-opacity group-hover:opacity-100"
+          className="mt-auto flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
         >
           <ExternalLink className="h-3 w-3" />
           View file
@@ -101,13 +101,13 @@ function DocumentCard({ doc }) {
 
 function DocumentCardSkeleton() {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm">
+    <div className="flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <Skeleton className="h-10 w-10 rounded-md" />
-        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-3 w-8" />
       </div>
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-2.5 w-1/2" />
     </div>
   );
 }
@@ -170,7 +170,9 @@ export default function CaseDocuments() {
             )}
 
             {documentsLoading ? (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <DocumentCardSkeleton />
+                <DocumentCardSkeleton />
                 <DocumentCardSkeleton />
                 <DocumentCardSkeleton />
                 <DocumentCardSkeleton />
@@ -182,7 +184,7 @@ export default function CaseDocuments() {
                 No documents attached yet.
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {documents.map((doc) => (
                   <DocumentCard key={doc._id} doc={doc} />
                 ))}
