@@ -55,6 +55,19 @@ export function useAdminDocuments() {
     [selectedFile],
   );
 
+  const handleDelete = useCallback(
+    async (id) => {
+      if (!window.confirm("Delete this document?")) return;
+      try {
+        await axios.delete(`/documents/${id}`);
+        setDocuments((prev) => prev.filter((doc) => (doc._id || doc.id) !== id));
+      } catch (err) {
+        setError(err?.message || "Failed to delete document");
+      }
+    },
+    [],
+  );
+
   return {
     documents,
     loading,
@@ -63,5 +76,6 @@ export function useAdminDocuments() {
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    handleDelete,
   };
 }

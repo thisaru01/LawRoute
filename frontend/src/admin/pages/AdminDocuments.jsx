@@ -4,12 +4,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { FilePlus, FileText, ExternalLink } from "lucide-react";
+import { FilePlus, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
 import AdminUploadDocumentContent from "@/admin/components/documents/AdminUploadDocumentContent";
 
-function DocumentCard({ doc }) {
+function DocumentCard({ doc, onDelete }) {
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
   const extension =
     doc.fileType?.toUpperCase() ||
@@ -27,6 +27,8 @@ function DocumentCard({ doc }) {
     );
 
   const previewUrl = isPdf ? doc.thumbnailUrl : isImage ? doc.fileUrl : null;
+
+  const id = doc._id || doc.id;
 
   return (
     <div className="group flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm transition-colors hover:bg-muted/40">
@@ -85,17 +87,30 @@ function DocumentCard({ doc }) {
         </p>
       )}
 
-      {/* View link */}
+      {/* View link + Delete */}
       {doc.fileUrl && (
-        <a
-          href={doc.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-auto flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
-        >
-          <ExternalLink className="h-3 w-3" />
-          View file
-        </a>
+        <div className="mt-auto flex items-center justify-between gap-2 text-[11px]">
+          <a
+            href={doc.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-primary underline underline-offset-2"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View file
+          </a>
+
+          {isPdf && onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(id)}
+              className="flex items-center gap-1 text-destructive hover:text-destructive/80"
+              aria-label="Delete document"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -123,6 +138,7 @@ export default function AdminDocuments() {
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
+    handleDelete,
   } = useAdminDocuments();
 
   return (
@@ -180,7 +196,11 @@ export default function AdminDocuments() {
                 ) : (
                   <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     {documents.map((doc) => (
-                      <DocumentCard key={doc._id || doc.id} doc={doc} />
+                      <DocumentCard
+                        key={doc._id || doc.id}
+                        doc={doc}
+                        onDelete={handleDelete}
+                      />
                     ))}
                   </div>
                 )}
