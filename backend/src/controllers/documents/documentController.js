@@ -28,6 +28,7 @@ export const createDocument = async (req, res, next) => {
     const { title, description } = req.body;
     const fileUrl = req.file.path;
     const filePublicId = req.file.filename;
+    const fileType = req.file.mimetype;
 
     const document = await documentService.createDocument({
       title,
@@ -35,6 +36,7 @@ export const createDocument = async (req, res, next) => {
       user: req.user,
       fileUrl,
       filePublicId,
+      fileType,
     });
 
     return res.status(201).json({ success: true, document });

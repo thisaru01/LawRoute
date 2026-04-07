@@ -1,96 +1,201 @@
-import React, { useEffect, useState } from "react";
-import axios from "@/api/axios";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash2, CheckCircle, ArrowDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { FilePlus, FileText, ExternalLink } from "lucide-react";
+import { formatDateTime } from "@/lib/formatDateTime";
+import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
+import AdminUploadDocumentContent from "@/admin/components/documents/AdminUploadDocumentContent";
 
-export default function AdminDocuments() {
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+function DocumentCard({ doc }) {
+  const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
+  const extension =
+    doc.fileType?.toUpperCase() ||
+    fileName.split(".").pop()?.toUpperCase() ||
+    "FILE";
 
-  useEffect(() => {
-    let mounted = true;
-    const fetchDocs = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await axios.get("/documents");
-        if (!mounted) return;
-        setDocuments(res?.data?.documents || []);
-      } catch (err) {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load documents");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+  const isPdf =
+    doc.fileType === "application/pdf" ||
+    fileName.toLowerCase().endsWith(".pdf");
 
-    fetchDocs();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const isImage =
+    doc.fileType?.startsWith("image/") ||
+    [".png", ".jpg", ".jpeg", ".webp"].some((ext) =>
+      fileName.toLowerCase().endsWith(ext),
+    );
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const previewUrl = isPdf ? doc.thumbnailUrl : isImage ? doc.fileUrl : null;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Documents</h1>
-      {/* <p className="mt-2 text-sm text-muted-foreground">Library documents (all uploads).</p> */}
+    <div className="group flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm transition-colors hover:bg-muted/40">
+      {/* Preview thumbnail for PDFs and images */}
+      {previewUrl && (
+        <div className="mb-2 overflow-hidden rounded-md border bg-muted/50 aspect-4/3">
+          <img
+            src={previewUrl}
+            alt={fileName}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
+          />
+        </div>
+      )}
 
-      {loading && <p className="mt-4 text-sm text-muted-foreground">Loading...</p>}
-      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
-
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {documents.map((d) => {
-          const id = d._id || d.id;
-          const time = d.createdAt ? new Date(d.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-          const uploadedDate = d.createdAt
-            ? new Date(d.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-            : '';
-          return (
-            <div key={id} className="relative rounded-xl p-4 pt-12 bg-white border border-slate-200 h-48 flex flex-col">
-              {/* Blue folder top-left */}
-              <div className="absolute -top-4 left-4 w-16 h-16 rounded-lg bg-blue-400 shadow-md flex items-center justify-center">
-                <FileText className="h-7 w-7 text-white" />
-              </div>
-
-              {/* icon controls top-right */}
-              <div className="absolute top-3 right-3 flex items-center gap-3">
-                <a href={`${API_BASE}/documents/${id}/download`} target="_blank" rel="noreferrer" className="text-slate-700 hover:text-slate-900" aria-label="Download document">
-                  <ArrowDown className="h-5 w-5" />
-                </a>
-
-                <button
-                  className="text-destructive hover:text-destructive/80"
-                  onClick={async () => {
-                    if (!confirm('Delete this document?')) return;
-                    try {
-                      await axios.delete(`/documents/${id}`);
-                      setDocuments((prev) => prev.filter((x) => (x._id || x.id) !== id));
-                    } catch (err) {
-                      alert(err?.message || 'Failed to delete document');
-                    }
-                  }}
-                  aria-label="Delete document"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="mt-2">
-                <h3 className="text-lg font-semibold text-slate-900 truncate">{d.title}</h3>
-                <div className="mt-1 flex items-center gap-3">
-                  <p className="text-sm text-slate-600 truncate">{d.description}</p>
-                  <div className="text-xs text-slate-500 whitespace-nowrap">{uploadedDate}</div>
-                </div>
-              </div>
-
-              <div className="mt-auto text-xs text-slate-300">{time}</div>
-            </div>
-          );
-        })}
+      {/* Icon + extension */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+          <FileText className="h-4 w-4 text-primary" />
+        </div>
+        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {extension}
+        </span>
       </div>
+
+      {/* Title & File name */}
+      <div className="mt-1">
+        <p
+          className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2"
+          title={doc.title || fileName}
+        >
+          {doc.title || fileName}
+        </p>
+        <p
+          className="text-[10px] text-muted-foreground truncate mt-0.5"
+          title={fileName}
+        >
+          {fileName}
+        </p>
+      </div>
+
+      {/* Description */}
+      {doc.description && (
+        <p
+          className="text-xs text-muted-foreground mt-1.5 wrap-break-word line-clamp-2"
+          title={doc.description}
+        >
+          {doc.description}
+        </p>
+      )}
+
+      {/* Date */}
+      {doc.createdAt && (
+        <p className="text-[11px] text-muted-foreground">
+          {formatDateTime(doc.createdAt)}
+        </p>
+      )}
+
+      {/* View link */}
+      {doc.fileUrl && (
+        <a
+          href={doc.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
+        >
+          <ExternalLink className="h-3 w-3" />
+          View file
+        </a>
+      )}
     </div>
+  );
+}
+
+function DocumentCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-3 w-8" />
+      </div>
+      <Skeleton className="h-3 w-3/4" />
+      <Skeleton className="h-2.5 w-1/2" />
+    </div>
+  );
+}
+
+export default function AdminDocuments() {
+  const {
+    documents,
+    loading,
+    error,
+    isUploading,
+    selectedFile,
+    handleSelectFile,
+    handleUploadDocumentConfirm,
+  } = useAdminDocuments();
+
+  return (
+    <AlertDialog>
+      <Card className="mt-4">
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            {/* Add Documents Banner */}
+            <div>
+              <CardContent className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <FilePlus className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Add Documents</p>
+                  <p className="text-sm text-muted-foreground">
+                    Upload files relevant to this case for easy access.
+                  </p>
+                </div>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={isUploading} className="gap-2">
+                    <FilePlus className="h-4 w-4" />
+                    {isUploading ? "Uploading..." : "Add document"}
+                  </Button>
+                </AlertDialogTrigger>
+              </CardContent>
+            </div>
+
+            <Separator />
+
+            {/* Documents list */}
+            <div>
+              <CardHeader className="pb-3 px-0">
+                <CardTitle className="text-base">Documents</CardTitle>
+              </CardHeader>
+              <CardContent className="px-0">
+                {error && (
+                  <p className="text-sm text-destructive mb-3">{error}</p>
+                )}
+
+                {loading ? (
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+                    <FileText className="mb-2 h-7 w-7 opacity-30" />
+                    No documents attached yet.
+                  </div>
+                ) : (
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                    {documents.map((doc) => (
+                      <DocumentCard key={doc._id || doc.id} doc={doc} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AdminUploadDocumentContent
+        selectedFile={selectedFile}
+        onSelectFile={handleSelectFile}
+        onConfirm={handleUploadDocumentConfirm}
+        isUploading={isUploading}
+      />
+    </AlertDialog>
   );
 }
