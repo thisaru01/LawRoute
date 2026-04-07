@@ -22,6 +22,12 @@ const CaseDocumentSchema = new Schema(
       type: String,
       required: true,
     },
+    filePublicId: {
+      type: String,
+    },
+    thumbnailUrl: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

@@ -21,12 +21,14 @@ export const uploadCaseDocument = async (req, res, next) => {
 
     const fileUrl = req.file.path;
     const fileType = req.file.mimetype;
+    const filePublicId = req.file.filename;
 
     const document = await caseDocumentsService.uploadCaseDocument({
       caseId: id,
       uploadedBy: req.user._id,
       fileUrl,
       fileType,
+      filePublicId,
     });
 
     return res.status(201).json({
