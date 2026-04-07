@@ -17,7 +17,7 @@ const TIME_OPTIONS = (() => {
   return times;
 })();
 
-export default function LawyerCaseDetails() {
+export default function CitizenCaseDetails() {
   const caseViewData = useCaseView();
 
   const contextValue = useMemo(
@@ -51,6 +51,9 @@ export default function LawyerCaseDetails() {
       caseViewData.isClosing,
       caseViewData.closeError,
       caseViewData.handleCloseCase,
+      caseViewData.canManageCase,
+      caseViewData.canScheduleMeetings,
+      caseViewData.canCloseCase,
     ],
   );
 

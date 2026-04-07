@@ -6,8 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
+import { useAuth } from "@/context/auth/useAuth";
 
 export default function CaseOverview() {
+  const { role } = useAuth();
   const {
     caseLoading,
     caseError,
@@ -17,6 +19,7 @@ export default function CaseOverview() {
     summary,
     normalizedStatus,
     label,
+    canCloseCase,
     isClosing,
     closeError,
     handleCloseCase,
@@ -66,8 +69,8 @@ export default function CaseOverview() {
           )}
         </div>
 
-        {/* Close case — only shown when case is open and loaded */}
-        {!caseLoading && !isAlreadyClosed && (
+        {/* Close case — only for lawyers when case is open and loaded */}
+        {!caseLoading && !isAlreadyClosed && canCloseCase && (
           <ConfirmDialog
             trigger={
               <Button
@@ -96,7 +99,7 @@ export default function CaseOverview() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            Involved Person
+            {role === "user" ? "Involved Lawyer" : "Involved Person"}
           </CardTitle>
         </CardHeader>
         <CardContent>

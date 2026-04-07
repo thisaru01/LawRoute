@@ -11,6 +11,7 @@ import {
   uploadCaseDocument,
 } from "@/api/services/caseService";
 import { formatDateTime } from "@/lib/formatDateTime";
+import { useAuth } from "@/context/auth/useAuth";
 
 const INITIAL_SCHEDULE_FORM = {
   date: "",
@@ -27,6 +28,7 @@ const INITIAL_SCHEDULE_FORM = {
 export function useCaseView() {
   const { status, caseId: caseIdFromParams } = useParams();
   const location = useLocation();
+  const { role } = useAuth();
 
   const navState = location.state || {};
   const caseId = caseIdFromParams || navState.caseId;
@@ -62,17 +64,35 @@ export function useCaseView() {
   const fallbackStatus = navState.status || status || "opened";
 
   //  Derived display values
-  const citizenName =
-    caseDetails?.user?.name || caseDetails?.citizen?.name || fallbackCitizenName;
-  const citizenEmail =
-    caseDetails?.user?.email || caseDetails?.citizen?.email || fallbackCitizenEmail;
+  const personName =
+    role === "user"
+      ? caseDetails?.lawyer?.name || fallbackCitizenName
+      : caseDetails?.user?.name ||
+        caseDetails?.citizen?.name ||
+        fallbackCitizenName;
+
+  const personEmail =
+    role === "user"
+      ? caseDetails?.lawyer?.email || fallbackCitizenEmail
+      : caseDetails?.user?.email ||
+        caseDetails?.citizen?.email ||
+        fallbackCitizenEmail;
+
+  const citizenName = personName;
+  const citizenEmail = personEmail;
   const createdAtLabel =
-    formatDateTime(caseDetails?.createdAt || navState.createdAt) || fallbackCreatedAtLabel;
+    formatDateTime(caseDetails?.createdAt || navState.createdAt) ||
+    fallbackCreatedAtLabel;
   const summary = caseDetails?.consultationRequest?.summary || fallbackSummary;
   const statusSource = caseDetails?.status || fallbackStatus;
   const normalizedStatus = String(statusSource ?? "opened").toLowerCase();
   const label =
     normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+
+  //  Role-based capabilities
+  const canManageCase = role === "lawyer";
+  const canScheduleMeetings = role === "lawyer";
+  const canCloseCase = role === "lawyer";
 
   //  Effects
   useEffect(() => {
@@ -81,10 +101,18 @@ export function useCaseView() {
     setCaseLoading(true);
     setCaseError(null);
     getCaseById(caseId)
-      .then((res) => { if (!cancelled) setCaseDetails(res?.data?.data || null); })
-      .catch((err) => { if (!cancelled) setCaseError(err); })
-      .finally(() => { if (!cancelled) setCaseLoading(false); });
-    return () => { cancelled = true; };
+      .then((res) => {
+        if (!cancelled) setCaseDetails(res?.data?.data || null);
+      })
+      .catch((err) => {
+        if (!cancelled) setCaseError(err);
+      })
+      .finally(() => {
+        if (!cancelled) setCaseLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   useEffect(() => {
@@ -99,9 +127,18 @@ export function useCaseView() {
           setMeetings(Array.isArray(list) ? list : []);
         }
       })
-      .catch((err) => { if (!cancelled) { setMeetingsError(err); setMeetings([]); } })
-      .finally(() => { if (!cancelled) setMeetingsLoading(false); });
-    return () => { cancelled = true; };
+      .catch((err) => {
+        if (!cancelled) {
+          setMeetingsError(err);
+          setMeetings([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMeetingsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   useEffect(() => {
@@ -116,9 +153,18 @@ export function useCaseView() {
           setDocuments(Array.isArray(list) ? list : []);
         }
       })
-      .catch((err) => { if (!cancelled) { setDocumentsError(err); setDocuments([]); } })
-      .finally(() => { if (!cancelled) setDocumentsLoading(false); });
-    return () => { cancelled = true; };
+      .catch((err) => {
+        if (!cancelled) {
+          setDocumentsError(err);
+          setDocuments([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDocumentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   //  Stable handlers (useCallback prevents unnecessary re-renders)
@@ -127,6 +173,7 @@ export function useCaseView() {
   }, []);
 
   const handleScheduleConfirm = useCallback(async () => {
+    if (!canScheduleMeetings) return;
     if (!caseId) return;
     setIsScheduling(true);
     try {
@@ -142,7 +189,7 @@ export function useCaseView() {
     } finally {
       setIsScheduling(false);
     }
-  }, [caseId, scheduleForm]);
+  }, [caseId, scheduleForm, canScheduleMeetings]);
 
   const handleSelectFile = useCallback((event) => {
     setSelectedFile(event.target.files?.[0] || null);
@@ -167,6 +214,7 @@ export function useCaseView() {
   }, [caseId, selectedFile]);
 
   const handleCloseCase = useCallback(async () => {
+    if (!canCloseCase) return;
     if (!caseId) return;
     setIsClosing(true);
     setCloseError(null);
@@ -182,7 +230,7 @@ export function useCaseView() {
     } finally {
       setIsClosing(false);
     }
-  }, [caseId]);
+  }, [caseId, canCloseCase]);
 
   return {
     // Case
@@ -196,6 +244,9 @@ export function useCaseView() {
     summary,
     normalizedStatus,
     label,
+    canManageCase,
+    canScheduleMeetings,
+    canCloseCase,
     // Meetings
     meetings,
     meetingsLoading,
