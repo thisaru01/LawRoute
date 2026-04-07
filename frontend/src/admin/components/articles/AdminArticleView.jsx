@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getArticle, updateArticleStatus, deleteArticle } from "@/api/services/articleService";
+import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -186,9 +187,10 @@ export default function AdminArticleView() {
                                 setConfirmOpen(false);
                                 setDeleting(true);
                                 await deleteArticle(article._id || article.id);
+                                toast.success("Article deleted");
                                 navigate(-1);
                               } catch (e) {
-                                alert(e?.message || "Failed to delete article");
+                                toast.error(e?.message || "Failed to delete article");
                               } finally {
                                 setDeleting(false);
                               }

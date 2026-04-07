@@ -1,15 +1,7 @@
 import React, { useState } from "react";
+import { toast } from "sonner";
 import { updateArticle } from "@/api/services/articleService";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
+// Alert dialog removed: using toasts only
 
 const CATEGORY_OPTIONS = ["Family", "Property", "Work", "Consumer", "Finance"];
 
@@ -23,10 +15,7 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
   const [removeExistingImageCard, setRemoveExistingImageCard] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogKind, setDialogKind] = useState("success"); // 'success' | 'error'
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [pendingUpdated, setPendingUpdated] = useState(null);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,17 +35,13 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
       const res = await updateArticle(article._id || article.id, formData);
       const updated = res?.data?.article || res?.data;
       if (updated) {
-        setDialogKind("success");
-        setDialogMessage("Article updated successfully.");
-        setPendingUpdated(typeof onUpdated === "function" ? updated : null);
-        setDialogOpen(true);
+        toast.success("Article updated successfully");
+        if (typeof onUpdated === "function") onUpdated(updated);
       }
     } catch (err) {
-        const msg = err?.message || "Failed to update article";
-        setError(msg);
-        setDialogKind("error");
-        setDialogMessage(msg);
-        setDialogOpen(true);
+      const msg = err?.message || "Failed to update article";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -67,31 +52,6 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
       <h2 className="text-lg font-semibold">Edit Article</h2>
 
       {error && <div className="text-sm text-red-600">{error}</div>}
-
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{dialogKind === "success" ? "Saved" : "Error"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {dialogMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOpen(false)}>Close</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setDialogOpen(false);
-                if (pendingUpdated && typeof onUpdated === "function") {
-                  onUpdated(pendingUpdated);
-                  setPendingUpdated(null);
-                }
-              }}
-            >
-              OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <div className="space-y-1">
         <label className="block text-sm font-medium">Title</label>
