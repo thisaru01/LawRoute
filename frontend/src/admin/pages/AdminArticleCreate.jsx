@@ -11,11 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import axios from "@/api/axios";
+import { toast } from "sonner";
 
 // categories will be fetched from the backend model
 const DEFAULT_CATEGORIES = ["Family", "Property", "Work", "Consumer", "Finance"];
 
-export default function AdminArticleCreate() {
+export default function AdminArticleCreate({ redirectPath = "/admin/articles/pending" }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
@@ -23,7 +24,6 @@ export default function AdminArticleCreate() {
   const [imageCard, setImageCard] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const navigate = useNavigate();
 
@@ -35,7 +35,6 @@ export default function AdminArticleCreate() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (!title.trim()) return setError("Title is required");
     if (!content.trim()) return setError("Content is required");
@@ -50,11 +49,13 @@ export default function AdminArticleCreate() {
     try {
       setSubmitting(true);
       await axios.post("/articles", form);
-      setSuccess("Article created successfully");
-      // Redirect to admin pending articles so the new article appears under "Own"
-      navigate("/admin/articles/pending");
+      toast.success("Article created successfully");
+      // Redirect so the new article appears under "Own"
+      navigate(redirectPath);
     } catch (err) {
-      setError(err?.message || "Failed to create article");
+      const msg = err?.message || "Failed to create article";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -230,7 +231,6 @@ export default function AdminArticleCreate() {
               </Field>
 
               {error && <div className="text-sm text-red-600">{error}</div>}
-              {success && <div className="text-sm text-green-600">{success}</div>}
 
               <div className="mt-4">
                 <Button type="submit" disabled={submitting}>
