@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar.jsx";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Paperclip, Zap } from "lucide-react";
+import { LayoutDashboard, MapPin, Paperclip, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IssueCard from "@/public/civil-issues/components/IssueCard.jsx";
 import IssueFilters from "@/public/civil-issues/components/IssueFilters.jsx";
@@ -9,9 +9,11 @@ import FloatingSubmitButton from "@/public/civil-issues/components/FloatingSubmi
 import CivilIssueSubmitForm from "@/citizen/components/civil-issues/CivilIssueSubmitForm.jsx";
 import CivilIssueAwarenessDialog from "@/public/civil-issues/components/CivilIssueAwarenessDialog.jsx";
 import { usePublicCivilIssuesPage } from "@/public/civil-issues/hooks/usePublicCivilIssuesPage.js";
+import { useAuth } from "@/context/auth/useAuth";
 
 export default function PublicCivilIssuesPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, role } = useAuth();
   const {
     CATEGORY_LABELS,
     DISTRICTS,
@@ -52,13 +54,24 @@ export default function PublicCivilIssuesPage() {
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Community Issues Feed</h2>
                 <p className="text-sm sm:text-base text-slate-500">Explore concerns shared by fellow citizens across Sri Lanka.</p>
-                <div>
+                <div className="flex flex-wrap items-center gap-3">
                   <CivilIssueAwarenessDialog
                     selectedCategory={filterCategory !== "all" ? filterCategory : ""}
                     triggerLabel="Awareness Q&A"
                     triggerVariant="outline"
                     triggerClassName="h-9"
                   />
+                  {isAuthenticated && role === "user" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 gap-2"
+                      onClick={() => navigate("/citizen")}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Citizen Dashboard
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
