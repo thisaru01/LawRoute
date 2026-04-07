@@ -1,29 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { toast } from "sonner";
-
-import {
-  closeCase,
-  getCaseById,
-  getCaseDocuments,
-  getCaseMeetings,
-  scheduleCaseMeeting,
-  uploadCaseDocument,
-} from "@/api/services/caseService";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAuth } from "@/context/auth/useAuth";
-
-const INITIAL_SCHEDULE_FORM = {
-  date: "",
-  time: "",
-  method: "online",
-  meetingLink: "",
-  location: "",
-};
+import { useCaseDetails } from "@/hooks/cases/useCaseDetails";
+import { useCaseMeetings } from "@/hooks/cases/useCaseMeetings";
+import { useCaseDocuments } from "@/hooks/cases/useCaseDocuments";
 
 /**
- * Encapsulates all state, effects, and handlers for the Lawyer Case View page.
- * Exposes the full context value needed by CaseProvider.
+ * Encapsulates all state, effects, and handlers for the Case View page.
+ * Composes smaller hooks for details, meetings, and documents.
  */
 export function useCaseView() {
   const { status, caseId: caseIdFromParams } = useParams();
@@ -33,28 +17,40 @@ export function useCaseView() {
   const navState = location.state || {};
   const caseId = caseIdFromParams || navState.caseId;
 
-  //  Case
-  const [caseDetails, setCaseDetails] = useState(null);
-  const [caseLoading, setCaseLoading] = useState(Boolean(caseId));
-  const [caseError, setCaseError] = useState(null);
+  //  Role-based capabilities
+  const canManageCase = role === "lawyer";
+  const canScheduleMeetings = role === "lawyer";
+  const canCloseCase = role === "lawyer";
 
-  //  Meetings
-  const [meetings, setMeetings] = useState([]);
-  const [meetingsLoading, setMeetingsLoading] = useState(Boolean(caseId));
-  const [meetingsError, setMeetingsError] = useState(null);
-  const [isScheduling, setIsScheduling] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState(INITIAL_SCHEDULE_FORM);
+  //  Data hooks
+  const {
+    caseDetails,
+    caseLoading,
+    caseError,
+    isClosing,
+    closeError,
+    handleCloseCase,
+  } = useCaseDetails(caseId, canCloseCase);
 
-  //  Documents
-  const [documents, setDocuments] = useState([]);
-  const [documentsLoading, setDocumentsLoading] = useState(Boolean(caseId));
-  const [documentsError, setDocumentsError] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const {
+    meetings,
+    meetingsLoading,
+    meetingsError,
+    isScheduling,
+    scheduleForm,
+    handleScheduleChange,
+    handleScheduleConfirm,
+  } = useCaseMeetings(caseId, canScheduleMeetings);
 
-  //  Close case
-  const [isClosing, setIsClosing] = useState(false);
-  const [closeError, setCloseError] = useState(null);
+  const {
+    documents,
+    documentsLoading,
+    documentsError,
+    isUploading,
+    selectedFile,
+    handleSelectFile,
+    handleUploadDocumentConfirm,
+  } = useCaseDocuments(caseId);
 
   //  Fallbacks from navigation state while API loads
   const fallbackCitizenName = navState.citizenName || "Citizen";
@@ -88,149 +84,6 @@ export function useCaseView() {
   const normalizedStatus = String(statusSource ?? "opened").toLowerCase();
   const label =
     normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
-
-  //  Role-based capabilities
-  const canManageCase = role === "lawyer";
-  const canScheduleMeetings = role === "lawyer";
-  const canCloseCase = role === "lawyer";
-
-  //  Effects
-  useEffect(() => {
-    if (!caseId) return;
-    let cancelled = false;
-    setCaseLoading(true);
-    setCaseError(null);
-    getCaseById(caseId)
-      .then((res) => {
-        if (!cancelled) setCaseDetails(res?.data?.data || null);
-      })
-      .catch((err) => {
-        if (!cancelled) setCaseError(err);
-      })
-      .finally(() => {
-        if (!cancelled) setCaseLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [caseId]);
-
-  useEffect(() => {
-    if (!caseId) return;
-    let cancelled = false;
-    setMeetingsLoading(true);
-    setMeetingsError(null);
-    getCaseMeetings(caseId)
-      .then((res) => {
-        if (!cancelled) {
-          const list = res?.data?.data;
-          setMeetings(Array.isArray(list) ? list : []);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setMeetingsError(err);
-          setMeetings([]);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setMeetingsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [caseId]);
-
-  useEffect(() => {
-    if (!caseId) return;
-    let cancelled = false;
-    setDocumentsLoading(true);
-    setDocumentsError(null);
-    getCaseDocuments(caseId)
-      .then((res) => {
-        if (!cancelled) {
-          const list = res?.data?.data;
-          setDocuments(Array.isArray(list) ? list : []);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setDocumentsError(err);
-          setDocuments([]);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setDocumentsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [caseId]);
-
-  //  Stable handlers (useCallback prevents unnecessary re-renders)
-  const handleScheduleChange = useCallback((field, value) => {
-    setScheduleForm((prev) => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleScheduleConfirm = useCallback(async () => {
-    if (!canScheduleMeetings) return;
-    if (!caseId) return;
-    setIsScheduling(true);
-    try {
-      await scheduleCaseMeeting(caseId, scheduleForm);
-      setScheduleForm(INITIAL_SCHEDULE_FORM);
-      const res = await getCaseMeetings(caseId);
-      const list = res?.data?.data;
-      setMeetings(Array.isArray(list) ? list : []);
-      toast.success("Meeting scheduled successfully");
-    } catch (err) {
-      setMeetingsError(err);
-      toast.error("Failed to schedule meeting");
-    } finally {
-      setIsScheduling(false);
-    }
-  }, [caseId, scheduleForm, canScheduleMeetings]);
-
-  const handleSelectFile = useCallback((event) => {
-    setSelectedFile(event.target.files?.[0] || null);
-  }, []);
-
-  const handleUploadDocumentConfirm = useCallback(async () => {
-    if (!caseId || !selectedFile) return;
-    setIsUploading(true);
-    try {
-      await uploadCaseDocument(caseId, selectedFile);
-      setSelectedFile(null);
-      const res = await getCaseDocuments(caseId);
-      const list = res?.data?.data;
-      setDocuments(Array.isArray(list) ? list : []);
-      toast.success("Document uploaded successfully");
-    } catch (err) {
-      setDocumentsError(err);
-      toast.error("Failed to upload document");
-    } finally {
-      setIsUploading(false);
-    }
-  }, [caseId, selectedFile]);
-
-  const handleCloseCase = useCallback(async () => {
-    if (!canCloseCase) return;
-    if (!caseId) return;
-    setIsClosing(true);
-    setCloseError(null);
-    try {
-      await closeCase(caseId);
-      // Refresh case details so status badge updates immediately
-      const res = await getCaseById(caseId);
-      setCaseDetails(res?.data?.data || null);
-      toast.success("Case closed successfully");
-    } catch (err) {
-      setCloseError(err);
-      toast.error("Failed to close case");
-    } finally {
-      setIsClosing(false);
-    }
-  }, [caseId, canCloseCase]);
 
   return {
     // Case
