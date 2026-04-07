@@ -11,6 +11,7 @@ export default function ProfileSidebar({
   basicInfo, 
   educationQualifications, 
   barRegistrationNumber, 
+  memberships,
   navigate,
   onRequestConsultation
 }) {
@@ -47,6 +48,15 @@ export default function ProfileSidebar({
                 </div>
               </div>
             )}
+            {contactInfo.officeAddress && (
+              <div className="flex items-start gap-3 pt-2">
+                <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground uppercase font-semibold">Office Address</p>
+                  <p className="text-sm font-medium leading-tight">{contactInfo.officeAddress}</p>
+                </div>
+              </div>
+            )}
            </>
         ) : (
           <div className="p-4 rounded-xl bg-slate-50 text-center border border-dashed border-slate-200">
@@ -54,16 +64,6 @@ export default function ProfileSidebar({
             <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="w-full">
               Sign In
             </Button>
-          </div>
-        )}
-
-        {contactInfo.officeAddress && (
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Office Address</p>
-              <p className="text-sm font-medium leading-tight">{contactInfo.officeAddress}</p>
-            </div>
           </div>
         )}
 
@@ -96,9 +96,26 @@ export default function ProfileSidebar({
              <div className="space-y-3">
                 {educationQualifications.certifications.map((cert, idx) => (
                   <div key={idx} className="text-sm">
-                    <p className="font-semibold leading-tight">{cert.name}</p>
+                    <p className="font-semibold leading-tight">{cert.title}</p>
                     <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.year}</p>
                   </div>
+                ))}
+             </div>
+          </div>
+        )}
+
+        {/* Memberships */}
+        {Boolean(memberships?.length) && (
+          <div className="space-y-3 pt-4">
+             <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-blue-500" />
+                <p className="text-xs text-muted-foreground uppercase font-semibold">Memberships</p>
+             </div>
+             <div className="flex flex-wrap gap-2">
+                {memberships.map((membership, idx) => (
+                  <Badge key={idx} variant="secondary" className="px-2 py-0.5 text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border-none">
+                    {membership}
+                  </Badge>
                 ))}
              </div>
           </div>

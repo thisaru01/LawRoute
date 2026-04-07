@@ -22,15 +22,16 @@ export default function ProfileExperience({ experience, educationQualifications 
               <div key={idx} className="relative pl-6 border-l-2 border-slate-100 last:border-0 pb-6 last:pb-0">
                 <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full border-4 border-white bg-blue-500"></div>
                 <div className="space-y-1">
-                  <h4 className="font-bold text-lg">{work.role}</h4>
-                  <p className="text-primary font-medium">{work.company}</p>
+                  <h4 className="font-bold text-lg">{work.position}</h4>
+                  <p className="text-primary font-medium">{work.lawFirm}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {work.duration}
+                    {work.startDate ? new Date(work.startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''} 
+                    {work.endDate ? ` - ${new Date(work.endDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}` : ' - Present'}
                   </p>
-                  {work.description && (
+                  {work.responsibilities && (
                     <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                      {work.description}
+                      {work.responsibilities}
                     </p>
                   )}
                 </div>
@@ -56,8 +57,8 @@ export default function ProfileExperience({ experience, educationQualifications 
                 </div>
                 <div>
                   <h4 className="font-bold">{edu.degree}</h4>
-                  <p className="text-sm text-muted-foreground">{edu.institution}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{edu.year}</p>
+                  <p className="text-sm text-muted-foreground">{edu.institute}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{edu.graduationYear}</p>
                 </div>
               </div>
             ))}
