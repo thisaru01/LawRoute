@@ -1,12 +1,16 @@
 import Case from "../../models/case/caseModel.js";
 import CaseDocument from "../../models/case/caseDocument.js";
+import { cloudinary } from "../../config/cloudinary.js";
 
 // Create a new document for a case (citizen or lawyer associated with the case)
 export async function uploadCaseDocument({
   caseId,
+  title,
+  description,
   uploadedBy,
   fileUrl,
   fileType,
+  filePublicId,
 }) {
   const caseDoc = await Case.findById(caseId).select("user lawyer status");
 
@@ -35,11 +39,30 @@ export async function uploadCaseDocument({
     throw error;
   }
 
+  let thumbnailUrl;
+
+  // For PDFs, generate a Cloudinary image thumbnail of the first page
+  if (fileType === "application/pdf" && filePublicId) {
+    thumbnailUrl = cloudinary.url(filePublicId, {
+      resource_type: "image",
+      format: "jpg",
+      page: 1,
+      width: 600,
+      height: 400,
+      crop: "fill",
+      quality: "auto",
+    });
+  }
+
   const document = await CaseDocument.create({
     caseId: caseDoc._id,
+    title,
+    description,
     uploadedBy,
     fileUrl,
     fileType,
+    filePublicId,
+    thumbnailUrl,
   });
 
   return document;

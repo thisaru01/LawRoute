@@ -24,8 +24,12 @@ export const getCaseDocuments = (caseId) => {
   return axios.get(`/cases/${caseId}/documents`);
 };
 
-export const uploadCaseDocument = (caseId, file) => {
+export const uploadCaseDocument = (caseId, file, title, description) => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("title", title);
+  if (description) {
+    formData.append("description", description);
+  }
   return axios.post(`/cases/${caseId}/documents`, formData);
 };

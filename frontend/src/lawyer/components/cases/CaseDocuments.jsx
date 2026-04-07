@@ -15,8 +15,32 @@ function DocumentCard({ doc }) {
     fileName.split(".").pop()?.toUpperCase() ||
     "FILE";
 
+  const isPdf =
+    doc.fileType === "application/pdf" ||
+    fileName.toLowerCase().endsWith(".pdf");
+
+  const isImage =
+    doc.fileType?.startsWith("image/") ||
+    [".png", ".jpg", ".jpeg", ".webp"].some((ext) =>
+      fileName.toLowerCase().endsWith(ext),
+    );
+
+  const previewUrl = isPdf ? doc.thumbnailUrl : isImage ? doc.fileUrl : null;
+
   return (
     <div className="group flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/40">
+      {/* Preview thumbnail for PDFs and images */}
+      {previewUrl && (
+        <div className="mb-2 overflow-hidden rounded-md border bg-muted/50 aspect-4/3">
+          <img
+            src={previewUrl}
+            alt={fileName}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
+          />
+        </div>
+      )}
+
       {/* Icon + extension */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
@@ -26,11 +50,31 @@ function DocumentCard({ doc }) {
           {extension}
         </span>
       </div>
+      {/* Title & File name */}
+      <div className="mt-1">
+        <p
+          className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2"
+          title={doc.title || fileName}
+        >
+          {doc.title || fileName}
+        </p>
+        <p
+          className="text-[11px] text-muted-foreground truncate mt-0.5"
+          title={fileName}
+        >
+          {fileName}
+        </p>
+      </div>
 
-      {/* File name */}
-      <p className="text-sm font-medium text-foreground leading-snug wrap-break-word line-clamp-2">
-        {fileName}
-      </p>
+      {/* Description */}
+      {doc.description && (
+        <p
+          className="text-xs text-muted-foreground mt-1.5 wrap-break-word line-clamp-2"
+          title={doc.description}
+        >
+          {doc.description}
+        </p>
+      )}
 
       {/* Date */}
       {doc.createdAt && (
