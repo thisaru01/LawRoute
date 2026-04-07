@@ -47,6 +47,7 @@ import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssues
 import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
 import PublicArticlesPage from "@/public/legal-library/articles/PublicArticlesPage.jsx";
 import PublicArticleView from "@/public/legal-library/articles/components/PublicArticleView.jsx";
+import PublicDocumentsPage from "@/public/legal-library/documents/PublicDocumentsPage.jsx";
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
         <Route path="/legal-library/articles" element={<PublicArticlesPage />} />
         <Route path="/legal-library/articles/:id" element={<PublicArticleView />} />
+        <Route path="/legal-library/documents" element={<PublicDocumentsPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
