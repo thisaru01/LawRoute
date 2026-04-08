@@ -3,6 +3,7 @@ import AuthorityProfile from "../../models/authorityProfileModel.js";
 import User from "../../models/userModel.js";
 import { sendEmail } from "../email/emailService.js";
 import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
+import { autocompleteSriLankaLocations } from "../location/locationService.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -16,6 +17,82 @@ const parseDateOnlyToUtcDate = (value) => {
     }
 
     return new Date(`${value}T00:00:00.000Z`);
+};
+
+const normalizeText = (value) => {
+    if (typeof value !== "string") {
+        return value;
+    }
+
+    return value.trim().replace(/\s+/g, " ");
+};
+
+const normalizeDistrictText = (value) =>
+    (typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, " ") : "")
+        .replace(/\s+district$/, "")
+        .trim();
+
+const isDistrictMatch = (districtValue, districtTarget) => {
+    const district = normalizeDistrictText(districtValue);
+    const target = normalizeDistrictText(districtTarget);
+
+    if (!district || !target) {
+        return false;
+    }
+
+    return district === target || district.includes(target) || target.includes(district);
+};
+
+const verifyLocationDistrictConsistency = async ({ district, exactLocation, postalAreaOrZip }) => {
+    const normalizedDistrict = normalizeText(district);
+    const normalizedLocation = normalizeText(exactLocation);
+
+    if (!normalizedDistrict || !normalizedLocation) {
+        return;
+    }
+
+    let result;
+    try {
+        result = await autocompleteSriLankaLocations({
+            text: normalizedLocation,
+            limit: 8,
+        });
+    } catch (error) {
+        // Do not block submissions when external location verification is unavailable.
+        return;
+    }
+
+    const suggestions = Array.isArray(result?.data) ? result.data : [];
+    if (suggestions.length === 0) {
+        return;
+    }
+
+    const normalizedPostcode = normalizeText(postalAreaOrZip);
+    const locationAligned = suggestions.filter((item) =>
+        normalizeText(item?.locationName) === normalizedLocation
+    );
+
+    const postcodeAligned = normalizedPostcode
+        ? suggestions.filter((item) => normalizeText(item?.postcode) === normalizedPostcode)
+        : [];
+
+    const evidencePool = locationAligned.length > 0
+        ? locationAligned
+        : postcodeAligned.length > 0
+            ? postcodeAligned
+            : suggestions;
+
+    const hasDistrictEvidence = evidencePool.some((item) =>
+        isDistrictMatch(item?.district, normalizedDistrict)
+    );
+
+    if (!hasDistrictEvidence) {
+        const error = new Error(
+            `${normalizedLocation} does not appear to be in ${normalizedDistrict}. Please verify the district or choose a matching location.`
+        );
+        error.statusCode = 400;
+        throw error;
+    }
 };
 
 const formatDateOnly = (value) => {
@@ -39,12 +116,12 @@ const normalizeIssuePayload = ({
     impactOnPeople,
     contactNumber,
 }) => ({
-    exactLocation: exactLocation ?? "",
-    postalAreaOrZip: postalAreaOrZip ?? "",
-    whatHappened: whatHappened ?? "",
+    exactLocation: normalizeText(exactLocation) ?? "",
+    postalAreaOrZip: normalizeText(postalAreaOrZip) ?? "",
+    whatHappened: normalizeText(whatHappened) ?? "",
     whenItHappened: parseDateOnlyToUtcDate(whenItHappened),
-    impactOnPeople: impactOnPeople ?? "",
-    contactNumber: contactNumber ?? "",
+    impactOnPeople: normalizeText(impactOnPeople) ?? "",
+    contactNumber: normalizeText(contactNumber) ?? "",
 });
 
 // Create a new civil issue, auto-routing to the correct authority by category.
@@ -62,6 +139,12 @@ export async function createIssue({ reporterId, category, subject, district, exa
         contactNumber,
     });
 
+    await verifyLocationDistrictConsistency({
+        district,
+        exactLocation: structuredIssue.exactLocation,
+        postalAreaOrZip: structuredIssue.postalAreaOrZip,
+    });
+
     if (!authorityProfile) {
         const error = new Error("No responsible authority found for this category.");
         error.statusCode = 404;
@@ -71,8 +154,8 @@ export async function createIssue({ reporterId, category, subject, district, exa
     const issue = await CivilIssue.create({
         reporterId,
         category,
-        subject,
-        district,
+        subject: normalizeText(subject),
+        district: normalizeText(district),
         ...structuredIssue,
         attachments,
         isPublic,
@@ -170,14 +253,26 @@ export async function updateIssue({ issueId, reporterId, subject, district, exac
         throw error;
     }
 
-    if (subject !== undefined) issue.subject = subject;
-    if (district !== undefined) issue.district = district;
-    if (exactLocation !== undefined) issue.exactLocation = exactLocation;
-    if (postalAreaOrZip !== undefined) issue.postalAreaOrZip = postalAreaOrZip;
-    if (whatHappened !== undefined) issue.whatHappened = whatHappened;
+    const resolvedDistrict = district !== undefined ? normalizeText(district) : issue.district;
+    const resolvedExactLocation = exactLocation !== undefined ? normalizeText(exactLocation) : issue.exactLocation;
+    const resolvedPostalCode = postalAreaOrZip !== undefined ? normalizeText(postalAreaOrZip) : issue.postalAreaOrZip;
+
+    if (district !== undefined || exactLocation !== undefined || postalAreaOrZip !== undefined) {
+        await verifyLocationDistrictConsistency({
+            district: resolvedDistrict,
+            exactLocation: resolvedExactLocation,
+            postalAreaOrZip: resolvedPostalCode,
+        });
+    }
+
+    if (subject !== undefined) issue.subject = normalizeText(subject);
+    if (district !== undefined) issue.district = normalizeText(district);
+    if (exactLocation !== undefined) issue.exactLocation = normalizeText(exactLocation);
+    if (postalAreaOrZip !== undefined) issue.postalAreaOrZip = normalizeText(postalAreaOrZip);
+    if (whatHappened !== undefined) issue.whatHappened = normalizeText(whatHappened);
     if (whenItHappened !== undefined) issue.whenItHappened = parseDateOnlyToUtcDate(whenItHappened);
-    if (impactOnPeople !== undefined) issue.impactOnPeople = impactOnPeople;
-    if (contactNumber !== undefined) issue.contactNumber = contactNumber;
+    if (impactOnPeople !== undefined) issue.impactOnPeople = normalizeText(impactOnPeople);
+    if (contactNumber !== undefined) issue.contactNumber = normalizeText(contactNumber);
 
     await issue.save();
 

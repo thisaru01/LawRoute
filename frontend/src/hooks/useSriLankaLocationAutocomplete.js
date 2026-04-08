@@ -6,10 +6,38 @@ const isTimeoutError = (error) => {
   return message.includes("timeout") || message.includes("timed out");
 };
 
+const toKeyPart = (value) =>
+  (typeof value === "string" ? value.trim().toLowerCase() : "");
+
+const dedupeSuggestions = (items) => {
+  const seen = new Set();
+  const unique = [];
+
+  for (const item of items) {
+    const key = [
+      toKeyPart(item?.locationName),
+      toKeyPart(item?.postcode),
+      toKeyPart(item?.district),
+      toKeyPart(item?.formatted),
+    ].join("|");
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    unique.push(item);
+  }
+
+  return unique;
+};
+
 export function useSriLankaLocationAutocomplete({ query, enabled = true, debounceMs = 300, minChars = 2 }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState("general");
+  const [matchedDistrict, setMatchedDistrict] = useState("");
 
   useEffect(() => {
     const text = typeof query === "string" ? query.trim() : "";
@@ -18,6 +46,8 @@ export function useSriLankaLocationAutocomplete({ query, enabled = true, debounc
       setSuggestions([]);
       setLoading(false);
       setError("");
+      setMode("general");
+      setMatchedDistrict("");
       return undefined;
     }
 
@@ -33,13 +63,18 @@ export function useSriLankaLocationAutocomplete({ query, enabled = true, debounc
           return;
         }
 
-        setSuggestions(Array.isArray(res?.data?.data) ? res.data.data : []);
+        const incoming = Array.isArray(res?.data?.data) ? res.data.data : [];
+        setSuggestions(dedupeSuggestions(incoming));
+        setMode(typeof res?.data?.meta?.mode === "string" ? res.data.meta.mode : "general");
+        setMatchedDistrict(typeof res?.data?.meta?.matchedDistrict === "string" ? res.data.meta.matchedDistrict : "");
       } catch (err) {
         if (!active) {
           return;
         }
 
         setSuggestions([]);
+        setMode("general");
+        setMatchedDistrict("");
         if (isTimeoutError(err)) {
           // Autocomplete should fail silently on transient timeouts.
           setError("");
@@ -63,5 +98,7 @@ export function useSriLankaLocationAutocomplete({ query, enabled = true, debounc
     suggestions,
     loading,
     error,
+    mode,
+    matchedDistrict,
   };
 }

@@ -3,6 +3,9 @@
 
 export const CIVIL_ISSUE_CATEGORIES = [
     "land",
+    "matrimonial_family",
+    "labour_industrial",
+    "digital_emerging_rights",
     "police",
     "harassment",
     "public_services",
