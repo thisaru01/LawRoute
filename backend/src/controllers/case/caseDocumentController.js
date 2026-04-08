@@ -21,12 +21,25 @@ export const uploadCaseDocument = async (req, res, next) => {
 
     const fileUrl = req.file.path;
     const fileType = req.file.mimetype;
+    const filePublicId = req.file.filename;
+
+    const { title, description } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Document title is required",
+      });
+    }
 
     const document = await caseDocumentsService.uploadCaseDocument({
       caseId: id,
+      title,
+      description,
       uploadedBy: req.user._id,
       fileUrl,
       fileType,
+      filePublicId,
     });
 
     return res.status(201).json({
@@ -58,6 +71,68 @@ export const getCaseDocuments = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: documents,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Update a document for a case
+export const updateCaseDocument = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { docId } = req.params;
+    const { title, description } = req.body;
+
+    if (!title && description === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Nothing to update",
+      });
+    }
+
+    const document = await caseDocumentsService.updateCaseDocument({
+      docId,
+      title,
+      description,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: document,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Delete a document for a case
+export const deleteCaseDocument = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { docId } = req.params;
+
+    await caseDocumentsService.deleteCaseDocument({
+      docId,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Document deleted successfully",
     });
   } catch (error) {
     return next(error);

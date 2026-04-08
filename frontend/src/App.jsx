@@ -22,6 +22,7 @@ import CitizenCases from "./citizen/pages/CitizenCases.jsx";
 import CitizenCivilIssues from "./citizen/pages/CitizenCivilIssues.jsx";
 import CitizenCivilIssueSubmit from "./citizen/pages/CitizenCivilIssueSubmit.jsx";
 import CitizenProfile from "./citizen/pages/CitizenProfile.jsx";
+import CitizenCaseDetails from "./citizen/pages/CitizenCaseView.jsx";
 
 // Lawyer
 import LawyerRouteLayout from "./lawyer/LawyerRouteLayout.jsx";
@@ -46,6 +47,9 @@ import AuthPage from "@/public/AuthPage.jsx";
 import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
 import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
 import PublicLawyerProfilePage from "@/public/find-lawyer/PublicLawyerProfilePage.jsx";
+import PublicArticlesPage from "@/public/legal-library/articles/PublicArticlesPage.jsx";
+import PublicArticleView from "@/public/legal-library/articles/components/PublicArticleView.jsx";
+import PublicDocumentsPage from "@/public/legal-library/documents/PublicDocumentsPage.jsx";
 
 export default function App() {
   return (
@@ -57,6 +61,9 @@ export default function App() {
         <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
         <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
         <Route path="/lawyers/:id" element={<PublicLawyerProfilePage />} />
+        <Route path="/legal-library/articles" element={<PublicArticlesPage />} />
+        <Route path="/legal-library/articles/:id" element={<PublicArticleView />} />
+        <Route path="/legal-library/documents" element={<PublicDocumentsPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
@@ -68,6 +75,7 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<CitizenCases />} />
+            <Route path=":status/:caseId" element={<CitizenCaseDetails />} />
           </Route>
           <Route path="civil-issues">
             <Route index element={<Navigate to="pending" replace />} />

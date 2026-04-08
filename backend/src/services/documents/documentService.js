@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
 import Document from "../../models/documents/documentModel.js";
 
-export const createDocument = async ({ title, description, user, fileUrl, filePublicId }) => {
+export const createDocument = async ({ title, description, user, fileUrl, filePublicId, fileType }) => {
   if (!user || !user._id) {
     const err = new Error("Unauthorized");
     err.status = 401;
@@ -27,11 +27,28 @@ export const createDocument = async ({ title, description, user, fileUrl, filePu
     throw err;
   }
 
+  let thumbnailUrl;
+
+  // For PDFs, generate a Cloudinary image thumbnail of the first page
+  if (fileType === "application/pdf" && filePublicId) {
+    thumbnailUrl = cloudinary.url(filePublicId, {
+      resource_type: "image",
+      format: "jpg",
+      page: 1,
+      width: 600,
+      height: 400,
+      crop: "fill",
+      quality: "auto",
+    });
+  }
+
   const doc = new Document({
     title,
     description,
     fileUrl,
     filePublicId,
+    fileType,
+    thumbnailUrl,
     uploadedBy: user._id,
   });
 

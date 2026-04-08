@@ -12,7 +12,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-export default function UploadDocumentContent({
+export default function AdminUploadDocumentContent({
   selectedFile,
   onSelectFile,
   onConfirm,
@@ -26,7 +26,9 @@ export default function UploadDocumentContent({
       setTitle("");
       setDescription("");
     } else if (!title) {
-      setTitle(selectedFile.name.split(".").slice(0, -1).join(".") || selectedFile.name);
+      setTitle(
+        selectedFile.name.split(".").slice(0, -1).join(".") || selectedFile.name,
+      );
     }
   }, [selectedFile]);
 
@@ -39,7 +41,7 @@ export default function UploadDocumentContent({
       <AlertDialogHeader>
         <AlertDialogTitle>Add document</AlertDialogTitle>
         <AlertDialogDescription>
-          Choose a file and provide details to upload for this case.
+          Choose a file and provide details to upload to the document library.
         </AlertDialogDescription>
       </AlertDialogHeader>
 
@@ -53,12 +55,14 @@ export default function UploadDocumentContent({
             </p>
           )}
         </div>
-        
+
         <div className="space-y-1.5">
-          <Label htmlFor="document-title">Title <span className="text-destructive">*</span></Label>
+          <Label htmlFor="document-title">
+            Title <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="document-title"
-            placeholder="E.g., Defendant statement"
+            placeholder="E.g., Law amendment 2024"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
