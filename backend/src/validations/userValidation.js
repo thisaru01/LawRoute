@@ -8,14 +8,14 @@ export const validateUserRegister = (req, res, next) => {
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return res.status(400).json({
       success: false,
-      message: "name is required and must be a non-empty string.",
+      message: "Name is required and must be a non-empty string.",
     });
   }
 
   if (!email || typeof email !== "string" || email.trim().length === 0) {
     return res.status(400).json({
       success: false,
-      message: "email is required and must be a non-empty string.",
+      message: "Email is required and must be a non-empty string.",
     });
   }
 
@@ -23,21 +23,21 @@ export const validateUserRegister = (req, res, next) => {
   if (!emailRegex.test(email)) {
     return res.status(400).json({
       success: false,
-      message: "email must be a valid email address.",
+      message: "Email must be a valid email address.",
     });
   }
 
   if (!password || typeof password !== "string") {
     return res.status(400).json({
       success: false,
-      message: "password is required and must be a string.",
+      message: "Password is required and must be a string.",
     });
   }
 
   if (password.length < 8) {
     return res.status(400).json({
       success: false,
-      message: "password must be at least 8 characters long.",
+      message: "Password must be at least 8 characters long.",
     });
   }
 
@@ -49,7 +49,7 @@ export const validateUserRegister = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message:
-        "password must contain at least one letter, one number, and one special character.",
+        "Password must contain at least one letter, one number, and one special character.",
     });
   }
 
@@ -57,7 +57,7 @@ export const validateUserRegister = (req, res, next) => {
     if (typeof role !== "string" || !ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: `role must be one of: ${ALLOWED_ROLES.join(", ")}.`,
+        message: `Role must be one of: ${ALLOWED_ROLES.join(", ")}.`,
       });
     }
   }
@@ -66,14 +66,15 @@ export const validateUserRegister = (req, res, next) => {
     if (!managedCategory || typeof managedCategory !== "string") {
       return res.status(400).json({
         success: false,
-        message: "managedCategory is required and must be a string for authority role.",
+        message:
+          "ManagedCategory is required and must be a string for authority role.",
       });
     }
 
     if (!CIVIL_ISSUE_CATEGORIES.includes(managedCategory)) {
       return res.status(400).json({
         success: false,
-        message: `managedCategory must be one of: ${CIVIL_ISSUE_CATEGORIES.join(", ")}.`,
+        message: `ManagedCategory must be one of: ${CIVIL_ISSUE_CATEGORIES.join(", ")}.`,
       });
     }
   }
