@@ -116,6 +116,7 @@ export const updateCivilIssue = async (req, res, next) => {
       whenItHappened,
       impactOnPeople,
       contactNumber,
+      isPublic,
     } = req.body;
 
     const issue = await civilIssueService.updateIssue({
@@ -129,6 +130,7 @@ export const updateCivilIssue = async (req, res, next) => {
       whenItHappened,
       impactOnPeople,
       contactNumber,
+      isPublic,
     });
 
     res.status(200).json({

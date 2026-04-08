@@ -254,6 +254,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         whenItHappened,
         impactOnPeople,
         contactNumber,
+        isPublic,
     } = req.body;
     const ALLOWED_FIELDS = [
         "subject",
@@ -264,6 +265,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         "whenItHappened",
         "impactOnPeople",
         "contactNumber",
+        "isPublic",
     ];
 
     const unknownFields = Object.keys(req.body).filter(
@@ -273,7 +275,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
     if (unknownFields.length > 0) {
         return res.status(400).json({
             success: false,
-            message: `Unknown fields: ${unknownFields.join(", ")}. Only subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople and contactNumber can be updated.`,
+            message: `Unknown fields: ${unknownFields.join(", ")}. Only subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber and isPublic can be updated.`,
         });
     }
 
@@ -285,7 +287,8 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         whatHappened === undefined &&
         whenItHappened === undefined &&
         impactOnPeople === undefined &&
-        contactNumber === undefined
+        contactNumber === undefined &&
+        isPublic === undefined
     ) {
         return res.status(400).json({
             success: false,
@@ -441,6 +444,13 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         return res.status(400).json({
             success: false,
             message: "contactNumber must be exactly 10 digits.",
+        });
+    }
+
+    if (isPublic !== undefined && typeof isPublic !== "boolean") {
+        return res.status(400).json({
+            success: false,
+            message: "isPublic must be a boolean value.",
         });
     }
 

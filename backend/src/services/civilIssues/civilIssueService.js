@@ -231,7 +231,19 @@ export async function getIssueById({ issueId, currentUserId }) {
 }
 
 // Update a civil issue (reporter only, pending status only).
-export async function updateIssue({ issueId, reporterId, subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber }) {
+export async function updateIssue({
+    issueId,
+    reporterId,
+    subject,
+    district,
+    exactLocation,
+    postalAreaOrZip,
+    whatHappened,
+    whenItHappened,
+    impactOnPeople,
+    contactNumber,
+    isPublic,
+}) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email");
 
@@ -273,6 +285,7 @@ export async function updateIssue({ issueId, reporterId, subject, district, exac
     if (whenItHappened !== undefined) issue.whenItHappened = parseDateOnlyToUtcDate(whenItHappened);
     if (impactOnPeople !== undefined) issue.impactOnPeople = normalizeText(impactOnPeople);
     if (contactNumber !== undefined) issue.contactNumber = normalizeText(contactNumber);
+    if (isPublic !== undefined) issue.isPublic = isPublic;
 
     await issue.save();
 
