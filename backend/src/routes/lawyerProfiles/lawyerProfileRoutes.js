@@ -7,6 +7,7 @@ import {
   getMyLawyerProfile,
   updateLawyerVerificationStatus,
   updateLawyerProfile,
+  getLawyerProfileById,
 } from "../../controllers/lawyerProfiles/lawyerProfileController.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 import {
@@ -33,6 +34,9 @@ router.put(
   validateUpdateLawyerProfile,
   updateLawyerProfile,
 );
+
+// Get a single lawyer profile by ID
+router.get("/:id", getLawyerProfileById);
 
 // Admin: review lawyer profiles (optionally filter by verificationStatus)
 router.get(
