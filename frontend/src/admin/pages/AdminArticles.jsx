@@ -4,6 +4,7 @@ import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArtic
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth/useAuth";
+import EmptyState from "@/components/consultation-requests/EmptyState";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
@@ -106,7 +107,7 @@ export default function AdminArticles() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {!loading && !error && articles.length === 0 && (
-          <p className="text-sm text-muted-foreground">No articles found.</p>
+          <EmptyState title="No articles found." />
         )}
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
