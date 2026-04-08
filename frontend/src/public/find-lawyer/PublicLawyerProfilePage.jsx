@@ -10,6 +10,7 @@ import ProfileHero from "./components/profile/ProfileHero";
 import ProfileAbout from "./components/profile/ProfileAbout";
 import ProfileExperience from "./components/profile/ProfileExperience";
 import ProfileSidebar from "./components/profile/ProfileSidebar";
+import ProfilePosts from "./components/profile/ProfilePosts";
 import RequestConsultationModal from "./components/RequestConsultationModal";
 import { EXPERTISE_LABELS } from "./components/LawyerCard";
 import { useState } from "react";
@@ -121,6 +122,8 @@ export default function PublicLawyerProfilePage() {
               experience={experience}
               educationQualifications={educationQualifications}
             />
+
+            <ProfilePosts lawyerId={user._id || user.id} />
           </div>
 
           {/* Sidebar */}
