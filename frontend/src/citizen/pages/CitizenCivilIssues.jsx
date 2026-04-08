@@ -1,11 +1,27 @@
-import { RefreshCw } from "lucide-react";
+import { CheckCircle2, Clock3, LoaderCircle, RefreshCw } from "lucide-react";
 import { CIVIL_ISSUE_CATEGORIES } from "@/constants/civilIssueConstants.js";
+import { Badge } from "@/components/ui/badge";
 import CitizenCivilIssueCard from "@/citizen/components/civil-issues/CitizenCivilIssueCard.jsx";
 import { useCitizenCivilIssuesPage } from "@/citizen/hooks/useCitizenCivilIssuesPage.js";
 
 const CATEGORY_LABELS = Object.fromEntries(
   CIVIL_ISSUE_CATEGORIES.map(({ value, label }) => [value, label]),
 );
+
+const STATUS_BADGE_STYLES = {
+  Pending: {
+    icon: Clock3,
+    className: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
+  },
+  "In Progress": {
+    icon: LoaderCircle,
+    className: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-50",
+  },
+  Resolved: {
+    icon: CheckCircle2,
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+  },
+};
 
 export default function CitizenCivilIssues() {
   const {
@@ -18,12 +34,23 @@ export default function CitizenCivilIssues() {
     setOpenIssues,
   } = useCitizenCivilIssuesPage();
 
+  const statusBadge = STATUS_BADGE_STYLES[label] || STATUS_BADGE_STYLES.Pending;
+  const StatusIcon = statusBadge.icon;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Civil Issues</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold">Civil Issues</h1>
+            <Badge
+              variant="outline"
+              className={`gap-2.5 px-4 py-1.5 text-base font-medium ${statusBadge.className}`}
+            >
+              <StatusIcon className="h-4.5 w-4.5" />
+              {label}
+            </Badge>
+          </div>
         </div>
 
         <button

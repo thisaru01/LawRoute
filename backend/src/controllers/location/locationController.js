@@ -11,12 +11,16 @@ export const getLocationAutocomplete = async (req, res, next) => {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    const data = await autocompleteSriLankaLocations({
+    const result = await autocompleteSriLankaLocations({
       text,
       limit: Math.min(Math.max(limit, 1), 10),
     });
 
-    return res.status(200).json({ success: true, data });
+    return res.status(200).json({
+      success: true,
+      data: result.data,
+      meta: result.meta,
+    });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({

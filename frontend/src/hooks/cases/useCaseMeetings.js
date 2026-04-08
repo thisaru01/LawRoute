@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { getCaseMeetings, scheduleCaseMeeting } from "@/api/services/caseService";
+import {
+  getCaseMeetings,
+  scheduleCaseMeeting,
+} from "@/api/services/caseService";
 
 const INITIAL_SCHEDULE_FORM = {
   date: "",
@@ -60,8 +63,11 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
       setMeetings(Array.isArray(list) ? list : []);
       toast.success("Meeting scheduled successfully");
     } catch (err) {
-      setMeetingsError(err);
-      toast.error("Failed to schedule meeting");
+      const message =
+        err?.message ||
+        err?.original?.response?.data?.message ||
+        "Failed to schedule meeting";
+      toast.error(message);
     } finally {
       setIsScheduling(false);
     }

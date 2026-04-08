@@ -10,32 +10,51 @@ export const CATEGORY_LABELS = Object.fromEntries(
 
 export const DISTRICTS = CIVIL_ISSUE_DISTRICTS;
 const PAGE_LIMIT = 10;
+const DEFAULT_DISTRICT = "All Districts";
+
+const normalizeDistrictText = (value) =>
+  (typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, " ") : "");
+
+const toCanonicalDistrict = (value) => {
+  const normalized = normalizeDistrictText(value).replace(/\s+district$/, "").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const canonical = DISTRICTS.find((district) => normalizeDistrictText(district) === normalized);
+  return canonical || "";
+};
+
+const isSpecificDistrict = (value) =>
+  Boolean(value && normalizeDistrictText(value) !== normalizeDistrictText(DEFAULT_DISTRICT));
 
 export function usePublicCivilIssuesPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { token } = useAuth();
 
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [filterCategory, setFilterCategory] = useState("all");
-  const [filterDistrict, setFilterDistrict] = useState("All Districts");
+  const [filterDistrict, setFilterDistrict] = useState(DEFAULT_DISTRICT);
   const [locationQuery, setLocationQuery] = useState("");
+  const [locationMessage, setLocationMessage] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedPostcode, setSelectedPostcode] = useState("");
   const [openIssues, setOpenIssues] = useState({});
   const [showForm, setShowForm] = useState(false);
 
   const fetchIssues = async ({ targetPage = 1, reset = true } = {}) => {
-    if (reset) {
+    if (reset && targetPage === 1) {
       setLoading(true);
     } else {
-      setLoadingMore(true);
+      setLoadingPage(true);
     }
 
     setError(null);
@@ -47,7 +66,7 @@ export function usePublicCivilIssuesPage() {
         params.category = filterCategory;
       }
 
-      if (filterDistrict !== "All Districts") {
+      if (filterDistrict !== DEFAULT_DISTRICT) {
         params.district = filterDistrict;
       }
 
@@ -66,7 +85,7 @@ export function usePublicCivilIssuesPage() {
       const incoming = Array.isArray(res?.data?.data) ? res.data.data : [];
       const pagination = res?.data?.pagination || {};
 
-      setIssues((prev) => (reset ? incoming : [...prev, ...incoming]));
+      setIssues(incoming);
       setPage(Number(pagination.page) || targetPage);
       setHasNextPage(Boolean(pagination.hasNextPage));
       setTotalPages(Number(pagination.totalPages) || 0);
@@ -74,10 +93,10 @@ export function usePublicCivilIssuesPage() {
       console.error("Failed to fetch public issues", err);
       setError(err.message || "Failed to load issues. Please try again.");
     } finally {
-      if (reset) {
+      if (reset && targetPage === 1) {
         setLoading(false);
       } else {
-        setLoadingMore(false);
+        setLoadingPage(false);
       }
     }
   };
@@ -89,13 +108,18 @@ export function usePublicCivilIssuesPage() {
   useEffect(() => {
     if (searchParams.get("action") === "submit" && token) {
       setShowForm(true);
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("action");
+      setSearchParams(nextParams, { replace: true });
     }
-  }, [searchParams, token]);
+  }, [searchParams, setSearchParams, token]);
 
   const filteredIssues = issues;
 
   const handleLocationQueryChange = (value) => {
     setLocationQuery(value);
+    setLocationMessage("");
 
     if (!value.trim()) {
       setSelectedLocation("");
@@ -104,7 +128,25 @@ export function usePublicCivilIssuesPage() {
   };
 
   const handleLocationSelect = (suggestion) => {
+    const isDistrictSuggestion = suggestion?.matchType === "district";
+    const districtFromSuggestion =
+      toCanonicalDistrict(suggestion?.district)
+      || toCanonicalDistrict(suggestion?.locationName);
+
     setLocationQuery(suggestion.locationName);
+    setLocationMessage("");
+
+    if (districtFromSuggestion && districtFromSuggestion !== filterDistrict) {
+      setFilterDistrict(districtFromSuggestion);
+      setLocationMessage(`District changed to ${districtFromSuggestion} based on selected location.`);
+    }
+
+    if (isDistrictSuggestion && districtFromSuggestion) {
+      setSelectedLocation("");
+      setSelectedPostcode("");
+      return;
+    }
+
     setSelectedLocation(suggestion.locationName || "");
     setSelectedPostcode(suggestion.postcode || "");
   };
@@ -117,19 +159,41 @@ export function usePublicCivilIssuesPage() {
     }
   };
 
+  const handleDistrictChange = (districtValue) => {
+    setFilterDistrict(districtValue);
+    setLocationMessage("");
+  };
+
   const loadNextPage = () => {
-    if (loading || loadingMore || !hasNextPage) {
+    if (loading || loadingPage || !hasNextPage) {
       return;
     }
 
-    fetchIssues({ targetPage: page + 1, reset: false });
+    fetchIssues({ targetPage: page + 1, reset: true });
   };
 
-  const handleCloseForm = () => setShowForm(false);
+  const loadPreviousPage = () => {
+    if (loading || loadingPage || page <= 1) {
+      return;
+    }
+
+    fetchIssues({ targetPage: page - 1, reset: true });
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+
+    if (searchParams.get("action") === "submit") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("action");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
   const handleClearFilters = () => {
     setFilterCategory("all");
-    setFilterDistrict("All Districts");
+    setFilterDistrict(DEFAULT_DISTRICT);
     setLocationQuery("");
+    setLocationMessage("");
     setSelectedLocation("");
     setSelectedPostcode("");
   };
@@ -145,17 +209,19 @@ export function usePublicCivilIssuesPage() {
     hasNextPage,
     handleLocationQueryChange,
     handleLocationSelect,
+    handleDistrictChange,
     handleClearFilters,
     handleCloseForm,
     handleStartSubmission,
     loadNextPage,
+    loadPreviousPage,
     loading,
-    loadingMore,
+    loadingPage,
     locationQuery,
+    locationMessage,
     openIssues,
     page,
     setFilterCategory,
-    setFilterDistrict,
     setOpenIssues,
     showForm,
     totalPages,

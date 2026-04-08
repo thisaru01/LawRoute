@@ -1,8 +1,11 @@
 export const CIVIL_ISSUE_CATEGORIES = [
-  { value: "land", label: "Land Issues" },
-  { value: "police", label: "Police Conduct" },
-  { value: "harassment", label: "Harassment" },
-  { value: "public_services", label: "Public Services" },
+  { value: "land", label: "Land & Property" },
+  { value: "matrimonial_family", label: "Matrimonial & Family" },
+  { value: "labour_industrial", label: "Labour & Industrial" },
+  { value: "digital_emerging_rights", label: "Digital & Emerging Rights" },
+  { value: "police", label: "Police & Security Accountability" },
+  { value: "harassment", label: "Gender, Child & Social Protection" },
+  { value: "public_services", label: "Administrative Injustice" },
   { value: "other", label: "Other" },
 ];
 

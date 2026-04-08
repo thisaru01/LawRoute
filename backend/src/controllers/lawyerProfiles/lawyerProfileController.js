@@ -2,6 +2,7 @@ import {
   findApprovedLawyerProfiles,
   findAllLawyerProfiles,
   findLawyerProfileByUser,
+  findLawyerProfileById,
   findLawyerProfilesForAdmin,
   updateLawyerVerificationStatusByAdmin,
   updateLawyerProfileByUser,
@@ -100,6 +101,20 @@ export const updateLawyerVerificationStatus = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Lawyer verification status updated successfully",
+      lawyerProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a single lawyer profile by ID.
+export const getLawyerProfileById = async (req, res, next) => {
+  try {
+    const lawyerProfile = await findLawyerProfileById(req.params.id);
+
+    return res.status(200).json({
+      success: true,
       lawyerProfile,
     });
   } catch (error) {

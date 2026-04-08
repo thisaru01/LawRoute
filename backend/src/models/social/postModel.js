@@ -75,16 +75,9 @@ const postSchema = new Schema(
       type: [postMediaSchema],
       default: [],
     },
-    repostOf: {
-      type: Schema.Types.ObjectId,
-      ref: "Post",
-      default: null,
-      index: true,
-    },
     stats: {
       likeCount: { type: Number, default: 0, min: 0 },
       commentCount: { type: Number, default: 0, min: 0 },
-      shareCount: { type: Number, default: 0, min: 0 },
     },
   },
   { timestamps: true },
@@ -92,6 +85,5 @@ const postSchema = new Schema(
 
 postSchema.index({ createdAt: -1 });
 postSchema.index({ author: 1, createdAt: -1 });
-postSchema.index({ repostOf: 1, createdAt: -1 });
 
 export default mongoose.model("Post", postSchema);

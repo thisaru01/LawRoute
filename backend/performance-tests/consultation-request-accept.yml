@@ -1,0 +1,33 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Lawyers accept consultation requests"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Lawyer: Login, Get Pending Requests, Accept"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.LAWYER_EMAIL }}"
+            password: "{{ $processEnvironment.LAWYER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - get:
+          url: "/api/consultation-requests/me"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.data[0]._id"
+              as: requestId
+      - patch:
+          url: "/api/consultation-requests/{{ requestId }}/accept"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json: {}

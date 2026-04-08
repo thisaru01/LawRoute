@@ -7,6 +7,8 @@ import {
 import {
   uploadCaseDocument,
   getCaseDocuments,
+  updateCaseDocument,
+  deleteCaseDocument,
 } from "../../controllers/case/caseDocumentController.js";
 import {
   scheduleCaseMeeting,
@@ -69,6 +71,22 @@ router.get(
   protect,
   authorizeRoles("user", "lawyer"),
   getCaseDocuments,
+);
+
+// Update a case document
+router.patch(
+  "/documents/:docId",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  updateCaseDocument,
+);
+
+// Delete a case document
+router.delete(
+  "/documents/:docId",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  deleteCaseDocument,
 );
 
 // Close case (lawyer only)
