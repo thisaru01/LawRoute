@@ -1,15 +1,15 @@
 config:
   target: "http://localhost:5000"
   phases:
-    - duration: 60 # seconds
-      arrivalRate: 5 # new virtual users per second
-      name: "Steady load on cases API"
+    - duration: 60
+      arrivalRate: 5
+      name: "Lawyers accept consultation requests"
   defaults:
     headers:
       Content-Type: "application/json"
 
 scenarios:
-  - name: "Lawyer: Login, List Cases, Get Case Meetings"
+  - name: "Lawyer: Login, Get Pending Requests, Accept"
     flow:
       - post:
           url: "/api/auth/login"
@@ -20,13 +20,14 @@ scenarios:
             - json: "$.token"
               as: token
       - get:
-          url: "/api/cases/my"
+          url: "/api/consultation-requests/me"
           headers:
             Authorization: "Bearer {{ token }}"
           capture:
             - json: "$.data[0]._id"
-              as: caseId
-      - get:
-          url: "/api/cases/{{ caseId }}/meetings"
+              as: requestId
+      - patch:
+          url: "/api/consultation-requests/{{ requestId }}/accept"
           headers:
             Authorization: "Bearer {{ token }}"
+          json: {}

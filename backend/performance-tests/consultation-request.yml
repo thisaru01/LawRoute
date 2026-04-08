@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Create consultation requests"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Citizen: Login, Submit Consultation Request"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - post:
+          url: "/api/consultation-requests"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            summary: "I need legal advice regarding a civil issue."
+            lawyerId: "{{ $processEnvironment.LAWYER_ID }}"
