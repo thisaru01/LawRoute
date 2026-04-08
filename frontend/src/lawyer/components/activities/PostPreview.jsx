@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2 } from "lucide-react";
+import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2, Loader2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/auth/useAuth";
+import { likePost, unlikePost } from "@/api/services/socialService";
+import CommentSection from "@/public/find-lawyer/components/profile/CommentSection";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const getInitials = (name) => {
   if (!name) return "L";
@@ -38,13 +43,48 @@ const getVisibilityIcon = (visibility) => {
 };
 
 export default function PostPreview({ post, onEdit, onDelete }) {
+  const { isAuthenticated, user: currentUser } = useAuth();
   const author = post?.author || {};
   const media = Array.isArray(post?.media) ? post.media : [];
   const hasMedia = media.length > 0;
   
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [isLiked, setIsLiked] = useState(false); // Initially false as we don't have isLiked from backend
+  const [likeCount, setLikeCount] = useState(formatStatValue(post?.stats?.likeCount));
+  const [isLiking, setIsLiking] = useState(false);
+
   const content = post.content || "";
   const isLongContent = content.length > 120 || content.split("\n").length > 3;
+
+  const postId = post._id || post.id;
+  const isAuthor = currentUser && (currentUser._id === author._id || currentUser.id === author._id || currentUser.id === author.id);
+
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to like this post");
+      return;
+    }
+
+    if (isLiking) return;
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        const response = await unlikePost(postId);
+        setLikeCount(response.data.likeCount);
+        setIsLiked(false);
+      } else {
+        const response = await likePost(postId);
+        setLikeCount(response.data.likeCount);
+        setIsLiked(true);
+      }
+    } catch (error) {
+      toast.error("Action failed. Try again.");
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card text-left text-card-foreground shadow-sm transition-shadow hover:shadow-md">
@@ -74,31 +114,34 @@ export default function PostPreview({ post, onEdit, onDelete }) {
           </div>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded-full p-2 text-foreground/60 outline-none transition-colors hover:bg-muted hover:text-foreground focus:ring-0">
-              <MoreHorizontal className="size-5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 border-border/80 bg-card text-foreground">
-            <DropdownMenuItem className="cursor-pointer gap-2 font-medium" onClick={() => onEdit && onEdit(post)}>
-              <Edit2 className="size-4 text-muted-foreground" />
-              <span>Edit Post</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer gap-2 font-medium text-red-600 focus:bg-red-500/10 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-500/20 dark:focus:text-red-400" onClick={() => onDelete && onDelete(post._id || post.id)}>
-              <Trash2 className="size-4" />
-              <span>Delete Post</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isAuthor && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="rounded-full p-2 text-foreground/60 outline-none transition-colors hover:bg-muted hover:text-foreground focus:ring-0">
+                <MoreHorizontal className="size-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 border-border/80 bg-card text-foreground">
+              <DropdownMenuItem className="cursor-pointer gap-2 font-medium" onClick={() => onEdit && onEdit(post)}>
+                <Edit2 className="size-4 text-muted-foreground" />
+                <span>Edit Post</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer gap-2 font-medium text-red-600 focus:bg-red-500/10 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-500/20 dark:focus:text-red-400" onClick={() => onDelete && onDelete(postId)}>
+                <Trash2 className="size-4" />
+                <span>Delete Post</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Content Section */}
       <div className="px-4 pb-3">
         <p 
-          className={`whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90 ${
-            !isExpanded ? "line-clamp-3" : ""
-          }`}
+          className={cn(
+            "whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90",
+            !isExpanded && "line-clamp-3"
+          )}
         >
           {content}
         </p>
@@ -176,16 +219,25 @@ export default function PostPreview({ post, onEdit, onDelete }) {
         {/* Stats Section */}
         <div className="flex items-center justify-between border-b border-border/40 px-4 py-2.5 text-[11px] text-muted-foreground">
           <div className="group flex cursor-pointer items-center gap-1.5">
-            <div className="relative z-10 rounded-full border border-white bg-blue-600 p-0.5 shadow-sm">
+            <div className={cn(
+               "relative z-10 rounded-full border border-white p-0.5 shadow-sm transition-colors",
+               isLiked ? "bg-blue-600" : "bg-slate-400 group-hover:bg-blue-500"
+            )}>
               <ThumbsUp className="size-3 text-white" fill="currentColor" />
             </div>
-            <span className="ml-0.5 font-medium group-hover:text-blue-600 group-hover:underline">
-              {formatStatValue(post?.stats?.likeCount)}
+            <span className={cn(
+              "ml-0.5 font-medium group-hover:underline",
+              isLiked ? "text-blue-600" : "text-muted-foreground"
+            )}>
+              {likeCount}
             </span>
           </div>
 
           <div className="flex items-center font-medium">
-            <span className="cursor-pointer hover:text-blue-600 hover:underline">
+            <span 
+              className="cursor-pointer hover:text-blue-600 hover:underline"
+              onClick={() => setShowComments(!showComments)}
+            >
               {formatStatValue(post?.stats?.commentCount)} comments
             </span>
           </div>
@@ -193,15 +245,43 @@ export default function PostPreview({ post, onEdit, onDelete }) {
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between gap-1 px-1 py-1.5 sm:gap-2 sm:px-2">
-          <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:gap-2 sm:p-3 sm:text-[14px]">
-            <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={2.5} />
-            <span>Like</span>
+          <button 
+            onClick={handleLike}
+            disabled={isLiking}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:p-3 sm:text-[14px]",
+              isLiked 
+                ? "bg-blue-50 text-blue-600" 
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            )}
+          >
+            {isLiking ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={isLiked ? 2.5 : 2} fill={isLiked ? "currentColor" : "none"} />
+            )}
+            <span>{isLiked ? "Liked" : "Like"}</span>
           </button>
-          <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:gap-2 sm:p-3 sm:text-[14px]">
-            <MessageSquare className="size-4 sm:size-4.5" strokeWidth={2.5} />
+          <button 
+            onClick={() => setShowComments(!showComments)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:p-3 sm:text-[14px]",
+              showComments
+                ? "bg-slate-50 text-foreground"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            )}
+          >
+            <MessageSquare className="size-4 sm:size-4.5" strokeWidth={2} />
             <span>Comment</span>
           </button>
         </div>
+
+        {/* Comments Section */}
+        {showComments && (
+          <div className="border-t border-border/40 px-4 pb-4">
+            <CommentSection postId={postId} />
+          </div>
+        )}
       </div>
     </div>
   );
