@@ -6,6 +6,7 @@ import AdminRouteLayout from "./admin/AdminRouteLayout.jsx";
 import AdminDashboard from "./admin/pages/AdminDashboard.jsx";
 import AdminProfile from "./admin/pages/AdminProfile.jsx";
 import AdminUsers from "./admin/pages/AdminUsers.jsx";
+import AdminLawyerApprovals from "./admin/pages/AdminLawyerApprovals.jsx";
 import AdminCases from "./admin/pages/AdminCases.jsx";
 import AdminCivilIssues from "./admin/pages/AdminCivilIssues.jsx";
 import AdminArticles from "./admin/pages/AdminArticles.jsx";
@@ -45,6 +46,10 @@ import Home from "@/public/Home.jsx";
 import AuthPage from "@/public/AuthPage.jsx";
 import PublicCivilIssuesPage from "@/public/civil-issues/pages/PublicCivilIssuesPage.jsx";
 import FindLawyerPage from "@/public/find-lawyer/FindLawyerPage.jsx";
+import PublicLawyerProfilePage from "@/public/find-lawyer/PublicLawyerProfilePage.jsx";
+import PublicArticlesPage from "@/public/legal-library/articles/PublicArticlesPage.jsx";
+import PublicArticleView from "@/public/legal-library/articles/components/PublicArticleView.jsx";
+import PublicDocumentsPage from "@/public/legal-library/documents/PublicDocumentsPage.jsx";
 
 export default function App() {
   return (
@@ -55,6 +60,10 @@ export default function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/civil-issues" element={<PublicCivilIssuesPage />} />
         <Route path="/find-a-lawyer" element={<FindLawyerPage />} />
+        <Route path="/lawyers/:id" element={<PublicLawyerProfilePage />} />
+        <Route path="/legal-library/articles" element={<PublicArticlesPage />} />
+        <Route path="/legal-library/articles/:id" element={<PublicArticleView />} />
+        <Route path="/legal-library/documents" element={<PublicDocumentsPage />} />
 
         <Route path="/citizen" element={<CitizenRouteLayout />}>
           <Route index element={<CitizenDashboard />} />
@@ -116,6 +125,7 @@ export default function App() {
           <Route path="profile" element={<AdminProfile />} />
           <Route path="users">
             <Route index element={<Navigate to="authority" replace />} />
+            <Route path="lawyer" element={<AdminLawyerApprovals />} />
             <Route path=":type" element={<AdminUsers />} />
           </Route>
           <Route path="cases">

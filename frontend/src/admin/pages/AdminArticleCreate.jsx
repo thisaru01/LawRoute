@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -11,34 +11,44 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import axios from "@/api/axios";
+import { toast } from "sonner";
+import { DEFAULT_ARTICLE_CATEGORIES, useArticleCategories } from "@/hooks/articles/useArticleCategories";
+import { useArticleFileInput } from "@/hooks/articles/useArticleFileInput";
 
-// categories will be fetched from the backend model
-const DEFAULT_CATEGORIES = ["Family", "Property", "Work", "Consumer", "Finance"];
-
-export default function AdminArticleCreate() {
+export default function AdminArticleCreate({ redirectPath = "/admin/articles/pending" }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
-  const [image, setImage] = useState(null);
-  const [imageCard, setImageCard] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const categories = useArticleCategories(DEFAULT_ARTICLE_CATEGORIES);
+  const {
+    file: image,
+    setFile: setImage,
+    inputRef: imageInputRef,
+    handleChange: handleImageChange,
+    openPicker: openImagePicker,
+    clear: clearImage,
+    previewUrl: imagePreviewUrl,
+  } = useArticleFileInput();
+  const {
+    file: imageCard,
+    setFile: setImageCard,
+    inputRef: imageCardInputRef,
+    handleChange: handleImageCardChange,
+    openPicker: openImageCardPicker,
+    clear: clearImageCard,
+    previewUrl: imageCardPreviewUrl,
+  } = useArticleFileInput();
   const navigate = useNavigate();
-
-  const handleFile = (e, setter) => {
-    const f = e.target.files && e.target.files[0];
-    setter(f || null);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (!title.trim()) return setError("Title is required");
     if (!content.trim()) return setError("Content is required");
+    if (!category.trim()) return setError("Category is required");
 
     const form = new FormData();
     form.append("title", title);
@@ -50,34 +60,17 @@ export default function AdminArticleCreate() {
     try {
       setSubmitting(true);
       await axios.post("/articles", form);
-      setSuccess("Article created successfully");
-      // Redirect to admin pending articles so the new article appears under "Own"
-      navigate("/admin/articles/pending");
+      toast.success("Article created successfully");
+      // Redirect so the new article appears under "Own"
+      navigate(redirectPath);
     } catch (err) {
-      setError(err?.message || "Failed to create article");
+      const msg = err?.message || "Failed to create article";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    let mounted = true;
-    const fetchCategories = async () => {
-      try {
-        const res = await axios.get("/articles/categories");
-        if (!mounted) return;
-        setCategories(res?.data?.categories || []);
-      } catch (err) {
-        // silently ignore; keep categories empty
-      }
-    };
-
-    fetchCategories();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -140,12 +133,12 @@ export default function AdminArticleCreate() {
                   <FieldLabel>Image</FieldLabel>
 
                   <div
-                    onClick={() => document.getElementById("article-image-input").click()}
+                    onClick={openImagePicker}
                     className="mt-2 cursor-pointer flex items-center justify-center border-2 border-dashed border-input rounded-lg h-48 bg-muted/30 overflow-hidden"
                   >
                     {image ? (
                       <img
-                        src={URL.createObjectURL(image)}
+                        src={imagePreviewUrl}
                         alt="preview"
                         className="max-h-full w-full object-contain"
                       />
@@ -165,7 +158,8 @@ export default function AdminArticleCreate() {
                       id="article-image-input"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFile(e, setImage)}
+                      ref={imageInputRef}
+                      onChange={handleImageChange}
                       className="hidden"
                     />
                   </div>
@@ -173,7 +167,7 @@ export default function AdminArticleCreate() {
                   {image && (
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-sm truncate">{image.name}</span>
-                      <button type="button" className="text-sm text-red-600" onClick={() => setImage(null)}>
+                      <button type="button" className="text-sm text-red-600" onClick={clearImage}>
                         Remove
                       </button>
                     </div>
@@ -186,12 +180,12 @@ export default function AdminArticleCreate() {
                   <FieldLabel>Image Card</FieldLabel>
 
                   <div
-                    onClick={() => document.getElementById("article-imagecard-input").click()}
+                    onClick={openImageCardPicker}
                     className="mt-2 cursor-pointer flex items-center justify-center border-2 border-dashed border-input rounded-lg h-48 bg-muted/30 overflow-hidden"
                   >
                     {imageCard ? (
                       <img
-                        src={URL.createObjectURL(imageCard)}
+                        src={imageCardPreviewUrl}
                         alt="preview"
                         className="max-h-full w-full object-contain"
                       />
@@ -211,7 +205,8 @@ export default function AdminArticleCreate() {
                       id="article-imagecard-input"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFile(e, setImageCard)}
+                      ref={imageCardInputRef}
+                      onChange={handleImageCardChange}
                       className="hidden"
                     />
                   </div>
@@ -219,7 +214,7 @@ export default function AdminArticleCreate() {
                   {imageCard && (
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-sm truncate">{imageCard.name}</span>
-                      <button type="button" className="text-sm text-red-600" onClick={() => setImageCard(null)}>
+                      <button type="button" className="text-sm text-red-600" onClick={clearImageCard}>
                         Remove
                       </button>
                     </div>
@@ -230,7 +225,6 @@ export default function AdminArticleCreate() {
               </Field>
 
               {error && <div className="text-sm text-red-600">{error}</div>}
-              {success && <div className="text-sm text-green-600">{success}</div>}
 
               <div className="mt-4">
                 <Button type="submit" disabled={submitting}>

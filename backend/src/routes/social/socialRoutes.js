@@ -9,12 +9,10 @@ import {
   getFeedForLoggedUser,
   getLawyerPosts,
   getMyPosts,
-  repostPost,
   updatePost,
 } from "../../controllers/social/postController.js";
 import {
   validateCreatePost,
-  validateRepostPost,
   validateUpdatePost,
 } from "../../validations/social/postValidation.js";
 import {
@@ -69,9 +67,6 @@ router.put(
 
 // Lawyer: delete own post
 router.delete("/posts/:id", protect, authorizeRoles("lawyer"), deletePost);
-
-// Authenticated users: repost/share a public post
-router.post("/posts/:id/repost", protect, validateRepostPost, repostPost);
 
 // Authenticated users: like a post
 router.post("/posts/:id/like", protect, likePost);

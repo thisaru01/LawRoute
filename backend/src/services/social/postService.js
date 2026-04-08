@@ -16,14 +16,7 @@ const POST_AUTHOR_POPULATE = "name email role profilePhoto";
 
 const applyPostPopulation = (query) =>
   query
-    .populate("author", POST_AUTHOR_POPULATE)
-    .populate({
-      path: "repostOf",
-      populate: {
-        path: "author",
-        select: POST_AUTHOR_POPULATE,
-      },
-    });
+    .populate("author", POST_AUTHOR_POPULATE);
 
 const ensureAuthenticatedUser = async (authUser) => {
   if (!authUser || !authUser._id) {
@@ -382,78 +375,6 @@ export const updatePostByLawyer = async (
   return updatedPost;
 };
 
-export const repostPostByUser = async (
-  authUser,
-  originalPostId,
-  payload = {},
-) => {
-  const user = await ensureAuthenticatedUser(authUser);
-  ensureValidPostId(originalPostId);
-
-  const originalPost = await Post.findById(originalPostId).select(
-    "_id author postType visibility repostOf",
-  );
-
-  if (!originalPost) {
-    throw buildError("Original post not found", 404);
-  }
-
-  if (originalPost.repostOf) {
-    throw buildError("Reposting a repost is not allowed", 400);
-  }
-
-  const isOwner = originalPost.author.toString() === user._id.toString();
-
-  if (originalPost.visibility !== "public" && !isOwner) {
-    throw buildError("Only public posts can be reposted", 403);
-  }
-
-  const existingRepost = await Post.findOne({
-    author: user._id,
-    repostOf: originalPost._id,
-  }).select("_id");
-
-  if (existingRepost) {
-    const repostedPost = await applyPostPopulation(
-      Post.findById(existingRepost._id),
-    ).lean();
-
-    return {
-      post: repostedPost,
-      created: false,
-    };
-  }
-
-  const repostContent =
-    typeof payload.content === "string" && payload.content.trim()
-      ? payload.content.trim()
-      : "Reposted";
-
-  const repost = await Post.create({
-    author: user._id,
-    postType: originalPost.postType,
-    content: repostContent,
-    visibility:
-      payload.visibility === "public" ||
-      payload.visibility === "followers" ||
-      payload.visibility === "private"
-        ? payload.visibility
-        : "public",
-    tags: [],
-    media: [],
-    repostOf: originalPost._id,
-  });
-
-  await Post.updateOne({ _id: originalPost._id }, { $inc: { "stats.shareCount": 1 } });
-
-  const repostedPost = await applyPostPopulation(Post.findById(repost._id)).lean();
-
-  return {
-    post: repostedPost,
-    created: true,
-  };
-};
-
 // Delete a lawyer-owned post and cleanup linked media from Cloudinary. 
 export const deletePostByLawyer = async (authUser, postId) => {
   const user = await ensureLawyerUser(authUser);
@@ -465,13 +386,6 @@ export const deletePostByLawyer = async (authUser, postId) => {
     .filter(Boolean);
 
   await destroyMediaByPublicIds(existingMediaPublicIds);
-
-  if (post.repostOf) {
-    await Post.updateOne(
-      { _id: post.repostOf, "stats.shareCount": { $gt: 0 } },
-      { $inc: { "stats.shareCount": -1 } },
-    );
-  }
 
   await post.deleteOne();
 };

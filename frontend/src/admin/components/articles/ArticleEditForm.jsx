@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { toast } from "sonner";
 import { updateArticle } from "@/api/services/articleService";
+// Alert dialog removed: using toasts only
 
 const CATEGORY_OPTIONS = ["Family", "Property", "Work", "Consumer", "Finance"];
 
@@ -13,6 +15,7 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
   const [removeExistingImageCard, setRemoveExistingImageCard] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,11 +34,14 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
       setSubmitting(true);
       const res = await updateArticle(article._id || article.id, formData);
       const updated = res?.data?.article || res?.data;
-      if (updated && typeof onUpdated === "function") {
-        onUpdated(updated);
+      if (updated) {
+        toast.success("Article updated successfully");
+        if (typeof onUpdated === "function") onUpdated(updated);
       }
     } catch (err) {
-      setError(err?.message || "Failed to update article");
+      const msg = err?.message || "Failed to update article";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

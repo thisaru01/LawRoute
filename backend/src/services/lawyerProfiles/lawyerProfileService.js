@@ -374,6 +374,30 @@ export const findApprovedLawyerProfiles = async ({ search, expertise, isFree } =
   return results;
 };
 
+// Return a single lawyer profile by lawyer profile ID or associated user ID.
+export const findLawyerProfileById = async (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error("Invalid ID format");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Try fetching by LawyerProfile _id or user _id
+  let lawyerProfile = await LawyerProfile.findOne({
+    $or: [{ _id: id }, { user: id }],
+  })
+    .populate("user", "name email role profilePhoto")
+    .lean();
+
+  if (!lawyerProfile) {
+    const error = new Error("Lawyer profile not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return mapLawyerProfileResponse(lawyerProfile);
+};
+
 // Return lawyer profiles for admin review, optionally filtered by verification status.
 export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) => {
   if (

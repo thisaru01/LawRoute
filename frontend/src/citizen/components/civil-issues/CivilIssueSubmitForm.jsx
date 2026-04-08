@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { AlertCircle } from "lucide-react";
 import CivilIssueSubmitSuccess from "@/citizen/components/civil-issues/CivilIssueSubmitSuccess.jsx";
 import { useCivilIssueSubmitForm } from "@/citizen/components/civil-issues/hooks/useCivilIssueSubmitForm.js";
@@ -10,6 +10,7 @@ import CivilIssueReportDetailsSection from "@/citizen/components/civil-issues/Ci
 import CivilIssueAttachmentsSection from "@/citizen/components/civil-issues/CivilIssueAttachmentsSection.jsx";
 import CivilIssueVisibilityToggle from "@/citizen/components/civil-issues/CivilIssueVisibilityToggle.jsx";
 import CivilIssueSubmitActions from "@/citizen/components/civil-issues/CivilIssueSubmitActions.jsx";
+import CivilIssueAwarenessDialog from "@/public/civil-issues/components/CivilIssueAwarenessDialog.jsx";
 
 export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} }) {
   const attachmentsInputRef = useRef(null);
@@ -29,9 +30,21 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
     removeFile,
     setFormData,
     showValidationErrors,
+    submitAttemptCount,
     success,
     onSuccess: handleSuccess,
   } = useCivilIssueSubmitForm({ onSuccess });
+
+  const errorBannerRef = useRef(null);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    errorBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    errorBannerRef.current?.focus({ preventScroll: true });
+  }, [error, submitAttemptCount]);
 
   if (success) {
     return <CivilIssueSubmitSuccess countdown={countdown} onRedirectNow={handleSuccess} />;
@@ -40,13 +53,33 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4 sm:space-y-6">
       {error && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-900 sm:gap-3 sm:p-4 sm:text-sm">
+        <div
+          ref={errorBannerRef}
+          tabIndex={-1}
+          role="alert"
+          aria-live="assertive"
+          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-900 sm:gap-3 sm:p-4 sm:text-sm outline-none"
+        >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 flex-none sm:h-5 sm:w-5" />
           <p className="leading-relaxed">{error}</p>
         </div>
       )}
 
       <CivilIssueSubmitInfoBanner />
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-600 sm:text-sm">
+            Need category-specific reporting guidance before submitting?
+          </p>
+          <CivilIssueAwarenessDialog
+            selectedCategory={formData.category}
+            triggerLabel="Open Awareness Q&A"
+            triggerVariant="outline"
+            triggerClassName="h-8 text-xs sm:h-9 sm:text-sm"
+          />
+        </div>
+      </div>
 
       <CivilIssueCategoryField
         value={formData.category}

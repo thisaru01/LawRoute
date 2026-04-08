@@ -52,6 +52,7 @@ export function useCitizenCivilIssuesPage() {
     label,
     loading,
     openIssues,
+    safeStatus,
     setOpenIssues,
   };
 }
