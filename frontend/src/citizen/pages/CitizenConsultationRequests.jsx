@@ -1,117 +1,106 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
 import { getMyConsultationRequests } from "@/api/services/consultationRequestService";
-import { Badge } from "@/components/ui/badge";
-
-import PendingConsultationRequests from "@/citizen/components/consultationRequests/PendingConsultationRequests";
-import AcceptedConsultationRequests from "@/citizen/components/consultationRequests/AcceptedConsultationRequests";
-import RejectedConsultationRequests from "@/citizen/components/consultationRequests/RejectedConsultationRequests";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useFetchList } from "@/hooks/useFetchList";
+import PageHeader from "@/components/consultation-requests/PageHeader";
+import CardGridSkeleton from "@/components/consultation-requests/CardGridSkeleton";
+import EmptyState from "@/components/consultation-requests/EmptyState";
+import CitizenConsultationRequestCard from "@/citizen/components/consultation-requests/CitizenConsultationRequestCard";
 
 const allowedStatuses = new Set(["pending", "accepted", "rejected"]);
+
+const STATUS_BADGE = {
+  accepted: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
+  rejected: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
+  pending: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+};
 
 export default function CitizenConsultationRequests() {
   const { status } = useParams();
   const normalizedStatus = (status ?? "pending").toLowerCase();
-
   const safeStatus = allowedStatuses.has(normalizedStatus)
     ? normalizedStatus
     : "pending";
+  const label = safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 
-  const label =
-    safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1).toLowerCase();
-
-  const statusBadgeClassName = useMemo(() => {
-    switch (safeStatus) {
-      case "accepted":
-        return "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300";
-      case "rejected":
-        return "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300";
-      case "pending":
-      default:
-        return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
-    }
-  }, [safeStatus]);
-
-  const [requests, setRequests] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchRequests = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await getMyConsultationRequests();
-      const list = response?.data?.data;
-      setRequests(Array.isArray(list) ? list : []);
-    } catch (err) {
-      setError(err);
-      setRequests([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const run = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await getMyConsultationRequests();
-        const list = response?.data?.data;
-        if (!cancelled) {
-          setRequests(Array.isArray(list) ? list : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err);
-          setRequests([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const filteredRequests = useMemo(() => {
-    return (Array.isArray(requests) ? requests : []).filter(
-      (r) => (r?.status || "").toLowerCase() === safeStatus,
-    );
-  }, [requests, safeStatus]);
-
-  const commonProps = {
-    requests: filteredRequests,
+  const {
+    data: requests,
     isLoading,
     error,
-    onRetry: fetchRequests,
+    refresh,
+  } = useFetchList(getMyConsultationRequests);
+
+  const filteredRequests = useMemo(
+    () =>
+      requests.filter((r) => (r?.status || "").toLowerCase() === safeStatus),
+    [requests, safeStatus],
+  );
+
+  const headerProps = {
+    title: "Consultation Requests",
+    badgeLabel: label,
+    badgeClass: STATUS_BADGE[safeStatus],
   };
 
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold">Consultation Requests</h1>
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Status:</span>
-        <Badge className={statusBadgeClassName}>{label}</Badge>
+  if (isLoading)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <CardGridSkeleton count={4} />
       </div>
+    );
 
-      {safeStatus === "pending" && (
-        <PendingConsultationRequests {...commonProps} />
-      )}
-      {safeStatus === "accepted" && (
-        <AcceptedConsultationRequests {...commonProps} />
-      )}
-      {safeStatus === "rejected" && (
-        <RejectedConsultationRequests {...commonProps} />
-      )}
+  if (error)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Couldn't load requests</CardTitle>
+            <CardDescription className="text-destructive">
+              {error.message || "Request failed"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={refresh}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+
+  if (filteredRequests.length === 0)
+    return (
+      <div className="space-y-4">
+        <PageHeader {...headerProps} />
+        <EmptyState
+          title={`No ${safeStatus} requests`}
+          message="Your requests will appear here."
+        />
+      </div>
+    );
+
+  return (
+    <div className="space-y-4">
+      <PageHeader {...headerProps} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {filteredRequests.map((request) => (
+          <CitizenConsultationRequestCard
+            key={request?._id}
+            request={request}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -7,6 +7,8 @@ const DocumentSchema = new Schema({
   description: { type: String },
   fileUrl: { type: String, required: true },
   filePublicId: { type: String, required: true },
+  fileType: { type: String },
+  thumbnailUrl: { type: String },
   uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now },
 });

@@ -4,13 +4,19 @@ import { formatDateTime } from "@/lib/formatDateTime";
 
 /**
  * CaseCard
- * @param {object}   caseItem   - raw case object from the API
- * @param {boolean}  clickable  - whether the card navigates on click
- * @param {function} onClick    - called when the card is clicked
+ * @param {object}   caseItem       - raw case object from the API
+ * @param {boolean}  clickable      - whether the card navigates on click
+ * @param {function} onClick        - called when the card is clicked
+ * @param {object}   primaryPerson  - optional { name, email } to display instead of caseItem.user
  */
-export default function CaseCard({ caseItem, clickable = false, onClick }) {
-  const citizenName = caseItem?.user?.name || "Citizen";
-  const citizenEmail = caseItem?.user?.email || "";
+export default function CaseCard({
+  caseItem,
+  clickable = false,
+  onClick,
+  primaryPerson,
+}) {
+  const displayName = primaryPerson?.name || caseItem?.user?.name || "Citizen";
+  const displayEmail = primaryPerson?.email || caseItem?.user?.email || "";
   const createdAt = formatDateTime(caseItem?.createdAt);
   const summary = caseItem?.consultationRequest?.summary || "(No summary)";
   const caseStatus = (caseItem?.status || "open").toLowerCase();
@@ -20,8 +26,7 @@ export default function CaseCard({ caseItem, clickable = false, onClick }) {
       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
       : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
 
-  const statusLabel =
-    caseStatus.charAt(0).toUpperCase() + caseStatus.slice(1);
+  const statusLabel = caseStatus.charAt(0).toUpperCase() + caseStatus.slice(1);
 
   return (
     <div
@@ -47,22 +52,24 @@ export default function CaseCard({ caseItem, clickable = false, onClick }) {
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar initial */}
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {citizenName.charAt(0).toUpperCase()}
+            {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm text-foreground">
-              {citizenName}
+              {displayName}
             </p>
-            {citizenEmail && (
+            {displayEmail && (
               <p className="truncate text-xs text-muted-foreground">
-                {citizenEmail}
+                {displayEmail}
               </p>
             )}
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <Badge className={`${badgeClass} text-[10px] uppercase tracking-wide`}>
+          <Badge
+            className={`${badgeClass} text-[10px] uppercase tracking-wide`}
+          >
             {statusLabel}
           </Badge>
           {clickable && (

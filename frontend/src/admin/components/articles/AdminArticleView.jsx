@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getArticle, updateArticleStatus, deleteArticle } from "@/api/services/articleService";
+import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/context/auth/useAuth";
 import RelatedArticlesSidebar from "@/admin/components/articles/RelatedArticlesSidebar";
 import ArticleEditForm from "@/admin/components/articles/ArticleEditForm";
@@ -19,6 +30,7 @@ export default function AdminArticleView() {
   const { userId } = useAuth();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -59,9 +71,14 @@ export default function AdminArticleView() {
       const updated = res?.data?.article;
       if (updated) {
         setArticle(updated);
+        if (nextStatus === "published") toast.success("Article published");
+        else if (nextStatus === "rejected") toast.success("Article rejected");
+        else toast.success("Article status updated");
       }
     } catch (e) {
-      setStatusError(e?.message || "Failed to update article status");
+      const msg = e?.message || "Failed to update article status";
+      setStatusError(msg);
+      toast.error(msg);
     } finally {
       setUpdatingStatus(false);
     }
@@ -148,27 +165,48 @@ export default function AdminArticleView() {
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    aria-label="Delete article"
-                    disabled={deleting}
-                    onClick={async () => {
-                      if (!confirm("Delete this article? This cannot be undone.")) return;
-                      try {
-                        setDeleting(true);
-                        await deleteArticle(article._id || article.id);
-                        // Navigate back to previous page or list
-                        navigate(-1);
-                      } catch (e) {
-                        alert(e?.message || "Failed to delete article");
-                      } finally {
-                        setDeleting(false);
-                      }
-                    }}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Delete article"
+                      disabled={deleting}
+                      onClick={() => setConfirmOpen(true)}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              try {
+                                setConfirmOpen(false);
+                                setDeleting(true);
+                                await deleteArticle(article._id || article.id);
+                                toast.success("Article deleted");
+                                navigate(-1);
+                              } catch (e) {
+                                toast.error(e?.message || "Failed to delete article");
+                              } finally {
+                                setDeleting(false);
+                              }
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
                 </>
               );
             }
@@ -176,25 +214,29 @@ export default function AdminArticleView() {
             // Show publish/reject for non-authors when viewing pending articles
             if (!isAuthor && status === "pending" && !editing) {
               return (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleChangeStatus("published")}
-                    disabled={updatingStatus}
-                    className="inline-flex items-center px-3 py-1 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700"
-                  >
-                    {updatingStatus ? "..." : "Publish"}
-                  </button>
+                  <>
+                    {!updatingStatus && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleChangeStatus("published")}
+                          disabled={updatingStatus}
+                          className="inline-flex items-center px-3 py-1 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                        >
+                          Publish
+                        </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleChangeStatus("rejected")}
-                    disabled={updatingStatus}
-                    className="inline-flex items-center px-3 py-1 rounded-md bg-destructive text-white text-sm hover:opacity-90"
-                  >
-                    {updatingStatus ? "..." : "Reject"}
-                  </button>
-                </>
+                        <button
+                          type="button"
+                          onClick={() => handleChangeStatus("rejected")}
+                          disabled={updatingStatus}
+                          className="inline-flex items-center px-3 py-1 rounded-md bg-destructive text-white text-sm hover:opacity-90 ml-2"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </>
               );
             }
 
