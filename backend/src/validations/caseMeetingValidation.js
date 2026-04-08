@@ -32,28 +32,28 @@ export const validateCreateCaseMeeting = (req, res, next) => {
   if (!date || typeof date !== "string" || !date.trim()) {
     return res.status(400).json({
       success: false,
-      message: "date is required",
+      message: "Date is required",
     });
   }
 
   if (!time || typeof time !== "string" || !time.trim()) {
     return res.status(400).json({
       success: false,
-      message: "time is required",
+      message: "Time is required",
     });
   }
 
   if (!method || typeof method !== "string" || !method.trim()) {
     return res.status(400).json({
       success: false,
-      message: "method is required",
+      message: "Method is required",
     });
   }
 
   if (!VALID_METHODS.includes(method)) {
     return res.status(400).json({
       success: false,
-      message: "method must be either 'online' or 'physical'",
+      message: "Method must be either 'online' or 'physical'",
     });
   }
 
@@ -65,7 +65,7 @@ export const validateCreateCaseMeeting = (req, res, next) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "meetingLink is required for online meetings",
+        message: "MeetingLink is required for online meetings",
       });
     }
   }
@@ -74,7 +74,7 @@ export const validateCreateCaseMeeting = (req, res, next) => {
     if (!location || typeof location !== "string" || !location.trim()) {
       return res.status(400).json({
         success: false,
-        message: "location is required for physical meetings",
+        message: "Location is required for physical meetings",
       });
     }
   }
@@ -122,7 +122,7 @@ export const validateUpdateCaseMeeting = (req, res, next) => {
     if (typeof method !== "string" || !method.trim()) {
       return res.status(400).json({
         success: false,
-        message: "method must be a non-empty string",
+        message: "Method must be a non-empty string",
       });
     }
 
@@ -148,7 +148,7 @@ export const validateUpdateCaseMeeting = (req, res, next) => {
       if (typeof meetingLink !== "string" || !meetingLink.trim()) {
         return res.status(400).json({
           success: false,
-          message: "meetingLink must be a non-empty string when provided",
+          message: "MeetingLink must be a non-empty string when provided",
         });
       }
     }
@@ -159,7 +159,7 @@ export const validateUpdateCaseMeeting = (req, res, next) => {
       if (typeof location !== "string" || !location.trim()) {
         return res.status(400).json({
           success: false,
-          message: "location must be a non-empty string when provided",
+          message: "Location must be a non-empty string when provided",
         });
       }
     }

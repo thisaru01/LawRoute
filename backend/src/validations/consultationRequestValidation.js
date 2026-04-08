@@ -32,7 +32,7 @@ export const validateCreateConsultationRequest = (req, res, next) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "summary is required",
+      message: "Summary is required",
     });
   }
 
@@ -89,7 +89,7 @@ export const validateUpdateConsultationRequest = (req, res, next) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "summary is required",
+      message: "Summary is required",
     });
   }
 

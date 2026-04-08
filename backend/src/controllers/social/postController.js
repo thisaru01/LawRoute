@@ -5,7 +5,6 @@ import {
   findFeedPostsForLoggedUser,
   findMyPosts,
   findPostsByLawyer,
-  repostPostByUser,
   updatePostByLawyer,
 } from "../../services/social/postService.js";
 
@@ -118,22 +117,6 @@ export const deletePost = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Post deleted successfully",
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const repostPost = async (req, res, next) => {
-  try {
-    const result = await repostPostByUser(req.user, req.params.id, req.body);
-
-    return res.status(result.created ? 201 : 200).json({
-      success: true,
-      message: result.created
-        ? "Post reposted successfully"
-        : "Post already reposted",
-      post: result.post,
     });
   } catch (error) {
     return next(error);
