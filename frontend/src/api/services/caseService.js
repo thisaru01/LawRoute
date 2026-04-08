@@ -24,8 +24,20 @@ export const getCaseDocuments = (caseId) => {
   return axios.get(`/cases/${caseId}/documents`);
 };
 
-export const uploadCaseDocument = (caseId, file) => {
+export const uploadCaseDocument = (caseId, file, title, description) => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("title", title);
+  if (description) {
+    formData.append("description", description);
+  }
   return axios.post(`/cases/${caseId}/documents`, formData);
+};
+
+export const updateCaseDocument = (docId, title, description) => {
+  return axios.patch(`/cases/documents/${docId}`, { title, description });
+};
+
+export const deleteCaseDocument = (docId) => {
+  return axios.delete(`/cases/documents/${docId}`);
 };

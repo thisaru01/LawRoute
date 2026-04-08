@@ -21,6 +21,7 @@ import CitizenCases from "./citizen/pages/CitizenCases.jsx";
 import CitizenCivilIssues from "./citizen/pages/CitizenCivilIssues.jsx";
 import CitizenCivilIssueSubmit from "./citizen/pages/CitizenCivilIssueSubmit.jsx";
 import CitizenProfile from "./citizen/pages/CitizenProfile.jsx";
+import CitizenCaseDetails from "./citizen/pages/CitizenCaseView.jsx";
 
 // Lawyer
 import LawyerRouteLayout from "./lawyer/LawyerRouteLayout.jsx";
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="cases">
             <Route index element={<Navigate to="opened" replace />} />
             <Route path=":status" element={<CitizenCases />} />
+            <Route path=":status/:caseId" element={<CitizenCaseDetails />} />
           </Route>
           <Route path="civil-issues">
             <Route index element={<Navigate to="pending" replace />} />

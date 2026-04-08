@@ -9,6 +9,15 @@ const CaseDocumentSchema = new Schema(
       ref: "Case",
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
     uploadedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -21,6 +30,12 @@ const CaseDocumentSchema = new Schema(
     fileType: {
       type: String,
       required: true,
+    },
+    filePublicId: {
+      type: String,
+    },
+    thumbnailUrl: {
+      type: String,
     },
   },
   { timestamps: true },

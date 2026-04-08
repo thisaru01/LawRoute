@@ -109,6 +109,7 @@ export default function CaseMeetings() {
     handleScheduleChange,
     handleScheduleConfirm,
     normalizedStatus,
+    canScheduleMeetings,
   } = useCaseContext();
   const upcomingMeetings = meetings.filter((m) => !isPast(m));
   const pastMeetings = meetings.filter((m) => isPast(m));
@@ -118,7 +119,7 @@ export default function CaseMeetings() {
   return (
     <AlertDialog>
       <div className="space-y-4">
-        {!isAlreadyClosed && (
+        {!isAlreadyClosed && canScheduleMeetings && (
           <>
             {/* Schedule Meeting Banner */}
             <div>
