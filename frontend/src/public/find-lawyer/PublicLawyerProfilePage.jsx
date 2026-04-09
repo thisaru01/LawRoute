@@ -14,6 +14,7 @@ import ProfilePosts from "./components/profile/ProfilePosts";
 import RequestConsultationModal from "./components/RequestConsultationModal";
 import { EXPERTISE_LABELS } from "./components/LawyerCard";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function PublicLawyerProfilePage() {
   const { id } = useParams();
@@ -45,8 +46,12 @@ export default function PublicLawyerProfilePage() {
   if (error || !lawyer) {
     return (
       <div className="container mx-auto max-w-2xl py-20 px-4 text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-4">Oops! Something went wrong</h2>
-        <p className="text-muted-foreground mb-8">{error || "Lawyer profile not found"}</p>
+        <h2 className="text-2xl font-bold text-foreground mb-4">
+          Oops! Something went wrong
+        </h2>
+        <p className="text-muted-foreground mb-8">
+          {error || "Lawyer profile not found"}
+        </p>
         <Button onClick={() => navigate("/find-a-lawyer")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
@@ -61,20 +66,22 @@ export default function PublicLawyerProfilePage() {
   const experience = lawyer.experience || {};
   const educationQualifications = lawyer.educationQualifications || {};
 
-  const initials = user.name
-    ?.split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("") || "L";
+  const initials =
+    user.name
+      ?.split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join("") || "L";
 
-  const expertiseLabel = EXPERTISE_LABELS[lawyer.expertise] || lawyer.expertise || "General";
+  const expertiseLabel =
+    EXPERTISE_LABELS[lawyer.expertise] || lawyer.expertise || "General";
 
   const handleRequestConsultation = () => {
     if (!isAuthenticated) {
       navigate(`/auth?redirect=/lawyers/${id}`);
     } else if (role !== "user") {
-      alert("Only citizens can request a consultation.");
+      toast.error("Only citizens can request a consultation.");
     } else {
       setIsModalOpen(true);
     }
@@ -85,7 +92,12 @@ export default function PublicLawyerProfilePage() {
       {/* Sticky Header for Actions */}
       <div className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/find-a-lawyer")} className="hidden sm:flex">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/find-a-lawyer")}
+            className="hidden sm:flex"
+          >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Back
           </Button>
@@ -97,10 +109,8 @@ export default function PublicLawyerProfilePage() {
 
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
           {/* Main Content Side */}
           <div className="lg:col-span-8 space-y-8">
-
             {/* Profile Hero Card */}
             <Card className="border-none shadow-md overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">
               <div className="h-32 w-full bg-primary/5 relative">
