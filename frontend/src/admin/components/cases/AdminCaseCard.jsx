@@ -10,26 +10,17 @@ export default function AdminCaseCard({ caseItem, clickable, onClick }) {
   const citizen = caseItem?.user;
   const lawyer = caseItem?.lawyer;
 
-  const lawyerLabel = lawyer?.name
-    ? `${lawyer.name}${lawyer.email ? ` \\u00b7 ${lawyer.email}` : ""}`
+  const lawyerMeta = lawyer?.name
+    ? `Lawyer: ${lawyer.name}${lawyer.email ? ` · ${lawyer.email}` : ""}`
     : null;
-
-  const enrichedCase = lawyerLabel
-    ? {
-        ...caseItem,
-        consultationRequest: {
-          ...caseItem?.consultationRequest,
-          summary: `${caseItem?.consultationRequest?.summary || "(No summary)"} \\u2014 Lawyer: ${lawyerLabel}`,
-        },
-      }
-    : caseItem;
 
   return (
     <CaseCard
-      caseItem={enrichedCase}
+      caseItem={caseItem}
       clickable={clickable}
       onClick={onClick}
       primaryPerson={citizen}
+      meta={lawyerMeta}
     />
   );
 }
