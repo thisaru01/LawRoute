@@ -1,4 +1,5 @@
 import CaseCard from "@/lawyer/components/cases/CaseCard";
+import AdminCaseModal from "@/components/cases/AdminCaseModal";
 
 /**
  * AdminCaseCard
@@ -15,12 +16,16 @@ export default function AdminCaseCard({ caseItem, clickable, onClick }) {
     : null;
 
   return (
-    <CaseCard
-      caseItem={caseItem}
-      clickable={clickable}
-      onClick={onClick}
-      primaryPerson={citizen}
-      meta={lawyerMeta}
-    />
+    <AdminCaseModal caseItem={caseItem}>
+      <div>
+        <CaseCard
+          caseItem={caseItem}
+          clickable={clickable}
+          onClick={onClick}
+          primaryPerson={citizen}
+          meta={lawyerMeta}
+        />
+      </div>
+    </AdminCaseModal>
   );
 }
