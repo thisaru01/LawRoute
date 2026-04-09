@@ -27,6 +27,7 @@ export default function QualificationsSection({
   onChange,
   onSave,
   setIsEditing,
+  onRetry,
 }) {
   const [isAddingEducation, setIsAddingEducation] = useState(false);
   const [editingEducationIndex, setEditingEducationIndex] = useState(-1);
@@ -485,10 +486,13 @@ export default function QualificationsSection({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                onRetry && onRetry();
+              }}
               disabled={isSaving}
             >
-              Finish Editing
+              Cancel
             </Button>
             <Button
               type="button"

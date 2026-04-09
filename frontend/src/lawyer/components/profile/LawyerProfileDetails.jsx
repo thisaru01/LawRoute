@@ -353,6 +353,7 @@ export default function LawyerProfileDetails({
             onChange={onChange}
             onSave={onSaveSection}
             setIsEditing={setIsEditingSkills}
+            onRetry={onRetry}
           />
 
           <QualificationsSection
@@ -362,6 +363,7 @@ export default function LawyerProfileDetails({
             onChange={onChange}
             onSave={onSaveSection}
             setIsEditing={setIsEditingQualifications}
+            onRetry={onRetry}
           />
 
           {error ? (

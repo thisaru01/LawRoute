@@ -35,6 +35,7 @@ export default function ExpertiseSection({
   onChange,
   onSave,
   setIsEditing,
+  onRetry,
 }) {
   const [isAddingLanguage, setIsAddingLanguage] = useState(false);
   const [editingLanguageIndex, setEditingLanguageIndex] = useState(-1);
@@ -740,10 +741,13 @@ export default function ExpertiseSection({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                onRetry && onRetry();
+              }}
               disabled={isSaving}
             >
-              Finish Editing
+              Cancel
             </Button>
             <Button
               type="button"
