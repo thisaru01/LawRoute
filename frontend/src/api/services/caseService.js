@@ -20,6 +20,10 @@ export const scheduleCaseMeeting = (caseId, payload) => {
   return axios.post(`/cases/${caseId}/meetings`, payload);
 };
 
+export const joinCaseMeeting = (meetingId) => {
+  return axios.get(`/cases/meetings/${meetingId}/join`);
+};
+
 export const getCaseDocuments = (caseId) => {
   return axios.get(`/cases/${caseId}/documents`);
 };

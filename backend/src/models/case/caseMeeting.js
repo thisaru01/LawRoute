@@ -43,6 +43,12 @@ const CaseMeetingSchema = new Schema(
       enum: ["scheduled", "completed", "cancelled"],
       default: "scheduled",
     },
+    assignedUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );

@@ -40,6 +40,7 @@ export function useCaseView() {
     scheduleForm,
     handleScheduleChange,
     handleScheduleConfirm,
+    handleJoinMeeting,
   } = useCaseMeetings(caseId, canScheduleMeetings);
 
   const {
@@ -112,6 +113,7 @@ export function useCaseView() {
     scheduleForm,
     handleScheduleChange,
     handleScheduleConfirm,
+    handleJoinMeeting,
     // Documents
     documents,
     documentsLoading,

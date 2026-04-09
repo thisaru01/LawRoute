@@ -14,6 +14,7 @@ import {
   scheduleCaseMeeting,
   getCaseMeetings,
   updateCaseMeeting,
+  joinCaseMeeting,
 } from "../../controllers/case/caseMeetingController.js";
 import {
   validateCreateCaseMeeting,
@@ -45,6 +46,14 @@ router.get(
   protect,
   authorizeRoles("user", "lawyer"),
   getCaseMeetings,
+);
+
+// Get a protected join link for an online meeting
+router.get(
+  "/meetings/:id/join",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  joinCaseMeeting,
 );
 
 // Update a meeting (lawyer only)

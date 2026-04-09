@@ -56,7 +56,17 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     if (!caseId) return;
     setIsScheduling(true);
     try {
-      await scheduleCaseMeeting(caseId, scheduleForm);
+      const payload = {
+        date: scheduleForm.date,
+        time: scheduleForm.time,
+        method: scheduleForm.method,
+      };
+
+      if (scheduleForm.method === "physical") {
+        payload.location = scheduleForm.location;
+      }
+
+      await scheduleCaseMeeting(caseId, payload);
       setScheduleForm(INITIAL_SCHEDULE_FORM);
       const res = await getCaseMeetings(caseId);
       const list = res?.data?.data;
@@ -73,6 +83,24 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     }
   }, [caseId, scheduleForm, canScheduleMeetings]);
 
+  const handleJoinMeeting = useCallback(async (meetingId) => {
+    try {
+      const { joinCaseMeeting } = await import("@/api/services/caseService");
+      const res = await joinCaseMeeting(meetingId);
+      const link = res?.data?.data?.meetingLink;
+      if (!link) {
+        throw new Error("Meeting link not available");
+      }
+      window.open(link, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      const message =
+        err?.message ||
+        err?.original?.response?.data?.message ||
+        "Failed to join meeting";
+      toast.error(message);
+    }
+  }, []);
+
   return {
     meetings,
     meetingsLoading,
@@ -81,5 +109,6 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     scheduleForm,
     handleScheduleChange,
     handleScheduleConfirm,
+    handleJoinMeeting,
   };
 }

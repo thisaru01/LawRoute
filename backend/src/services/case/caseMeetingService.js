@@ -1,5 +1,12 @@
+import { randomBytes } from "crypto";
 import Case from "../../models/case/caseModel.js";
 import CaseMeeting from "../../models/case/caseMeeting.js";
+
+function generateJitsiMeetingLink(caseId) {
+  const randomPart = randomBytes(8).toString("hex");
+  const roomName = `lawroute-case-${caseId}-${randomPart}`;
+  return `https://meet.jit.si/${roomName}`;
+}
 
 // Schedule a meeting for a case (assigned lawyer only)
 export async function scheduleCaseMeeting({
@@ -8,7 +15,6 @@ export async function scheduleCaseMeeting({
   date,
   time,
   method,
-  meetingLink,
   location,
 }) {
   const caseDoc = await Case.findById(caseId).select("lawyer user status");
@@ -36,18 +42,16 @@ export async function scheduleCaseMeeting({
     throw error;
   }
 
-  // Basic backend guard: ensure required field depending on method
-  if (method === "online" && !meetingLink) {
-    const error = new Error("meetingLink is required for online meetings");
-    error.statusCode = 400;
-    throw error;
-  }
-
   if (method === "physical" && !location) {
     const error = new Error("location is required for physical meetings");
     error.statusCode = 400;
     throw error;
   }
+
+  const meetingLink =
+    method === "online"
+      ? generateJitsiMeetingLink(caseDoc._id.toString())
+      : undefined;
 
   const meeting = await CaseMeeting.create({
     caseId: caseDoc._id,
@@ -56,7 +60,8 @@ export async function scheduleCaseMeeting({
     time,
     method,
     meetingLink,
-    location,
+    location: method === "physical" ? location : undefined,
+    assignedUsers: [caseDoc.user, caseDoc.lawyer].filter(Boolean),
   });
 
   return meeting;
@@ -89,7 +94,71 @@ export async function getCaseMeetings({ caseId, currentUserId }) {
     .populate("scheduledBy", "name email role")
     .sort({ createdAt: -1 });
 
-  return meetings;
+  const sanitizedMeetings = meetings.map((meeting) => {
+    const obj =
+      typeof meeting.toObject === "function"
+        ? meeting.toObject()
+        : { ...meeting };
+    if (obj.method === "online") {
+      delete obj.meetingLink;
+    }
+    delete obj.assignedUsers;
+    return obj;
+  });
+
+  return sanitizedMeetings;
+}
+
+export async function getJoinableCaseMeetingLink({ meetingId, currentUserId }) {
+  const meeting = await CaseMeeting.findById(meetingId).select(
+    "caseId method status meetingLink assignedUsers",
+  );
+
+  if (!meeting) {
+    const error = new Error("Meeting not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (meeting.method !== "online") {
+    const error = new Error("This meeting does not have an online link");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!meeting.meetingLink) {
+    const error = new Error("Meeting link is not available");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  let assignedUsers = Array.isArray(meeting.assignedUsers)
+    ? meeting.assignedUsers
+    : [];
+
+  if (!assignedUsers.length) {
+    const caseDoc = await Case.findById(meeting.caseId).select("user lawyer");
+
+    if (!caseDoc) {
+      const error = new Error("Case not found for this meeting");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    assignedUsers = [caseDoc.user, caseDoc.lawyer].filter(Boolean);
+  }
+
+  const isAssigned = assignedUsers.some(
+    (userId) => userId && userId.toString() === currentUserId.toString(),
+  );
+
+  if (!isAssigned) {
+    const error = new Error("You are not allowed to join this meeting");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return meeting.meetingLink;
 }
 
 // Update a meeting (assigned lawyer only)

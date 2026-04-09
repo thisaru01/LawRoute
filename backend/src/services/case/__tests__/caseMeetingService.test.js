@@ -57,23 +57,32 @@ describe("scheduleCaseMeeting", () => {
   });
 
   // 400 when online meeting is missing meetingLink
-  it("throws 400 when online method missing meetingLink", async () => {
-    jest.spyOn(Case, "findById").mockReturnValue({
-      select: jest
-        .fn()
-        .mockResolvedValue({ _id: "c1", status: "open", lawyer: "l1" }),
+  it("generates a meetingLink automatically for online meetings when none is provided", async () => {
+    const caseObj = { _id: "c1", status: "open", lawyer: "l1", user: "u1" };
+    jest
+      .spyOn(Case, "findById")
+      .mockReturnValue({ select: jest.fn().mockResolvedValue(caseObj) });
+
+    const createSpy = jest
+      .spyOn(CaseMeeting, "create")
+      .mockResolvedValue({ _id: "m1" });
+
+    await scheduleCaseMeeting({
+      caseId: "c1",
+      scheduledBy: "l1",
+      date: "2026-04-08",
+      time: "10:00",
+      method: "online",
     });
 
-    await expect(
-      scheduleCaseMeeting({
-        caseId: "c1",
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        caseId: caseObj._id,
         scheduledBy: "l1",
         method: "online",
+        meetingLink: expect.stringContaining("https://meet.jit.si/"),
       }),
-    ).rejects.toMatchObject({
-      message: "meetingLink is required for online meetings",
-      statusCode: 400,
-    });
+    );
   });
 
   // 400 when physical meeting is missing location
@@ -162,7 +171,7 @@ describe("getCaseMeetings", () => {
         .mockResolvedValue({ _id: "c1", user: "u1", lawyer: "l1" }),
     });
 
-    const fake = [{ _id: "m1" }];
+    const fake = [{ _id: "m1", method: "physical", location: "loc" }];
     jest.spyOn(CaseMeeting, "find").mockReturnValue({
       populate: jest
         .fn()
@@ -172,7 +181,7 @@ describe("getCaseMeetings", () => {
     const res = await getCaseMeetings({ caseId: "c1", currentUserId: "u1" });
 
     expect(CaseMeeting.find).toHaveBeenCalledWith({ caseId: "c1" });
-    expect(res).toBe(fake);
+    expect(res).toEqual(fake);
   });
 });
 

@@ -18,7 +18,7 @@ export const validateCreateCaseMeeting = (req, res, next) => {
     });
   }
 
-  const allowedFields = ["date", "time", "method", "meetingLink", "location"];
+  const allowedFields = ["date", "time", "method", "location"];
 
   if (!hasOnlyAllowedKeys(body, allowedFields)) {
     return res.status(400).json({
@@ -27,7 +27,7 @@ export const validateCreateCaseMeeting = (req, res, next) => {
     });
   }
 
-  const { date, time, method, meetingLink, location } = body;
+  const { date, time, method, location } = body;
 
   if (!date || typeof date !== "string" || !date.trim()) {
     return res.status(400).json({
@@ -55,19 +55,6 @@ export const validateCreateCaseMeeting = (req, res, next) => {
       success: false,
       message: "Method must be either 'online' or 'physical'",
     });
-  }
-
-  if (method === "online") {
-    if (
-      !meetingLink ||
-      typeof meetingLink !== "string" ||
-      !meetingLink.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "MeetingLink is required for online meetings",
-      });
-    }
   }
 
   if (method === "physical") {
