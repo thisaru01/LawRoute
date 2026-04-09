@@ -9,6 +9,7 @@ import {
 } from "@/api/services/consultationRequestService";
 import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 import ConsultationRequestModal from "@/components/consultation-requests/ConsultationRequestModal";
+import { toast } from "sonner";
 
 const STATUS_BADGE = {
   accepted: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
@@ -37,13 +38,21 @@ export default function ConsultationRequestCard({
   const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
   const badgeClass = STATUS_BADGE[status] ?? STATUS_BADGE.pending;
 
-  const act = async (fn) => {
+  const act = async (fn, successMessage) => {
     setIsBusy(true);
     try {
       await fn(request?._id);
+      if (successMessage) {
+        toast.success(successMessage);
+      }
       onAction?.();
     } catch (err) {
       console.error(err);
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Something went wrong. Please try again.";
+      toast.error(message);
     } finally {
       setIsBusy(false);
     }
@@ -111,7 +120,12 @@ export default function ConsultationRequestCard({
             description={`You are about to accept the consultation request from ${citizenName}. A new case will be opened for this client.`}
             confirmLabel="Yes, accept"
             confirmClass="bg-green-600 text-white hover:bg-green-700"
-            onConfirm={() => act(acceptConsultationRequest)}
+            onConfirm={() =>
+              act(
+                acceptConsultationRequest,
+                "Consultation request accepted and case opened.",
+              )
+            }
           />
 
           <ConfirmDialog
@@ -124,7 +138,9 @@ export default function ConsultationRequestCard({
             description={`You are about to reject the consultation request from ${citizenName}. This action cannot be undone.`}
             confirmLabel="Yes, reject"
             confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onConfirm={() => act(rejectConsultationRequest)}
+            onConfirm={() =>
+              act(rejectConsultationRequest, "Consultation request rejected.")
+            }
           />
         </div>
       )}
