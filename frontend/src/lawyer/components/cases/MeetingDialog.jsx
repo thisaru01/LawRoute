@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
+import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
 export default function MeetingDialog({
   open,
@@ -113,12 +114,19 @@ export default function MeetingDialog({
           </Button>
 
           {canMarkCompleted && (
-            <Button
-              variant="secondary"
-              className="mr-2"
-              onClick={async () => {
-                const ok = window.confirm("Mark this meeting as completed?");
-                if (!ok) return;
+            <ConfirmDialog
+              trigger={
+                <Button variant="secondary" className="mr-2">
+                  Mark as completed
+                </Button>
+              }
+              title="Mark meeting as completed?"
+              description={
+                "This will mark the meeting as completed. You can still add notes afterwards."
+              }
+              confirmLabel="Yes, mark completed"
+              confirmClass="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              onConfirm={async () => {
                 try {
                   await updateCaseMeeting(meeting._id, { status: "completed" });
                   toast.success("Meeting marked as completed");
@@ -132,56 +140,70 @@ export default function MeetingDialog({
                   );
                 }
               }}
-            >
-              Mark as completed
-            </Button>
+            />
           )}
 
           {meeting.method === "online" && (
             <>
               {canScheduleMeetings && (
-                <Button
-                  variant="destructive"
-                  className="mr-2"
-                  onClick={async () => {
-                    const now = new Date();
-                    const meetingDate = meeting.date
-                      ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
-                      : null;
-                    const diffMinutes = meetingDate
-                      ? (meetingDate.getTime() - now.getTime()) / 60000
-                      : Infinity;
-                    const cancelAllowed = diffMinutes > 24 * 60;
-                    if (!cancelAllowed) {
-                      toast.error(
-                        "Cannot cancel meetings within 24 hours of the start time.",
-                      );
-                      return;
-                    }
+                (() => {
+                  const nowLocal = new Date();
+                  const meetingDateLocal = meeting.date
+                    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+                    : null;
+                  const diffMinutesLocal = meetingDateLocal
+                    ? (meetingDateLocal.getTime() - nowLocal.getTime()) / 60000
+                    : Infinity;
+                  const cancelAllowedLocal = diffMinutesLocal > 24 * 60;
 
-                    const ok = window.confirm(
-                      "Are you sure you want to cancel this meeting?",
+                  if (!cancelAllowedLocal) {
+                    return (
+                      <Button
+                        variant="destructive"
+                        className="mr-2"
+                        onClick={() =>
+                          toast.error(
+                            "Cannot cancel meetings within 24 hours of the start time.",
+                          )
+                        }
+                      >
+                        Cancel Meeting
+                      </Button>
                     );
-                    if (!ok) return;
+                  }
 
-                    try {
-                      await updateCaseMeeting(meeting._id, {
-                        status: "cancelled",
-                      });
-                      toast.success("Meeting cancelled");
-                      close();
-                      window.dispatchEvent(new CustomEvent("meetings:refresh"));
-                    } catch (err) {
-                      toast.error(
-                        err.response?.data?.message ||
-                          err.message ||
-                          "Failed to cancel meeting",
-                      );
-                    }
-                  }}
-                >
-                  Cancel Meeting
-                </Button>
+                  return (
+                    <ConfirmDialog
+                      trigger={
+                        <Button variant="destructive" className="mr-2">
+                          Cancel Meeting
+                        </Button>
+                      }
+                      title="Cancel this meeting?"
+                      description={
+                        "Are you sure you want to cancel this meeting? This action cannot be undone."
+                      }
+                      confirmLabel="Yes, cancel"
+                      confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onConfirm={async () => {
+                        try {
+                          await updateCaseMeeting(meeting._id, {
+                            status: "cancelled",
+                          });
+                          toast.success("Meeting cancelled");
+                          close();
+                          window.dispatchEvent(new CustomEvent("meetings:refresh"));
+                        } catch (err) {
+                          toast.error(
+                            err.response?.data?.message ||
+                              err.message ||
+                              "Failed to cancel meeting",
+                          );
+                        }
+                      }}
+                    />
+                  );
+                })()
               )}
 
               <Button
