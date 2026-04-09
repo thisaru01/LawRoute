@@ -27,6 +27,7 @@ export default function AboutSection({
   setIsEditing,
   onRetry,
   EXPERTISE_OPTIONS,
+  isVerified,
 }) {
   return (
       <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-gray-200/60">
@@ -118,12 +119,21 @@ export default function AboutSection({
             Bar registration number
           </FieldLabel>
           {isEditing ? (
-            <Input
-              id="barRegistrationNumber"
-              value={form.barRegistrationNumber}
-              onChange={onChange("barRegistrationNumber")}
-              placeholder="BRN-2020-0001"
-            />
+            <div className="space-y-1">
+              <Input
+                id="barRegistrationNumber"
+                value={form.barRegistrationNumber}
+                onChange={onChange("barRegistrationNumber")}
+                placeholder="BRN-2020-0001"
+                disabled={isVerified}
+                className={isVerified ? "bg-gray-50 text-muted-foreground border-dashed" : ""}
+              />
+              {isVerified && (
+                <FieldDescription className="text-blue-600 flex items-center gap-1">
+                   Verified credential. Contact support to change.
+                </FieldDescription>
+              )}
+            </div>
           ) : (
             <div className="text-sm text-muted-foreground">
               {form.barRegistrationNumber || "—"}

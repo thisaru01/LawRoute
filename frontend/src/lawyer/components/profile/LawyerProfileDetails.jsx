@@ -334,6 +334,7 @@ export default function LawyerProfileDetails({
             setIsEditing={setIsEditingAbout}
             onRetry={onRetry}
             EXPERTISE_OPTIONS={EXPERTISE_OPTIONS}
+            isVerified={verificationStatus === "approved"}
           />
 
           <ContactSection
