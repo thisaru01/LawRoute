@@ -81,6 +81,40 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     if (!caseId) return;
     setIsScheduling(true);
     try {
+      // Frontend validation: match backend rules and prevent scheduling past times
+      if (!scheduleForm.date || typeof scheduleForm.date !== "string") {
+        throw new Error("Date is required");
+      }
+
+      if (!scheduleForm.time || typeof scheduleForm.time !== "string") {
+        throw new Error("Time is required");
+      }
+
+      if (
+        !scheduleForm.method ||
+        !["online", "physical"].includes(scheduleForm.method)
+      ) {
+        throw new Error("Method must be either 'online' or 'physical'");
+      }
+
+      if (
+        scheduleForm.method === "physical" &&
+        (!scheduleForm.location || !scheduleForm.location.trim())
+      ) {
+        throw new Error("Location is required for physical meetings");
+      }
+
+      // Prevent scheduling in the past: combine date + time and compare with now
+      const meetingDate = new Date(`${scheduleForm.date}T${scheduleForm.time}`);
+      if (Number.isNaN(meetingDate.getTime())) {
+        throw new Error("Invalid date or time");
+      }
+
+      const now = new Date();
+      if (meetingDate.getTime() <= now.getTime()) {
+        throw new Error("Cannot schedule meetings in the past");
+      }
+
       const payload = {
         date: scheduleForm.date,
         time: scheduleForm.time,
