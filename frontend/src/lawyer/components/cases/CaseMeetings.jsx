@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import MeetingDialog from "./MeetingDialog";
 import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingContent";
 import { Separator } from "@/components/ui/separator";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
@@ -14,7 +16,7 @@ function isPast(meeting) {
   return meetingDate < new Date();
 }
 
-function MeetingCard({ meeting, onJoin, isLawyer }) {
+function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
   const methodLabel = meeting.method === "physical" ? "In-person" : "Online";
   const isOnline = meeting.method === "online";
   const locationText = !isOnline ? meeting.location : null;
@@ -23,8 +25,19 @@ function MeetingCard({ meeting, onJoin, isLawyer }) {
       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
       : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
 
+  const clickable = isOnline && onOpen;
+  const className = `flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm ${clickable ? "cursor-pointer" : ""}`;
+
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm">
+    <div
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={() => clickable && onOpen && onOpen(meeting)}
+      onKeyDown={(e) => {
+        if (clickable && e.key === "Enter") onOpen && onOpen(meeting);
+      }}
+      className={className}
+    >
       {/* Title row */}
       <div className="flex items-start justify-between gap-2">
         <p className="font-semibold text-sm text-foreground leading-tight">
@@ -124,7 +137,10 @@ function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
           size="xs"
           variant="outline"
           className="shrink-0 text-[11px]"
-          onClick={() => onJoin(meeting._id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onJoin(meeting._id);
+          }}
           disabled={disabled}
         >
           {label}
@@ -166,6 +182,18 @@ export default function CaseMeetings() {
   const pastMeetings = meetings.filter((m) => isPast(m));
 
   const isAlreadyClosed = normalizedStatus === "closed";
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [selectedMeeting, setSelectedMeeting] = React.useState(null);
+
+  const openMeetingDialog = (meeting) => {
+    setSelectedMeeting(meeting);
+    setDialogOpen(true);
+  };
+
+  const closeMeetingDialog = () => {
+    setDialogOpen(false);
+    setTimeout(() => setSelectedMeeting(null), 200);
+  };
 
   return (
     <AlertDialog>
@@ -233,6 +261,7 @@ export default function CaseMeetings() {
                         meeting={meeting}
                         onJoin={handleJoinMeeting}
                         isLawyer={canScheduleMeetings}
+                        onOpen={openMeetingDialog}
                       />
                     ))}
                   </div>
@@ -268,6 +297,7 @@ export default function CaseMeetings() {
                     meeting={meeting}
                     onJoin={handleJoinMeeting}
                     isLawyer={canScheduleMeetings}
+                    onOpen={openMeetingDialog}
                   />
                 ))}
               </div>
@@ -283,6 +313,14 @@ export default function CaseMeetings() {
         onConfirm={handleScheduleConfirm}
         isScheduling={isScheduling}
         timeOptions={timeOptions}
+      />
+
+      <MeetingDialog
+        open={dialogOpen}
+        onOpenChange={closeMeetingDialog}
+        meeting={selectedMeeting}
+        canScheduleMeetings={canScheduleMeetings}
+        onJoin={handleJoinMeeting}
       />
     </AlertDialog>
   );
