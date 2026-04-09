@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../../models/userModel.js";
 import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
+import { validateCreateArticleInput } from "../../validations/articles/articleValidation.js";
 
 const VALID_STATUSES = ["pending", "published", "rejected", "archived"];
 
@@ -16,24 +17,16 @@ export const createArticle = async ({
   imagecardUrl,
   imagecardPublicId,
 }) => {
-  if (!user || !user._id) {
-    const err = new Error("Unauthorized");
-    err.status = 401;
-    throw err;
-  }
+  validateCreateArticleInput({
+    user,
+    title,
+    content,
+    category,
+    imageUrl,
+    imagecardUrl,
+  });
 
   const role = user.role;
-  if (!["admin", "lawyer"].includes(role)) {
-    const err = new Error("Only admins or lawyers can create articles");
-    err.status = 403;
-    throw err;
-  }
-
-  if (!title || !content || !category || !imagecardUrl || !imageUrl) {
-    const err = new Error("Title, content, category, image, and imagecard files are required");
-    err.status = 400;
-    throw err;
-  }
 
   const status = "pending";
 
