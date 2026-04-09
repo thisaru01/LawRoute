@@ -10,24 +10,27 @@ import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingCon
 import { Separator } from "@/components/ui/separator";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
 
-function isPast(meeting) {
-  if (!meeting.date) return false;
-  const meetingDate = new Date(`${meeting.date}T${meeting.time || "00:00"}`);
-  return meetingDate < new Date();
-}
-
 function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
   const methodLabel = meeting.method === "physical" ? "In-person" : "Online";
   const isOnline = meeting.method === "online";
   const locationText = !isOnline ? meeting.location : null;
-  const statusColor =
-    meeting.status === "completed" || meeting.status === "done"
-      ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-      : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+  let statusColor =
+    "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+  if (meeting.status === "completed" || meeting.status === "done") {
+    statusColor =
+      "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300";
+  } else if (meeting.status === "cancelled") {
+    statusColor = "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300";
+  } else if (meeting.status === "incomplete") {
+    statusColor =
+      "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
+  }
 
   // allow opening the dialog for both online and in-person meetings,
   // but never for cancelled meetings
-  const clickable = onOpen && meeting.status !== "cancelled";
+  // clickable for non-cancelled and non-completed meetings only
+  const clickable =
+    onOpen && meeting.status !== "cancelled" && meeting.status !== "completed";
   const className = `flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm ${clickable ? "cursor-pointer" : ""}`;
 
   return (
@@ -64,7 +67,11 @@ function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
       {isOnline ? (
         <OnlineMeetingActions
           meeting={meeting}
-          onJoin={meeting.status !== "cancelled" ? onJoin : undefined}
+          onJoin={
+            meeting.status !== "cancelled" && meeting.status !== "completed"
+              ? onJoin
+              : undefined
+          }
           isLawyer={isLawyer}
         />
       ) : (
@@ -96,6 +103,14 @@ function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
   const meetingDate = meeting.date
     ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
     : null;
+
+  if (meeting.status === "completed") {
+    return (
+      <div className="text-sm text-muted-foreground">
+        This meeting is completed.
+      </div>
+    );
+  }
 
   if (!meetingDate) {
     return (
@@ -181,12 +196,32 @@ export default function CaseMeetings() {
     handleJoinMeeting,
   } = useCaseContext();
   const cancelledMeetings = meetings.filter((m) => m.status === "cancelled");
-  const upcomingMeetings = meetings.filter(
-    (m) => m.status !== "cancelled" && !isPast(m),
-  );
-  const pastMeetings = meetings.filter(
-    (m) => m.status !== "cancelled" && isPast(m),
-  );
+
+  const now = new Date();
+  const toDate = (m) =>
+    m.date ? new Date(`${m.date}T${m.time || "00:00"}`) : null;
+  const within24h = (m) => {
+    const d = toDate(m);
+    if (!d) return false;
+    const diff = now.getTime() - d.getTime();
+    return diff >= 0 && diff <= 24 * 60 * 60 * 1000;
+  };
+
+  // Upcoming: scheduled OR incomplete but not yet passed 24 hours
+  const upcomingMeetings = meetings.filter((m) => {
+    if (m.status === "cancelled") return false;
+    if (m.status === "scheduled") return true;
+    if (m.status === "incomplete") return within24h(m);
+    return false;
+  });
+
+  // History: completed OR incomplete that exceeded 24 hours since scheduled time
+  const pastMeetings = meetings.filter((m) => {
+    if (m.status === "cancelled") return false;
+    if (m.status === "completed") return true;
+    if (m.status === "incomplete") return !within24h(m);
+    return false;
+  });
 
   const isAlreadyClosed = normalizedStatus === "closed";
   const [dialogOpen, setDialogOpen] = React.useState(false);

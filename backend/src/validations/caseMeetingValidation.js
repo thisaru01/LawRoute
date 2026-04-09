@@ -1,5 +1,5 @@
 const VALID_METHODS = ["online", "physical"];
-const VALID_STATUSES = ["scheduled", "completed", "cancelled"];
+const VALID_STATUSES = ["scheduled", "incomplete", "completed", "cancelled"];
 
 const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);

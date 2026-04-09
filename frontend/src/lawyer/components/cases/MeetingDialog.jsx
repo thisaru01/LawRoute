@@ -28,6 +28,20 @@ export default function MeetingDialog({
     );
   }
 
+  const now = new Date();
+  const meetingDate = meeting.date
+    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+    : null;
+  const diffMinutes = meetingDate
+    ? (meetingDate.getTime() - now.getTime()) / 60000
+    : Infinity;
+  const canMarkCompleted =
+    canScheduleMeetings &&
+    meeting.status !== "completed" &&
+    meeting.status !== "cancelled" &&
+    meetingDate &&
+    diffMinutes <= 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-150">
@@ -97,6 +111,31 @@ export default function MeetingDialog({
           <Button variant="outline" onClick={close}>
             Close
           </Button>
+
+          {canMarkCompleted && (
+            <Button
+              variant="secondary"
+              className="mr-2"
+              onClick={async () => {
+                const ok = window.confirm("Mark this meeting as completed?");
+                if (!ok) return;
+                try {
+                  await updateCaseMeeting(meeting._id, { status: "completed" });
+                  toast.success("Meeting marked as completed");
+                  close();
+                  window.dispatchEvent(new CustomEvent("meetings:refresh"));
+                } catch (err) {
+                  toast.error(
+                    err.response?.data?.message ||
+                      err.message ||
+                      "Failed to update meeting",
+                  );
+                }
+              }}
+            >
+              Mark as completed
+            </Button>
+          )}
 
           {meeting.method === "online" && (
             <>

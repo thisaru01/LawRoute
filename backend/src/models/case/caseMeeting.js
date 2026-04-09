@@ -40,7 +40,7 @@ const CaseMeetingSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["scheduled", "completed", "cancelled"],
+      enum: ["scheduled", "incomplete", "completed", "cancelled"],
       default: "scheduled",
     },
     assignedUsers: [

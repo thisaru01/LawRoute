@@ -94,6 +94,22 @@ export async function getCaseMeetings({ caseId, currentUserId }) {
     .populate("scheduledBy", "name email role")
     .sort({ createdAt: -1 });
 
+  // Update any meetings that have passed their scheduled time from 'scheduled' -> 'incomplete'
+  const now = new Date();
+  for (const meeting of meetings) {
+    if (meeting.status === "scheduled" && meeting.date) {
+      const meetingDate = new Date(
+        `${meeting.date}T${meeting.time || "00:00"}`,
+      );
+      if (!Number.isNaN(meetingDate.getTime()) && meetingDate < now) {
+        meeting.status = "incomplete";
+        // save the updated status (do not block other updates)
+        // eslint-disable-next-line no-await-in-loop
+        await meeting.save();
+      }
+    }
+  }
+
   const sanitizedMeetings = meetings.map((meeting) => {
     const obj =
       typeof meeting.toObject === "function"
