@@ -133,24 +133,22 @@ export default function ScheduleMeetingContent({
             </DropdownMenu>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="meeting-location-link">
-              Meeting link or location
-            </Label>
-            <Input
-              id="meeting-location-link"
-              value={
-                scheduleForm.method === "online"
-                  ? scheduleForm.meetingLink
-                  : scheduleForm.location
-              }
-              onChange={(e) =>
-                onChange(
-                  scheduleForm.method === "online" ? "meetingLink" : "location",
-                  e.target.value,
-                )
-              }
-              placeholder="Video link for online, address for physical"
-            />
+            {scheduleForm.method === "physical" ? (
+              <>
+                <Label htmlFor="meeting-location-link">Location</Label>
+                <Input
+                  id="meeting-location-link"
+                  value={scheduleForm.location}
+                  onChange={(e) => onChange("location", e.target.value)}
+                  placeholder="Address for the in-person meeting"
+                />
+              </>
+            ) : (
+              <div className="text-xs text-muted-foreground pt-5">
+                A secure Jitsi video link will be generated automatically when
+                you schedule this meeting.
+              </div>
+            )}
           </div>
         </div>
       </div>

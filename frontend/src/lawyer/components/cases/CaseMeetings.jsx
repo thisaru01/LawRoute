@@ -1,4 +1,4 @@
-import { CalendarPlus, Calendar, Link2, MapPin, Video } from "lucide-react";
+import { CalendarPlus, Calendar, MapPin, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +14,10 @@ function isPast(meeting) {
   return meetingDate < new Date();
 }
 
-function MeetingCard({ meeting }) {
+function MeetingCard({ meeting, onJoin }) {
   const methodLabel = meeting.method === "physical" ? "In-person" : "Online";
-  const locationText =
-    meeting.method === "physical" ? meeting.location : meeting.meetingLink;
   const isOnline = meeting.method === "online";
+  const locationText = !isOnline ? meeting.location : null;
   const statusColor =
     meeting.status === "completed" || meeting.status === "done"
       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
@@ -46,29 +45,32 @@ function MeetingCard({ meeting }) {
         </span>
       </div>
 
-      {/* Link / location */}
-      {locationText && (
-        <div className="flex items-start gap-1.5 text-xs">
-          {isOnline ? (
-            <Link2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          ) : (
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          )}
-          {isOnline ? (
-            <a
-              href={locationText}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="break-all text-primary underline underline-offset-2 leading-snug"
+      {/* Link / location or join */}
+      {isOnline ? (
+        <div className="flex items-start justify-between gap-2 text-xs">
+          <p className="text-muted-foreground leading-snug">
+            A secure video link will be generated when you join.
+          </p>
+          {onJoin && (
+            <Button
+              size="xs"
+              variant="outline"
+              className="shrink-0 text-[11px]"
+              onClick={() => onJoin(meeting._id)}
             >
-              {locationText}
-            </a>
-          ) : (
+              Join
+            </Button>
+          )}
+        </div>
+      ) : (
+        locationText && (
+          <div className="flex items-start gap-1.5 text-xs">
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <span className="text-muted-foreground wrap-break-words leading-snug">
               {locationText}
             </span>
-          )}
-        </div>
+          </div>
+        )
       )}
 
       {/* Method badge */}
@@ -110,6 +112,7 @@ export default function CaseMeetings() {
     handleScheduleConfirm,
     normalizedStatus,
     canScheduleMeetings,
+    handleJoinMeeting,
   } = useCaseContext();
   const upcomingMeetings = meetings.filter((m) => !isPast(m));
   const pastMeetings = meetings.filter((m) => isPast(m));
@@ -177,7 +180,11 @@ export default function CaseMeetings() {
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {upcomingMeetings.map((meeting) => (
-                      <MeetingCard key={meeting._id} meeting={meeting} />
+                      <MeetingCard
+                        key={meeting._id}
+                        meeting={meeting}
+                        onJoin={handleJoinMeeting}
+                      />
                     ))}
                   </div>
                 )}
@@ -207,7 +214,11 @@ export default function CaseMeetings() {
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {pastMeetings.map((meeting) => (
-                  <MeetingCard key={meeting._id} meeting={meeting} />
+                  <MeetingCard
+                    key={meeting._id}
+                    meeting={meeting}
+                    onJoin={handleJoinMeeting}
+                  />
                 ))}
               </div>
             )}
