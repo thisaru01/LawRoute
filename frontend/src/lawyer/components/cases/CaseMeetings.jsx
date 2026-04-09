@@ -1,7 +1,7 @@
 import { CalendarPlus, Calendar, MapPin, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -103,6 +103,14 @@ function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
   const meetingDate = meeting.date
     ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
     : null;
+
+  if (meeting.status === "cancelled") {
+    return (
+      <div className="text-sm text-muted-foreground">
+        This meeting has been cancelled.
+      </div>
+    );
+  }
 
   if (meeting.status === "completed") {
     return (
