@@ -15,3 +15,11 @@ export const acceptConsultationRequest = (id) => {
 export const rejectConsultationRequest = (id) => {
   return axios.patch(`/consultation-requests/${id}/reject`);
 };
+
+export const updateConsultationRequest = (id, data) => {
+  return axios.put(`/consultation-requests/${id}`, data);
+};
+
+export const deleteConsultationRequest = (id) => {
+  return axios.delete(`/consultation-requests/${id}`);
+};
