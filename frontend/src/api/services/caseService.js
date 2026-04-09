@@ -4,6 +4,14 @@ export const getMyCases = () => {
   return axios.get("/cases/my");
 };
 
+export const getAllCasesForAdmin = (status) => {
+  const params = {};
+  if (status) {
+    params.status = status;
+  }
+  return axios.get("/cases/admin", { params });
+};
+
 export const closeCase = (id) => {
   return axios.patch(`/cases/${id}/close`);
 };
