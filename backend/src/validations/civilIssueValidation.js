@@ -460,7 +460,19 @@ export const validateUpdateCivilIssue = (req, res, next) => {
 // PATCH /api/civil-issues/:id/status
 // Validates the request body when an authority updates the status of a civil issue.
 export const validateUpdateCivilIssueStatus = (req, res, next) => {
-    const { status } = req.body;
+    const { status, note, resolutionSummary } = req.body;
+    const ALLOWED_FIELDS = ["status", "note", "resolutionSummary"];
+
+    const unknownFields = Object.keys(req.body).filter(
+        (key) => !ALLOWED_FIELDS.includes(key),
+    );
+
+    if (unknownFields.length > 0) {
+        return res.status(400).json({
+            success: false,
+            message: `Unknown fields: ${unknownFields.join(", ")}. Only status, note and resolutionSummary are allowed.`,
+        });
+    }
 
     if (!status) {
         return res.status(400).json({
@@ -473,6 +485,61 @@ export const validateUpdateCivilIssueStatus = (req, res, next) => {
         return res.status(400).json({
             success: false,
             message: `status must be one of: ${CIVIL_ISSUE_STATUSES.join(", ")}.`,
+        });
+    }
+
+    if (note !== undefined && !isNonEmptyString(note)) {
+        return res.status(400).json({
+            success: false,
+            message: "note must be a non-empty string.",
+        });
+    }
+
+    if (resolutionSummary !== undefined && !isNonEmptyString(resolutionSummary)) {
+        return res.status(400).json({
+            success: false,
+            message: "resolutionSummary must be a non-empty string.",
+        });
+    }
+
+    if (status === "resolved" && !isNonEmptyString(note)) {
+        return res.status(400).json({
+            success: false,
+            message: "note is required when status is resolved.",
+        });
+    }
+
+    if (status === "resolved" && !isNonEmptyString(resolutionSummary)) {
+        return res.status(400).json({
+            success: false,
+            message: "resolutionSummary is required when status is resolved.",
+        });
+    }
+
+    return next();
+};
+
+// PATCH /api/civil-issues/:id/reject
+// Validates the request body when an authority or admin rejects a civil issue.
+export const validateRejectCivilIssue = (req, res, next) => {
+    const { note } = req.body;
+    const ALLOWED_FIELDS = ["note"];
+
+    const unknownFields = Object.keys(req.body).filter(
+        (key) => !ALLOWED_FIELDS.includes(key),
+    );
+
+    if (unknownFields.length > 0) {
+        return res.status(400).json({
+            success: false,
+            message: `Unknown fields: ${unknownFields.join(", ")}. Only note is allowed.`,
+        });
+    }
+
+    if (!isNonEmptyString(note)) {
+        return res.status(400).json({
+            success: false,
+            message: "note is required.",
         });
     }
 

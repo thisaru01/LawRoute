@@ -12,4 +12,4 @@ export const CIVIL_ISSUE_CATEGORIES = [
     "other",
 ];
 
-export const CIVIL_ISSUE_STATUSES = ["pending", "in_progress", "resolved"];
+export const CIVIL_ISSUE_STATUSES = ["pending", "in_progress", "resolved", "rejected"];

@@ -84,6 +84,18 @@ export const getAssignedCivilIssues = async (req, res, next) => {
   }
 };
 
+// GET /api/civil-issues/admin
+// Admin views all "other" category civil issues as a shared triage queue.
+export const getAdminCivilIssues = async (req, res, next) => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status.trim() : "";
+    const issues = await civilIssueService.getAdminCivilIssues(status || undefined);
+    res.status(200).json({ success: true, data: issues });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/civil-issues/:id
 // Citizen or assigned authority views a single civil issue by ID.
 export const getCivilIssueById = async (req, res, next) => {
@@ -91,6 +103,7 @@ export const getCivilIssueById = async (req, res, next) => {
     const issue = await civilIssueService.getIssueById({
       issueId: req.params.id,
       currentUserId: req.user._id,
+      currentUserRole: req.user.role,
     });
     res.status(200).json({ success: true, data: issue });
   } catch (error) {
@@ -178,12 +191,41 @@ export const updateCivilIssueStatus = async (req, res, next) => {
     const issue = await civilIssueService.updateIssueStatus({
       issueId: req.params.id,
       authorityId: req.user._id,
+      actorRole: req.user.role,
       status: req.body.status,
+      note: req.body.note,
+      resolutionSummary: req.body.resolutionSummary,
     });
 
     res.status(200).json({
       success: true,
       message: "Civil issue status updated successfully.",
+      data: issue,
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
+// PATCH /api/civil-issues/:id/reject
+// Assigned authority or admin rejects a civil issue with a note.
+export const rejectCivilIssue = async (req, res, next) => {
+  try {
+    const issue = await civilIssueService.rejectIssue({
+      issueId: req.params.id,
+      actorId: req.user._id,
+      actorRole: req.user.role,
+      note: req.body.note,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Civil issue rejected successfully.",
       data: issue,
     });
   } catch (error) {
