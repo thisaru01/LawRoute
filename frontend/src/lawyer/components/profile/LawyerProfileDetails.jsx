@@ -20,6 +20,18 @@ import ContactSection from "./sections/ContactSection";
 import ExpertiseSection from "./sections/ExpertiseSection";
 import QualificationsSection from "./sections/QualificationsSection";
 
+import { 
+  AlertCircle, 
+  AlertTriangle, 
+  Building2, 
+  Camera, 
+  CheckCircle2, 
+  Clock,
+  MapPin, 
+  ShieldCheck,
+  XCircle 
+} from "lucide-react";
+
 const EXPERTISE_OPTIONS = [
   { value: "general", label: "General" },
   { value: "civil", label: "Civil" },
@@ -183,9 +195,7 @@ export default function LawyerProfileDetails({
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 pt-0.5">
-              <svg className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
             </div>
             <div>
               <h3 className="font-semibold text-amber-900">Account Not Verified</h3>
@@ -199,9 +209,7 @@ export default function LawyerProfileDetails({
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 pt-0.5">
-              <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+              <XCircle className="h-5 w-5 text-red-600" />
             </div>
             <div>
               <h3 className="font-semibold text-red-900">Verification Rejected</h3>
@@ -241,10 +249,7 @@ export default function LawyerProfileDetails({
                   className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 border border-gray-100 transition-all hover:scale-110 disabled:opacity-60 disabled:cursor-not-allowed group"
                   aria-label="Edit profile image"
                 >
-                  <svg className="w-4 h-4 text-blue-600 group-hover:text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <Camera className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
                 </button>
               </div>
 
@@ -254,30 +259,27 @@ export default function LawyerProfileDetails({
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{displayName}</h1>
                     {verificationStatus === "approved" && (
                       <div className="text-blue-500" title="Verified Lawyer">
-                        <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                        </svg>
+                        <CheckCircle2 className="w-6 h-6 fill-blue-50 text-blue-500" />
                       </div>
                     )}
                   </div>
                   <p className="text-lg font-medium text-blue-600/90">{profile?.basicInfo?.professionalTitle || form.professionalTitle || "Attorney at Law"}</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  {membershipsText && (
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    <span>{profile?.expertise || "General"} Law Expert</span>
+                  </div>
+                  {profile?.totalYearsExperience > 0 && (
                     <div className="flex items-center gap-1.5">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <span>{membershipsText}</span>
+                      <Clock className="h-4 w-4 text-blue-500" />
+                      <span>{profile.totalYearsExperience}+ Years Experience</span>
                     </div>
                   )}
                   {profile?.basicInfo?.contactInfo?.location && (
                     <div className="flex items-center gap-1.5">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+                      <MapPin className="h-4 w-4 text-red-500" />
                       <span>{profile.basicInfo.contactInfo.location}</span>
                     </div>
                   )}
