@@ -33,6 +33,8 @@ export default function ScheduleMeetingContent({
   onChange,
   onConfirm,
   isScheduling,
+  title = "Schedule meeting",
+  confirmLabel = "Schedule meeting",
 }) {
   const [dateOpen, setDateOpen] = React.useState(false);
   const selectedDate = scheduleForm.date
@@ -48,7 +50,7 @@ export default function ScheduleMeetingContent({
   return (
     <AlertDialogContent size="lg">
       <AlertDialogHeader>
-        <AlertDialogTitle>Schedule meeting</AlertDialogTitle>
+        <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>
           Choose date, time and method for this case.
         </AlertDialogDescription>
@@ -156,7 +158,7 @@ export default function ScheduleMeetingContent({
       <AlertDialogFooter>
         <AlertDialogCancel>Cancel</AlertDialogCancel>
         <AlertDialogAction onClick={onConfirm} disabled={isScheduling}>
-          {isScheduling ? "Scheduling..." : "Schedule meeting"}
+          {isScheduling ? "Scheduling..." : confirmLabel}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
