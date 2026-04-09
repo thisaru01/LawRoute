@@ -14,7 +14,7 @@ function isPast(meeting) {
   return meetingDate < new Date();
 }
 
-function MeetingCard({ meeting, onJoin }) {
+function MeetingCard({ meeting, onJoin, isLawyer }) {
   const methodLabel = meeting.method === "physical" ? "In-person" : "Online";
   const isOnline = meeting.method === "online";
   const locationText = !isOnline ? meeting.location : null;
@@ -47,21 +47,11 @@ function MeetingCard({ meeting, onJoin }) {
 
       {/* Link / location or join */}
       {isOnline ? (
-        <div className="flex items-start justify-between gap-2 text-xs">
-          <p className="text-muted-foreground leading-snug">
-            A secure video link will be generated when you join.
-          </p>
-          {onJoin && (
-            <Button
-              size="xs"
-              variant="outline"
-              className="shrink-0 text-[11px]"
-              onClick={() => onJoin(meeting._id)}
-            >
-              Join
-            </Button>
-          )}
-        </div>
+        <OnlineMeetingActions
+          meeting={meeting}
+          onJoin={onJoin}
+          isLawyer={isLawyer}
+        />
       ) : (
         locationText && (
           <div className="flex items-start gap-1.5 text-xs">
@@ -82,6 +72,64 @@ function MeetingCard({ meeting, onJoin }) {
         )}
         {methodLabel}
       </div>
+    </div>
+  );
+}
+
+function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
+  const now = new Date();
+  const meetingDate = meeting.date
+    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+    : null;
+
+  if (!meetingDate) {
+    return (
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <p className="leading-snug">
+          A secure video link will be available when the meeting starts.
+        </p>
+      </div>
+    );
+  }
+
+  const diffMs = meetingDate.getTime() - now.getTime();
+  const diffMinutes = diffMs / 60000;
+
+  // Lawyer: unlocked 10 minutes before start (diffMinutes <= 10)
+  const lawyerUnlocked = isLawyer && diffMinutes <= 10;
+  // Citizen: unlocked at or after start (diffMinutes <= 0)
+  const citizenUnlocked = !isLawyer && diffMinutes <= 0;
+
+  const disabled = isLawyer ? !lawyerUnlocked : !citizenUnlocked;
+  const label = isLawyer ? "Start" : "Join";
+  let infoText = isLawyer
+    ? "The Start button will unlock 10 minutes before the scheduled time."
+    : "The Join button will unlock when the meeting starts.";
+
+  // When unlocked, show actionable instruction
+  if (isLawyer && lawyerUnlocked) {
+    infoText =
+      "Click Start to begin the meeting (you can set a Jitsi password).";
+  }
+
+  if (!isLawyer && citizenUnlocked) {
+    infoText = "Click Join to enter the meeting.";
+  }
+
+  return (
+    <div className="flex items-start justify-between gap-2 text-xs">
+      <p className="text-muted-foreground leading-snug">{infoText}</p>
+      {onJoin && (
+        <Button
+          size="xs"
+          variant="outline"
+          className="shrink-0 text-[11px]"
+          onClick={() => onJoin(meeting._id)}
+          disabled={disabled}
+        >
+          {label}
+        </Button>
+      )}
     </div>
   );
 }
@@ -184,6 +232,7 @@ export default function CaseMeetings() {
                         key={meeting._id}
                         meeting={meeting}
                         onJoin={handleJoinMeeting}
+                        isLawyer={canScheduleMeetings}
                       />
                     ))}
                   </div>
@@ -218,6 +267,7 @@ export default function CaseMeetings() {
                     key={meeting._id}
                     meeting={meeting}
                     onJoin={handleJoinMeeting}
+                    isLawyer={canScheduleMeetings}
                   />
                 ))}
               </div>
