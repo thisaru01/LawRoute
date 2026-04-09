@@ -47,6 +47,31 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     };
   }, [caseId]);
 
+  const refreshMeetings = useCallback(async () => {
+    if (!caseId) return;
+    setMeetingsLoading(true);
+    try {
+      const res = await getCaseMeetings(caseId);
+      const list = res?.data?.data;
+      setMeetings(Array.isArray(list) ? list : []);
+      setMeetingsError(null);
+    } catch (err) {
+      setMeetingsError(err);
+      setMeetings([]);
+    } finally {
+      setMeetingsLoading(false);
+    }
+  }, [caseId]);
+
+  // Listen for global refresh events (used by dialog after cancel)
+  useEffect(() => {
+    const handler = () => {
+      refreshMeetings();
+    };
+    window.addEventListener("meetings:refresh", handler);
+    return () => window.removeEventListener("meetings:refresh", handler);
+  }, [refreshMeetings]);
+
   const handleScheduleChange = useCallback((field, value) => {
     setScheduleForm((prev) => ({ ...prev, [field]: value }));
   }, []);
@@ -110,5 +135,6 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     handleScheduleChange,
     handleScheduleConfirm,
     handleJoinMeeting,
+    refreshMeetings,
   };
 }

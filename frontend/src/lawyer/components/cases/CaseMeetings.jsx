@@ -25,7 +25,9 @@ function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
       : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
 
-  const clickable = isOnline && onOpen;
+  // allow opening the dialog for both online and in-person meetings,
+  // but never for cancelled meetings
+  const clickable = onOpen && meeting.status !== "cancelled";
   const className = `flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm ${clickable ? "cursor-pointer" : ""}`;
 
   return (
@@ -62,7 +64,7 @@ function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
       {isOnline ? (
         <OnlineMeetingActions
           meeting={meeting}
-          onJoin={onJoin}
+          onJoin={meeting.status !== "cancelled" ? onJoin : undefined}
           isLawyer={isLawyer}
         />
       ) : (
@@ -178,8 +180,13 @@ export default function CaseMeetings() {
     canScheduleMeetings,
     handleJoinMeeting,
   } = useCaseContext();
-  const upcomingMeetings = meetings.filter((m) => !isPast(m));
-  const pastMeetings = meetings.filter((m) => isPast(m));
+  const cancelledMeetings = meetings.filter((m) => m.status === "cancelled");
+  const upcomingMeetings = meetings.filter(
+    (m) => m.status !== "cancelled" && !isPast(m),
+  );
+  const pastMeetings = meetings.filter(
+    (m) => m.status !== "cancelled" && isPast(m),
+  );
 
   const isAlreadyClosed = normalizedStatus === "closed";
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -223,7 +230,7 @@ export default function CaseMeetings() {
               </CardContent>
             </div>
 
-            <Separator />
+            <Separator className="h-px" />
           </>
         )}
 
@@ -272,6 +279,40 @@ export default function CaseMeetings() {
             <Separator />
           </>
         )}
+
+        {/* Cancelled Meetings */}
+        <div>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Cancelled meetings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {meetingsLoading ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <MeetingCardSkeleton />
+                <MeetingCardSkeleton />
+              </div>
+            ) : cancelledMeetings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
+                <Calendar className="mb-2 h-7 w-7 opacity-30" />
+                No cancelled meetings.
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {cancelledMeetings.map((meeting) => (
+                  <MeetingCard
+                    key={meeting._id}
+                    meeting={meeting}
+                    onJoin={handleJoinMeeting}
+                    isLawyer={canScheduleMeetings}
+                    onOpen={openMeetingDialog}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </div>
+
+        <Separator className="h-px" />
 
         {/* Meeting History */}
         <div>
