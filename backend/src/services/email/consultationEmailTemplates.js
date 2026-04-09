@@ -53,4 +53,38 @@ export function consultationNotificationTemplate({
   };
 }
 
+export function consultationAcceptedCitizenTemplate({
+  citizenName,
+  lawyerName,
+  loginUrl,
+}) {
+  const html = compileTemplate("consultationAcceptedCitizen.hbs", {
+    citizenName,
+    lawyerName,
+    loginUrl,
+  });
+
+  return {
+    subject: `Your Consultation Request Was Accepted — LawRoute`,
+    html,
+  };
+}
+
+export function consultationRejectedCitizenTemplate({
+  citizenName,
+  lawyerName,
+  loginUrl,
+}) {
+  const html = compileTemplate("consultationRejectedCitizen.hbs", {
+    citizenName,
+    lawyerName,
+    loginUrl,
+  });
+
+  return {
+    subject: `Your Consultation Request Was Reviewed — LawRoute`,
+    html,
+  };
+}
+
 export default {};
