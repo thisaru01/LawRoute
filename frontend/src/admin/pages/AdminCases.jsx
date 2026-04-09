@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { getAllCasesForAdmin } from "@/api/services/caseService";
@@ -30,7 +30,10 @@ export default function AdminCases() {
 
   const [search, setSearch] = useState("");
 
-  const fetcher = () => getAllCasesForAdmin(safeStatus);
+  const fetcher = useCallback(
+    () => getAllCasesForAdmin(safeStatus),
+    [safeStatus],
+  );
   const { data: cases, isLoading, error, refresh } = useFetchList(fetcher);
 
   const filteredCases = useMemo(() => {
@@ -132,4 +135,3 @@ export default function AdminCases() {
     </div>
   );
 }
-
