@@ -566,9 +566,68 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
     throw error;
   }
 
+  // Validate bio length if provided
+  const bio = lawyerProfile.basicInfo?.bio;
+  if (bio && bio.trim().length < 50) {
+    const error = new Error("Bio must be at least 50 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+  if (bio && bio.trim().length > 1000) {
+    const error = new Error("Bio must not exceed 1000 characters.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  // Validate totalYearsExperience if provided
+  const years = lawyerProfile.experience?.totalYearsExperience;
+  if (years !== undefined && years !== null && years !== "") {
+    const yearsNum = Number(years);
+    if (isNaN(yearsNum) || yearsNum < 0 || yearsNum > 60) {
+      const error = new Error("Years of experience must be a number between 0 and 60.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  // Validate contact details if provided
+  const contact = lawyerProfile.basicInfo?.contactInfo || {};
+  if (contact.phone) {
+    const phoneClean = contact.phone.toString().replace(/\s+/g, "");
+    if (!/^(?:\+94|0)?7[0-9]{8}$/.test(phoneClean)) {
+      const error = new Error("Invalid Sri Lankan phone number format.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  if (contact.location !== undefined && (!contact.location || contact.location.trim() === "")) {
+    const error = new Error("Location is required.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  if (contact.officeAddress && contact.officeAddress.trim().length < 10) {
+    const error = new Error("Office address must be at least 10 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+
   lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile, user);
 
-  await lawyerProfile.save();
+  try {
+    await lawyerProfile.save();
+  } catch (err) {
+    // Duplicate key on barRegistrationNumber
+    if (err.code === 11000 && err.keyPattern?.barRegistrationNumber) {
+      const friendlyError = new Error(
+        "This Bar Registration Number is already registered to another lawyer. Please check your number and try again."
+      );
+      friendlyError.statusCode = 409;
+      throw friendlyError;
+    }
+    throw err;
+  }
 
   return lawyerProfile;
 };
