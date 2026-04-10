@@ -14,7 +14,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { FilePlus, FileText, ExternalLink, Trash2, Edit2 } from "lucide-react";
+import { FilePlus, FileText, ExternalLink, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
@@ -99,67 +99,76 @@ function DocumentCard({ doc, onDelete, onEdit }) {
         </p>
       )}
 
-      {/* View link + Delete */}
+      {/* View link + actions (edit / delete) */}
       {doc.fileUrl && (
-        <div className="mt-auto flex items-center justify-between gap-2 text-[11px]">
+        <div className="mt-auto flex items-center gap-1">
           <a
             href={doc.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-primary underline underline-offset-2"
+            className="flex items-center gap-1 text-[11px] text-primary underline underline-offset-2"
           >
             <ExternalLink className="h-3 w-3" />
             View file
           </a>
 
-          {isPdf && onDelete && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-1 text-destructive hover:text-destructive/80"
-                  aria-label="Delete document"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete document?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. The document will be permanently
-                    removed from the library.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async (event) => {
-                      event.preventDefault();
-                      const ok = await onDelete(id);
-                      if (ok) {
-                        toast.success("Document deleted successfully");
-                      } else {
-                        toast.error("Failed to delete document");
-                      }
-                    }}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          <div className="flex gap-1 ml-auto">
+            {onEdit && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                aria-label="Edit document"
+                onClick={() => onEdit(doc)}
+              >
+                <Pencil className="h-3 w-3" />
+                <span className="sr-only">Edit document</span>
+              </Button>
+            )}
+
+            {isPdf && onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Delete document"
                   >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onEdit && onEdit(doc)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              aria-label="Edit document"
-            >
-              <Edit2 className="h-3 w-3" />
-            </button>
+                    <Trash2 className="h-3 w-3" />
+                    <span className="sr-only">Delete document</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete document?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. The document will be permanently
+                      removed from the library.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async (event) => {
+                        event.preventDefault();
+                        const ok = await onDelete(id);
+                        if (ok) {
+                          toast.success("Document deleted successfully");
+                        } else {
+                          toast.error("Failed to delete document");
+                        }
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       )}
