@@ -76,7 +76,9 @@ export default function AboutSection({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="professionalTitle">Professional title</FieldLabel>
+          <FieldLabel htmlFor="professionalTitle">
+            Professional title <span className="text-red-600 font-bold text-lg">*</span>
+          </FieldLabel>
           {isEditing ? (
             <Input
               id="professionalTitle"
@@ -92,7 +94,9 @@ export default function AboutSection({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="expertise">Expertise</FieldLabel>
+          <FieldLabel htmlFor="expertise">
+            Expertise <span className="text-red-600 font-bold text-lg">*</span>
+          </FieldLabel>
           {isEditing ? (
             <Select
               value={form.expertise}
@@ -116,7 +120,7 @@ export default function AboutSection({
 
         <Field>
           <FieldLabel htmlFor="barRegistrationNumber">
-            Bar registration number
+            Bar registration number <span className="text-red-600 font-bold text-lg">*</span>
           </FieldLabel>
           {isEditing ? (
             <div className="space-y-1">
@@ -142,7 +146,9 @@ export default function AboutSection({
         </Field>
 
         <Field className="md:col-span-2">
-          <FieldLabel htmlFor="memberships">Memberships</FieldLabel>
+          <FieldLabel htmlFor="memberships">
+            Memberships <span className="text-red-600 font-bold text-lg">*</span>
+          </FieldLabel>
           {isEditing ? (
             <Input
               id="memberships"
@@ -181,7 +187,9 @@ export default function AboutSection({
         </Field>
 
         <Field className="md:col-span-2">
-          <FieldLabel htmlFor="bio">Bio</FieldLabel>
+          <FieldLabel htmlFor="bio">
+            Bio <span className="text-red-600 font-bold text-lg">*</span>
+          </FieldLabel>
           {isEditing ? (
             <textarea
               id="bio"

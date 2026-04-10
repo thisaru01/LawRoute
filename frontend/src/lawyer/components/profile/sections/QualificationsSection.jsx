@@ -131,7 +131,7 @@ export default function QualificationsSection({
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500">
-              Education
+              Education <span className="text-red-600 font-bold text-lg">*</span>
             </h3>
             {isEditing && !isAddingEducation && (
               <Button

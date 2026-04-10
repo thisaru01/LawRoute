@@ -51,7 +51,7 @@ export default function ContactSection({
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor="phone">Phone</FieldLabel>
+          <FieldLabel htmlFor="phone">Phone <span className="text-red-600 font-bold text-lg">*</span></FieldLabel>
           {isEditing ? (
             <Input
               id="phone"
@@ -67,7 +67,7 @@ export default function ContactSection({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="location">Location</FieldLabel>
+          <FieldLabel htmlFor="location">Location <span className="text-red-600 font-bold text-lg">*</span></FieldLabel>
           {isEditing ? (
             <Input
               id="location"
@@ -83,7 +83,7 @@ export default function ContactSection({
         </Field>
 
         <Field className="md:col-span-2">
-          <FieldLabel htmlFor="officeAddress">Office address</FieldLabel>
+          <FieldLabel htmlFor="officeAddress">Office address <span className="text-red-600 font-bold text-lg">*</span></FieldLabel>
           {isEditing ? (
             <Input
               id="officeAddress"
