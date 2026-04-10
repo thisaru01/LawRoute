@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import Case from "../../models/case/caseModel.js";
 import CaseMeeting from "../../models/case/caseMeeting.js";
+import User from "../../models/userModel.js";
 
 function generateJitsiMeetingLink(caseId) {
   const randomPart = randomBytes(8).toString("hex");
@@ -63,6 +64,46 @@ export async function scheduleCaseMeeting({
     location: method === "physical" ? location : undefined,
     assignedUsers: [caseDoc.user, caseDoc.lawyer].filter(Boolean),
   });
+
+  // Notify the citizen that a new meeting has been scheduled for this case.
+  if (process.env.NODE_ENV !== "test") {
+    (async () => {
+      try {
+        const [{ caseMeetingScheduledCitizenTemplate }, { sendEmail }] =
+          await Promise.all([
+            import("../email/caseMeetingEmailTemplates.js"),
+            import("../email/emailService.js"),
+          ]);
+
+        const [citizen, lawyer] = await Promise.all([
+          caseDoc.user
+            ? User.findById(caseDoc.user).select("name email")
+            : null,
+          caseDoc.lawyer ? User.findById(caseDoc.lawyer).select("name") : null,
+        ]);
+
+        if (citizen?.email) {
+          const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+          const { subject, html } = caseMeetingScheduledCitizenTemplate({
+            citizenName: citizen.name || "there",
+            lawyerName: lawyer?.name || "your lawyer",
+            date,
+            time,
+            method,
+            location: method === "physical" ? location : undefined,
+            loginUrl,
+          });
+
+          await sendEmail({ to: citizen.email, subject, html });
+        }
+      } catch (err) {
+        console.error(
+          "[Email] Failed to send case meeting scheduled notification:",
+          err.message,
+        );
+      }
+    })();
+  }
 
   return meeting;
 }
@@ -187,7 +228,7 @@ export async function updateCaseMeeting({ meetingId, currentUserId, updates }) {
     throw error;
   }
 
-  const caseDoc = await Case.findById(meeting.caseId).select("lawyer");
+  const caseDoc = await Case.findById(meeting.caseId).select("lawyer user");
 
   if (!caseDoc) {
     const error = new Error("Case not found for this meeting");
@@ -249,6 +290,58 @@ export async function updateCaseMeeting({ meetingId, currentUserId, updates }) {
   });
 
   await meeting.save();
+
+  // Notify the citizen about meeting updates or cancellation.
+  if (process.env.NODE_ENV !== "test") {
+    (async () => {
+      try {
+        const [
+          {
+            caseMeetingUpdatedCitizenTemplate,
+            caseMeetingCancelledCitizenTemplate,
+          },
+          { sendEmail },
+        ] = await Promise.all([
+          import("../email/caseMeetingEmailTemplates.js"),
+          import("../email/emailService.js"),
+        ]);
+
+        const citizen = caseDoc.user
+          ? await User.findById(caseDoc.user).select("name email")
+          : null;
+        const lawyer = caseDoc.lawyer
+          ? await User.findById(caseDoc.lawyer).select("name")
+          : null;
+
+        if (citizen?.email) {
+          const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+          const templateFn =
+            meeting.status === "cancelled"
+              ? caseMeetingCancelledCitizenTemplate
+              : caseMeetingUpdatedCitizenTemplate;
+
+          const { subject, html } = templateFn({
+            citizenName: citizen.name || "there",
+            lawyerName: lawyer?.name || "your lawyer",
+            date: meeting.date,
+            time: meeting.time,
+            method: meeting.method,
+            location:
+              meeting.method === "physical" ? meeting.location : undefined,
+            loginUrl,
+          });
+
+          await sendEmail({ to: citizen.email, subject, html });
+        }
+      } catch (err) {
+        console.error(
+          "[Email] Failed to send case meeting update notification:",
+          err.message,
+        );
+      }
+    })();
+  }
 
   return meeting;
 }

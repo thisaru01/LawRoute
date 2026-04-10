@@ -170,13 +170,11 @@ describe("Case Routes", () => {
       jest.spyOn(Case, "findById").mockImplementation((id) => {
         if (id === "c1") {
           return {
-            select: jest
-              .fn()
-              .mockResolvedValue({
-                _id: "c1",
-                lawyer: TEST_LAWYER_ID,
-                status: "open",
-              }),
+            select: jest.fn().mockResolvedValue({
+              _id: "c1",
+              lawyer: TEST_LAWYER_ID,
+              status: "open",
+            }),
           };
         }
         return Promise.resolve(null);
@@ -191,7 +189,6 @@ describe("Case Routes", () => {
           date: "2026-04-09",
           time: "11:00",
           method: "online",
-          meetingLink: "https://zoom",
         });
 
       expect(res.status).toBe(201);
@@ -212,6 +209,46 @@ describe("Case Routes", () => {
         .send({});
 
       expect(res.status).toBe(400);
+    });
+  });
+
+  // GET /api/cases/:id/meetings
+  describe("GET /api/cases/:id/meetings", () => {
+    it("should get meetings for a case", async () => {
+      const fakeMeetings = [{ _id: "m1" }, { _id: "m2" }];
+
+      // mock user lookup
+      jest.spyOn(User, "findById").mockResolvedValue({
+        _id: TEST_USER_ID,
+        role: "user",
+      });
+
+      // mock Case.findById used by service to authorize access
+      jest.spyOn(Case, "findById").mockImplementation((id) => {
+        if (id === "r1") {
+          return {
+            select: jest.fn().mockResolvedValue({
+              _id: "r1",
+              user: TEST_USER_ID,
+              lawyer: TEST_LAWYER_ID,
+            }),
+          };
+        }
+        return Promise.resolve(null);
+      });
+
+      // mock CaseMeeting.find (used by service) to return meetings
+      jest.spyOn(CaseMeeting, "find").mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          sort: jest.fn().mockResolvedValue(fakeMeetings),
+        }),
+      });
+
+      const res = await request(app)
+        .get("/api/cases/r1/meetings")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
     });
   });
 });

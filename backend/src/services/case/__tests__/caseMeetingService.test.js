@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 
 import Case from "../../../models/case/caseModel.js";
 import CaseMeeting from "../../../models/case/caseMeeting.js";
+import User from "../../../models/userModel.js";
 import {
   scheduleCaseMeeting,
   getCaseMeetings,
@@ -128,6 +129,32 @@ describe("scheduleCaseMeeting", () => {
       expect.objectContaining({ caseId: "c1" }),
     );
     expect(res).toBe(fakeMeeting);
+  });
+
+  // ensures that the email notification path does not throw when NODE_ENV is test
+  it("does not attempt to send email in test environment", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "test";
+
+    const caseObj = { _id: "c1", status: "open", lawyer: "l1", user: "u1" };
+    jest
+      .spyOn(Case, "findById")
+      .mockReturnValue({ select: jest.fn().mockResolvedValue(caseObj) });
+
+    const fakeMeeting = { _id: "m1", caseId: "c1" };
+    jest.spyOn(CaseMeeting, "create").mockResolvedValue(fakeMeeting);
+
+    await expect(
+      scheduleCaseMeeting({
+        caseId: "c1",
+        scheduledBy: "l1",
+        date: "2026-04-08",
+        time: "10:00",
+        method: "online",
+      }),
+    ).resolves.toBe(fakeMeeting);
+
+    process.env.NODE_ENV = originalEnv;
   });
 });
 
@@ -336,5 +363,40 @@ describe("updateCaseMeeting", () => {
     expect(saveMock).toHaveBeenCalled();
     expect(res.date).toBe("2026-04-09");
     expect(res.time).toBe("11:00");
+  });
+
+  it("skips email sending logic in test environment when updating", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "test";
+
+    const saveMock = jest.fn().mockResolvedValue(true);
+    const meeting = {
+      caseId: "c1",
+      method: "online",
+      meetingLink: "link",
+      date: "old",
+      time: "old",
+      status: "scheduled",
+      save: saveMock,
+    };
+    jest.spyOn(CaseMeeting, "findById").mockResolvedValue(meeting);
+    jest.spyOn(Case, "findById").mockReturnValue({
+      select: jest.fn().mockResolvedValue({ lawyer: "l1", user: "u1" }),
+    });
+
+    const res = await updateCaseMeeting({
+      meetingId: "m1",
+      currentUserId: "l1",
+      updates: {
+        date: "2026-04-09",
+        time: "11:00",
+      },
+    });
+
+    expect(saveMock).toHaveBeenCalled();
+    expect(res.date).toBe("2026-04-09");
+    expect(res.time).toBe("11:00");
+
+    process.env.NODE_ENV = originalEnv;
   });
 });
