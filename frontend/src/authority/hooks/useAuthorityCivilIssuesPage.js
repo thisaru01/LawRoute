@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAssignedCivilIssues } from "@/api/services/civilIssueService";
 
-const allowedStatuses = new Set(["pending", "in_progress", "resolved"]);
+const allowedStatuses = new Set(["pending", "in_progress", "resolved", "rejected"]);
 
 export function useAuthorityCivilIssuesPage() {
   const { status } = useParams();
@@ -15,6 +15,7 @@ export function useAuthorityCivilIssuesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openIssues, setOpenIssues] = useState({});
+  const [districtFilter, setDistrictFilter] = useState("all");
 
   const fetchIssues = async () => {
     setLoading(true);
@@ -36,8 +37,12 @@ export function useAuthorityCivilIssuesPage() {
   }, []);
 
   const filteredIssues = useMemo(() => {
-    return issues.filter((issue) => issue.status === safeStatus);
-  }, [issues, safeStatus]);
+    return issues.filter((issue) => {
+      const matchesStatus = issue.status === safeStatus;
+      const matchesDistrict = districtFilter === "all" || issue.district === districtFilter;
+      return matchesStatus && matchesDistrict;
+    });
+  }, [issues, safeStatus, districtFilter]);
 
   const label = safeStatus
     .split("_")
@@ -48,10 +53,13 @@ export function useAuthorityCivilIssuesPage() {
     error,
     fetchIssues,
     filteredIssues,
+    rawIssues: issues,
     label,
     loading,
     openIssues,
     safeStatus,
     setOpenIssues,
+    districtFilter,
+    setDistrictFilter
   };
 }
