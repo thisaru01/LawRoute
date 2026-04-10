@@ -76,3 +76,10 @@ export const rejectCivilIssue = (issueId, note) => {
 export const getAdminCivilIssueStats = () => {
   return axios.get("/civil-issues/admin/stats");
 };
+
+/**
+ * Get status counts for the authority's assigned category.
+ */
+export const getAuthorityCivilIssueStats = () => {
+  return axios.get("/civil-issues/authority/stats");
+};

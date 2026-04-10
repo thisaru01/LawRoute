@@ -1,5 +1,35 @@
 import * as civilIssueService from "../../services/civilIssues/civilIssueService.js";
 import { cloudinary } from "../../config/cloudinary.js";
+import AuthorityProfile from "../../models/authorityProfileModel.js";
+
+/**
+ * GET /api/civil-issues/authority/stats
+ * Get status breakdown for the authority's assigned category.
+ */
+export const getAuthorityStats = async (req, res, next) => {
+  try {
+    const userId = req.user && req.user._id;
+
+    // Find the authority's profile to get their managed category
+    const authProfile = await AuthorityProfile.findOne({ user: userId });
+    
+    if (!authProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Authority profile not found.",
+      });
+    }
+
+    const stats = await civilIssueService.getCategoryStats(authProfile.managedCategory);
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // POST /api/civil-issues
 // Citizen submits a civil issue; system auto-routes it to the correct authority.

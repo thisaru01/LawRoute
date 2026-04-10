@@ -246,6 +246,27 @@ export async function getAdminCivilIssueStats() {
     }, {});
 }
 
+/**
+ * Get status-based summary statistics for a specific category.
+ * Used primarily for the Authority Dashboard.
+ */
+export async function getCategoryStats(category) {
+    if (!category) return null;
+    
+    const statuses = ["pending", "in_progress", "resolved", "rejected"];
+    
+    const countPromises = statuses.map(status => 
+        CivilIssue.countDocuments({ category, status })
+    );
+    
+    const counts = await Promise.all(countPromises);
+    
+    return statuses.reduce((acc, status, index) => {
+        acc[status] = counts[index];
+        return acc;
+    }, {});
+}
+
 // Get a single civil issue by ID, ensuring the requester is the reporter or assigned authority.
 export async function getIssueById({ issueId, currentUserId, currentUserRole }) {
     const issue = await CivilIssue.findById(issueId)

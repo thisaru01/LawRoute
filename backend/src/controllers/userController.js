@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import AuthorityProfile from "../models/authorityProfileModel.js";
 
 export const getMe = async (req, res, next) => {
   try {
@@ -20,6 +21,14 @@ export const getMe = async (req, res, next) => {
       });
     }
 
+    let extraData = {};
+    if (user.role === "authority") {
+      const authProfile = await AuthorityProfile.findOne({ user: user._id });
+      if (authProfile) {
+        extraData.managedCategory = authProfile.managedCategory;
+      }
+    }
+
     return res.status(200).json({
       success: true,
       user: {
@@ -28,6 +37,7 @@ export const getMe = async (req, res, next) => {
         email: user.email,
         role: user.role,
         profilePhoto: user.profilePhoto,
+        ...extraData,
       },
     });
   } catch (error) {

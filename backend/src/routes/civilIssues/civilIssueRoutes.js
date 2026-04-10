@@ -12,6 +12,7 @@ import {
   rejectCivilIssue,
   getPublicCivilIssues,
   getAdminCivilIssueStats,
+  getAuthorityStats,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -66,6 +67,13 @@ router.get(
   protect,
   authorizeRoles("admin"),
   getAdminCivilIssueStats,
+);
+
+router.get(
+  "/authority/stats",
+  protect,
+  authorizeRoles("authority"),
+  getAuthorityStats,
 );
 
 // Citizen or Authority: view a single civil issue by ID
