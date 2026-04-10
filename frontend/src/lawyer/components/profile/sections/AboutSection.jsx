@@ -61,7 +61,9 @@ export default function AboutSection({
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor="name">Full name</FieldLabel>
+          <FieldLabel htmlFor="name">
+            Full name <span className="text-red-600 font-bold text-lg">*</span>
+          </FieldLabel>
           {isEditing ? (
             <Input
               id="name"
@@ -203,7 +205,7 @@ export default function AboutSection({
 
         <Field className="md:col-span-2">
           <FieldLabel htmlFor="bio">
-            Bio <span className="text-red-600 font-bold text-lg">*</span>
+            Bio
           </FieldLabel>
           {isEditing ? (
             <textarea

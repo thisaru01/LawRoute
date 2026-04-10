@@ -63,8 +63,8 @@ export default function LawyerApprovalCard({
   const edu = lawyer?.educationQualifications || {};
   
   const checklist = [
+    { label: "Full Name", isCompleted: !!lawyer?.user?.name },
     { label: "Professional Title", isCompleted: !!basic.professionalTitle },
-    { label: "Personal Bio", isCompleted: !!basic.bio },
     { 
       label: "Contact Info", 
       isCompleted: basic.contactInfo && typeof basic.contactInfo === "object" && Object.keys(basic.contactInfo).length > 0 

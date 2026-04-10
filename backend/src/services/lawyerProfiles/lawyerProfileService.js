@@ -229,8 +229,8 @@ const applyLegacyPayload = (lawyerProfile, body) => {
   return applied;
 };
 
-// Compute whether minimum profile details are complete. 
-const computeProfileCompleted = (lawyerProfile) => {
+// Compute whether minimum profile details are complete.
+const computeProfileCompleted = (lawyerProfile, user) => {
   const basic = lawyerProfile.basicInfo || {};
   const education = lawyerProfile.educationQualifications || {};
   const hasPracticeAreas =
@@ -243,15 +243,16 @@ const computeProfileCompleted = (lawyerProfile) => {
   const hasEducation =
     Array.isArray(education.education) && education.education.length > 0;
   const hasMemberships =
-    Array.isArray(lawyerProfile.memberships) && lawyerProfile.memberships.length > 0;
+    Array.isArray(lawyerProfile.memberships) &&
+    lawyerProfile.memberships.length > 0;
   const hasValidExpertise =
     typeof lawyerProfile.expertise === "string" &&
     ALLOWED_EXPERTISE_VALUES.includes(lawyerProfile.expertise) &&
     lawyerProfile.expertise !== "general";
 
   return Boolean(
+    user?.name?.trim() &&
     basic.professionalTitle &&
-    basic.bio &&
     hasContactInfo &&
     hasPracticeAreas &&
     hasValidExpertise &&
@@ -558,7 +559,7 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
     throw error;
   }
 
-  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile);
+  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile, user);
 
   await lawyerProfile.save();
 
