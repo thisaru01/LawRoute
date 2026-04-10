@@ -1,4 +1,5 @@
 import React from "react";
+import { Star, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -26,6 +27,7 @@ export default function AboutSection({
   setIsEditing,
   onRetry,
   EXPERTISE_OPTIONS,
+  isVerified,
 }) {
   return (
       <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-gray-200/60">
@@ -33,9 +35,7 @@ export default function AboutSection({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border shadow-sm text-blue-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <Star className="w-5 h-5 text-amber-500 fill-amber-50" />
             </div>
             <div>
               <CardTitle className="text-xl">About & Identity</CardTitle>
@@ -52,19 +52,7 @@ export default function AboutSection({
               onClick={() => setIsEditing(true)}
               className="h-8 border-gray-200 hover:bg-gray-50"
             >
-              <svg
-                className="w-4 h-4 mr-1.5 text-gray-700"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <Pencil className="w-4 h-4 mr-1.5 text-gray-700" />
               Edit
             </Button>
           )}
@@ -131,12 +119,21 @@ export default function AboutSection({
             Bar registration number
           </FieldLabel>
           {isEditing ? (
-            <Input
-              id="barRegistrationNumber"
-              value={form.barRegistrationNumber}
-              onChange={onChange("barRegistrationNumber")}
-              placeholder="BRN-2020-0001"
-            />
+            <div className="space-y-1">
+              <Input
+                id="barRegistrationNumber"
+                value={form.barRegistrationNumber}
+                onChange={onChange("barRegistrationNumber")}
+                placeholder="BRN-2020-0001"
+                disabled={isVerified}
+                className={isVerified ? "bg-gray-50 text-muted-foreground border-dashed" : ""}
+              />
+              {isVerified && (
+                <FieldDescription className="text-blue-600 flex items-center gap-1">
+                   Verified credential. Contact support to change.
+                </FieldDescription>
+              )}
+            </div>
           ) : (
             <div className="text-sm text-muted-foreground">
               {form.barRegistrationNumber || "—"}
