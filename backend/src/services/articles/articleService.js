@@ -4,6 +4,8 @@ import User from "../../models/userModel.js";
 import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
 import { validateCreateArticleInput } from "../../validations/articles/articleValidation.js";
+import { sendEmail } from "../email/emailService.js";
+import { articleStatusUpdateTemplate } from "../email/articleEmailTemplates.js";
 
 const VALID_STATUSES = ["pending", "published", "rejected", "archived"];
 
@@ -234,6 +236,30 @@ export const updateArticleStatus = async ({ id, status, user }) => {
 
     article.status = status;
     await article.save();
+
+    // Notify the article author via Handlebars-formatted email when an admin publishes or rejects
+    try {
+      const author = await User.findById(authorId).select("name email").lean();
+      if (author?.email) {
+        const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const authorName = author.name || "there";
+        const articleTitle = article.title || "your article";
+
+        const { subject, html } = articleStatusUpdateTemplate({
+          authorName,
+          articleTitle,
+          status,
+          loginUrl,
+        });
+
+        // Fire-and-forget; log any failure but do not block the response
+        sendEmail({ to: author.email, subject, html }).catch((err) => {
+          console.error("[Email] Failed to send article status notification:", err.message);
+        });
+      }
+    } catch (err) {
+      console.error("[Email] Error preparing article status notification:", err.message);
+    }
     return { deleted: false, article };
   }
 
