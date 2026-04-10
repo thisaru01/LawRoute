@@ -132,6 +132,11 @@ export default function AboutSection({
                 disabled={isVerified}
                 className={isVerified ? "bg-gray-50 text-muted-foreground border-dashed" : ""}
               />
+              {!isVerified && (
+                <FieldDescription>
+                  Format: BRN-YYYY-NNNN (e.g., BRN-2024-0001)
+                </FieldDescription>
+              )}
               {isVerified && (
                 <FieldDescription className="text-blue-600 flex items-center gap-1">
                    Verified credential. Contact support to change.
