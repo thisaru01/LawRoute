@@ -46,6 +46,7 @@ export default function IssueCard({
   categoryLabels,
   showContactNumber = false,
   reporterLabel = "Anonymous Citizen",
+  footerContent = null,
 }) {
   const displayTitle =
     typeof issue.subject === "string" && issue.subject.trim().length > 0
@@ -128,6 +129,11 @@ export default function IssueCard({
                 <DetailRow label="Contact number" value={issue.contactNumber} icon={Phone} />
               ) : null}
             </div>
+            {footerContent ? (
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                {footerContent}
+              </div>
+            ) : null}
           </CardContent>
         </CollapsibleContent>
       </Card>

@@ -126,9 +126,21 @@ const normalizeIssuePayload = ({
 
 // Create a new civil issue, auto-routing to the correct authority by category.
 export async function createIssue({ reporterId, category, subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber, attachments = [], isPublic = false }) {
-    const authorityProfile = await AuthorityProfile.findOne({
-        managedCategory: category,
-    });
+    let assignedTo;
+
+    if (category !== "other") {
+        const authorityProfile = await AuthorityProfile.findOne({
+            managedCategory: category,
+        });
+
+        if (!authorityProfile) {
+            const error = new Error("No responsible authority found for this category.");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        assignedTo = authorityProfile.user;
+    }
 
     const structuredIssue = normalizeIssuePayload({
         exactLocation,
@@ -145,12 +157,6 @@ export async function createIssue({ reporterId, category, subject, district, exa
         postalAreaOrZip: structuredIssue.postalAreaOrZip,
     });
 
-    if (!authorityProfile) {
-        const error = new Error("No responsible authority found for this category.");
-        error.statusCode = 404;
-        throw error;
-    }
-
     const issue = await CivilIssue.create({
         reporterId,
         category,
@@ -159,7 +165,7 @@ export async function createIssue({ reporterId, category, subject, district, exa
         ...structuredIssue,
         attachments,
         isPublic,
-        assignedTo: authorityProfile.user,
+        assignedTo,
     });
 
     // Send acknowledgement email to the citizen on successful submission.
@@ -203,8 +209,23 @@ export async function getIssuesAssignedTo(userId, district) {
     return issues;
 }
 
+// Get all civil issues in the admin triage queue (shared "other" category issues).
+export async function getAdminCivilIssues(status) {
+    const query = { category: "other" };
+
+    if (status) {
+        query.status = status;
+    }
+
+    const issues = await CivilIssue.find(query)
+        .populate("reporterId", "name email")
+        .sort({ createdAt: -1 });
+
+    return issues;
+}
+
 // Get a single civil issue by ID, ensuring the requester is the reporter or assigned authority.
-export async function getIssueById({ issueId, currentUserId }) {
+export async function getIssueById({ issueId, currentUserId, currentUserRole }) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email")
         .populate("assignedTo", "name email");
@@ -220,8 +241,10 @@ export async function getIssueById({ issueId, currentUserId }) {
     const isAssigned =
         issue.assignedTo &&
         issue.assignedTo._id.toString() === currentUserId.toString();
+    const isAdminForOtherIssue =
+        currentUserRole === "admin" && issue.category === "other";
 
-    if (!isReporter && !isAssigned) {
+    if (!isReporter && !isAssigned && !isAdminForOtherIssue) {
         const error = new Error("Access denied.");
         error.statusCode = 403;
         throw error;
@@ -231,7 +254,19 @@ export async function getIssueById({ issueId, currentUserId }) {
 }
 
 // Update a civil issue (reporter only, pending status only).
-export async function updateIssue({ issueId, reporterId, subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber }) {
+export async function updateIssue({
+    issueId,
+    reporterId,
+    subject,
+    district,
+    exactLocation,
+    postalAreaOrZip,
+    whatHappened,
+    whenItHappened,
+    impactOnPeople,
+    contactNumber,
+    isPublic,
+}) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email");
 
@@ -273,6 +308,7 @@ export async function updateIssue({ issueId, reporterId, subject, district, exac
     if (whenItHappened !== undefined) issue.whenItHappened = parseDateOnlyToUtcDate(whenItHappened);
     if (impactOnPeople !== undefined) issue.impactOnPeople = normalizeText(impactOnPeople);
     if (contactNumber !== undefined) issue.contactNumber = normalizeText(contactNumber);
+    if (isPublic !== undefined) issue.isPublic = isPublic;
 
     await issue.save();
 
@@ -317,7 +353,14 @@ export async function deleteIssue({ issueId, reporterId }) {
 }
 
 // Update the status of a civil issue (assigned authority only).
-export async function updateIssueStatus({ issueId, authorityId, status }) {
+export async function updateIssueStatus({
+    issueId,
+    authorityId,
+    actorRole,
+    status,
+    note,
+    resolutionSummary,
+}) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email");
 
@@ -327,10 +370,13 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
         throw error;
     }
 
-    if (
-        !issue.assignedTo ||
-        issue.assignedTo.toString() !== authorityId.toString()
-    ) {
+    const isAssignedAuthority =
+        issue.assignedTo &&
+        issue.assignedTo.toString() === authorityId.toString();
+    const isAdminForOtherIssue =
+        actorRole === "admin" && issue.category === "other";
+
+    if (!isAssignedAuthority && !isAdminForOtherIssue) {
         const error = new Error(
             "Access denied. You are not assigned to this issue.",
         );
@@ -338,8 +384,30 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
         throw error;
     }
 
+    if (issue.status === status) {
+        const error = new Error("Issue is already in the requested status.");
+        error.statusCode = 400;
+        throw error;
+    }
+
     const oldStatus = issue.status;
+    const normalizedNote = normalizeText(note) ?? "";
+    const normalizedResolutionSummary = normalizeText(resolutionSummary) ?? "";
+
     issue.status = status;
+    if (status === "resolved") {
+        issue.resolutionSummary = normalizedResolutionSummary;
+    } else {
+        issue.resolutionSummary = "";
+    }
+    issue.statusHistory.push({
+        fromStatus: oldStatus,
+        toStatus: status,
+        note: normalizedNote,
+        resolutionSummary: normalizedResolutionSummary,
+        updatedBy: authorityId,
+        updatedAt: new Date(),
+    });
     await issue.save();
 
     // Non-blocking email notification — a mail failure must never fail the API response.
@@ -349,10 +417,74 @@ export async function updateIssueStatus({ issueId, authorityId, status }) {
             district: issue.district,
             oldStatus,
             newStatus: status,
+            note: normalizedNote,
+            resolutionSummary: normalizedResolutionSummary,
         });
 
         sendEmail({ to: issue.reporterId.email, subject, html }).catch((err) =>
             console.error("[Email] Failed to send status update email:", err.message)
+        );
+    }
+
+    return issue;
+}
+
+// Reject a civil issue (assigned authority for normal categories, admin for "other").
+export async function rejectIssue({ issueId, actorId, actorRole, note }) {
+    const issue = await CivilIssue.findById(issueId)
+        .populate("reporterId", "name email");
+
+    if (!issue) {
+        const error = new Error("Civil issue not found.");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const isAssignedAuthority =
+        issue.assignedTo &&
+        issue.assignedTo.toString() === actorId.toString();
+    const isAdminForOtherIssue =
+        actorRole === "admin" && issue.category === "other";
+
+    if (!isAssignedAuthority && !isAdminForOtherIssue) {
+        const error = new Error("Access denied. You cannot reject this issue.");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    if (issue.status === "rejected") {
+        const error = new Error("Issue is already rejected.");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const oldStatus = issue.status;
+    const normalizedNote = normalizeText(note) ?? "";
+
+    issue.status = "rejected";
+    issue.resolutionSummary = "";
+    issue.statusHistory.push({
+        fromStatus: oldStatus,
+        toStatus: "rejected",
+        note: normalizedNote,
+        resolutionSummary: "",
+        updatedBy: actorId,
+        updatedAt: new Date(),
+    });
+    await issue.save();
+
+    if (issue.reporterId?.email) {
+        const { subject, html } = statusUpdateTemplate({
+            category: issue.category,
+            district: issue.district,
+            oldStatus,
+            newStatus: "rejected",
+            note: normalizedNote,
+            resolutionSummary: "",
+        });
+
+        sendEmail({ to: issue.reporterId.email, subject, html }).catch((err) =>
+            console.error("[Email] Failed to send rejection email:", err.message)
         );
     }
 

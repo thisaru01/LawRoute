@@ -1,29 +1,33 @@
+import { useState } from "react";
 import { CheckCircle2, Clock3, LoaderCircle, RefreshCw } from "lucide-react";
 import { CIVIL_ISSUE_CATEGORIES } from "@/constants/civilIssueConstants.js";
 import { Badge } from "@/components/ui/badge";
 import CitizenCivilIssueCard from "@/citizen/components/civil-issues/CitizenCivilIssueCard.jsx";
 import { useCitizenCivilIssuesPage } from "@/citizen/hooks/useCitizenCivilIssuesPage.js";
+import { deleteCivilIssue } from "@/api/services/civilIssueService";
 
 const CATEGORY_LABELS = Object.fromEntries(
   CIVIL_ISSUE_CATEGORIES.map(({ value, label }) => [value, label]),
 );
 
 const STATUS_BADGE_STYLES = {
-  Pending: {
+  pending: {
     icon: Clock3,
     className: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
   },
-  "In Progress": {
+  in_progress: {
     icon: LoaderCircle,
     className: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-50",
   },
-  Resolved: {
+  resolved: {
     icon: CheckCircle2,
     className: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
   },
 };
 
 export default function CitizenCivilIssues() {
+  const [deletingIssueId, setDeletingIssueId] = useState("");
+  const [actionError, setActionError] = useState("");
   const {
     error,
     fetchIssues,
@@ -31,11 +35,30 @@ export default function CitizenCivilIssues() {
     label,
     loading,
     openIssues,
+    safeStatus,
     setOpenIssues,
   } = useCitizenCivilIssuesPage();
 
-  const statusBadge = STATUS_BADGE_STYLES[label] || STATUS_BADGE_STYLES.Pending;
+  const statusBadge = STATUS_BADGE_STYLES[safeStatus] || STATUS_BADGE_STYLES.pending;
   const StatusIcon = statusBadge.icon;
+
+  const handleDeleteIssue = async (issue) => {
+    if (!issue?._id) {
+      return;
+    }
+
+    setActionError("");
+    setDeletingIssueId(issue._id);
+
+    try {
+      await deleteCivilIssue(issue._id);
+      await fetchIssues();
+    } catch (err) {
+      setActionError(err?.message || "Failed to delete this issue. Please try again.");
+    } finally {
+      setDeletingIssueId("");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -68,6 +91,12 @@ export default function CitizenCivilIssues() {
         </div>
       )}
 
+      {actionError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {actionError}
+        </div>
+      ) : null}
+
       {loading ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
           Loading your civil issues...
@@ -85,6 +114,8 @@ export default function CitizenCivilIssues() {
                 onToggle={(nextOpen) =>
                   setOpenIssues((prev) => ({ ...prev, [issue._id]: nextOpen }))
                 }
+                onDelete={handleDeleteIssue}
+                deleting={deletingIssueId === issue._id}
                 categoryLabels={CATEGORY_LABELS}
               />
             );
