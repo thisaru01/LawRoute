@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { createPost, updatePost } from "@/api/services/socialService";
 
 const initialFormState = {
@@ -88,6 +89,7 @@ export function usePostForm(refreshPosts, setPosts) {
           await refreshPosts({ silent: true });
         }
         if (successCallback) successCallback("Post updated successfully.");
+        toast.success("Post updated successfully.");
       } else {
         const response = await createPost(payload);
         const createdPost = response?.data?.post;
@@ -98,6 +100,7 @@ export function usePostForm(refreshPosts, setPosts) {
           await refreshPosts({ silent: true });
         }
         if (successCallback) successCallback("Post created successfully.");
+        toast.success("Post created successfully.");
       }
 
       setForm(initialFormState);
@@ -107,6 +110,7 @@ export function usePostForm(refreshPosts, setPosts) {
       return true;
     } catch (error) {
       setFormError(error?.response?.data?.message || error?.message || "Unable to save your post.");
+      toast.error(error?.response?.data?.message || error?.message || "Failed to save post.");
       return false;
     } finally {
       setIsCreating(false);
