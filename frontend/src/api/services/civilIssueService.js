@@ -16,6 +16,13 @@ export const getMyCivilIssues = () => {
 };
 
 /**
+ * Get a single civil issue.
+ */
+export const getCivilIssueById = (issueId) => {
+  return axios.get(`/civil-issues/${issueId}`);
+};
+
+/**
  * Get all publicly shared civil issues (No auth required).
  */
 export const getPublicCivilIssues = (params = {}) => {
@@ -27,4 +34,18 @@ export const getPublicCivilIssues = (params = {}) => {
  */
 export const getAssignedCivilIssues = () => {
   return axios.get("/civil-issues/assigned");
+};
+
+/**
+ * Update an existing civil issue.
+ */
+export const updateCivilIssue = (issueId, payload) => {
+  return axios.patch(`/civil-issues/${issueId}`, payload);
+};
+
+/**
+ * Delete an existing civil issue.
+ */
+export const deleteCivilIssue = (issueId) => {
+  return axios.delete(`/civil-issues/${issueId}`);
 };

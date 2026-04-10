@@ -5,6 +5,8 @@ export default function CivilIssueSubmitActions({
   busy,
   disableSubmit,
   onCancel,
+  submitLabel = "Complete Submission",
+  busyLabel = "Submitting...",
 }) {
   return (
     <div className="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:gap-3 sm:pt-6">
@@ -16,10 +18,10 @@ export default function CivilIssueSubmitActions({
         {busy ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Submitting...
+            {busyLabel}
           </>
         ) : (
-          "Complete Submission"
+          submitLabel
         )}
       </Button>
       <Button

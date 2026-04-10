@@ -79,10 +79,17 @@ export function issueUpdatedCitizenTemplate({ category, district, exactLocation,
 /**
  * Builds the email sent to the citizen when an authority updates their issue's status.
  */
-export function statusUpdateTemplate({ category, district, oldStatus, newStatus }) {
+export function statusUpdateTemplate({
+  category,
+  district,
+  oldStatus,
+  newStatus,
+  note,
+  resolutionSummary,
+}) {
   const statusColor = {
     pending: "#f59e0b",
-    "in-progress": "#3b82f6",
+    in_progress: "#3b82f6",
     resolved: "#22c55e",
     rejected: "#ef4444",
   };
@@ -94,6 +101,8 @@ export function statusUpdateTemplate({ category, district, oldStatus, newStatus 
     district,
     oldStatus,
     newStatus,
+    note,
+    resolutionSummary,
     color,
   });
 

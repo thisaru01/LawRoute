@@ -64,6 +64,47 @@ const civilIssueSchema = new Schema(
       enum: CIVIL_ISSUE_STATUSES,
       default: "pending",
     },
+    resolutionSummary: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    statusHistory: {
+      type: [
+        {
+          fromStatus: {
+            type: String,
+            enum: CIVIL_ISSUE_STATUSES,
+            required: true,
+          },
+          toStatus: {
+            type: String,
+            enum: CIVIL_ISSUE_STATUSES,
+            required: true,
+          },
+          note: {
+            type: String,
+            trim: true,
+            default: "",
+          },
+          resolutionSummary: {
+            type: String,
+            trim: true,
+            default: "",
+          },
+          updatedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+          },
+          updatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
+    },
     attachments: {
       type: [String],
       default: [],
