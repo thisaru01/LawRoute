@@ -27,6 +27,7 @@ export default function AboutSection({
   setIsEditing,
   onRetry,
   EXPERTISE_OPTIONS,
+  MEMBERSHIP_OPTIONS,
   isVerified,
 }) {
   return (
@@ -152,22 +153,31 @@ export default function AboutSection({
 
         <Field className="md:col-span-2">
           <FieldLabel htmlFor="memberships">
-            Memberships <span className="text-red-600 font-bold text-lg">*</span>
+            Membership <span className="text-red-600 font-bold text-lg">*</span>
           </FieldLabel>
           {isEditing ? (
-            <Input
-              id="memberships"
+            <Select
               value={form.memberships}
-              onChange={onChange("memberships")}
-              placeholder="Bar Association, IBA"
-            />
+              onValueChange={(value) => onChange("memberships")({ target: { value } })}
+            >
+              <SelectTrigger className="w-full" id="memberships">
+                <SelectValue placeholder="Select professional membership" />
+              </SelectTrigger>
+              <SelectContent>
+                {MEMBERSHIP_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <div className="text-sm text-muted-foreground">
               {form.memberships || "—"}
             </div>
           )}
           {isEditing ? (
-            <FieldDescription>Comma-separated values.</FieldDescription>
+            <FieldDescription>Choose your primary professional membership.</FieldDescription>
           ) : null}
         </Field>
 
