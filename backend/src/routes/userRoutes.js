@@ -3,6 +3,7 @@ import {
   getMe,
   updateMe,
   updateProfilePhoto,
+  changePassword,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import upload from "../middleware/uploadMiddleware.js";
@@ -22,5 +23,8 @@ router.put(
   upload.single("profilePhoto"),
   updateProfilePhoto,
 );
+
+// Change password for logged-in user
+router.put("/me/password", protect, changePassword);
 
 export default router;

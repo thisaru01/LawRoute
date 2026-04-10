@@ -12,7 +12,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth/useAuth";
-import { updateMe, updateProfilePhoto } from "@/api/services/userService";
+import {
+  updateMe,
+  updateProfilePhoto,
+  changePassword,
+} from "@/api/services/userService";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
@@ -40,6 +44,12 @@ export default function AdminProfile() {
   }, [user?.name]);
 
   const displayPhoto = previewUrl || user?.profilePhoto || "";
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   async function performNameUpdate() {
     if (!user || !name || name.trim() === user.name) return;
@@ -93,7 +103,6 @@ export default function AdminProfile() {
       try {
         URL.revokeObjectURL(previewUrl);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn("Failed to revoke object URL", err);
       }
     }
@@ -136,8 +145,101 @@ export default function AdminProfile() {
                 <AvatarFallback>{initials || "U"}</AvatarFallback>
               </Avatar>
               <div className="space-y-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change password</CardTitle>
+                    <CardDescription>
+                      Update your account password.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!currentPassword || !newPassword) return;
+                        if (newPassword.length < 8) {
+                          toast.error(
+                            "New password must be at least 8 characters",
+                          );
+                          return;
+                        }
+                        if (newPassword !== confirmNewPassword) {
+                          toast.error("New passwords do not match");
+                          return;
+                        }
+
+                        setIsChangingPassword(true);
+                        try {
+                          await changePassword({
+                            currentPassword,
+                            newPassword,
+                          });
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setConfirmNewPassword("");
+                          toast.success("Password changed");
+                        } catch (err) {
+                          toast.error(
+                            err?.message || "Failed to change password",
+                          );
+                        } finally {
+                          setIsChangingPassword(false);
+                        }
+                      }}
+                      className="space-y-4 max-w-md"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="currentPassword">
+                          Current password
+                        </Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">New password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmNewPassword">
+                          Confirm new password
+                        </Label>
+                        <Input
+                          id="confirmNewPassword"
+                          type="password"
+                          value={confirmNewPassword}
+                          onChange={(e) =>
+                            setConfirmNewPassword(e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={isChangingPassword}
+                        >
+                          {isChangingPassword ? "Saving..." : "Change password"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
                 <div className="text-sm font-medium">{user.name}</div>
-                <div className="text-xs text-muted-foreground">{user.email}</div>
+                <div className="text-xs text-muted-foreground">
+                  {user.email}
+                </div>
               </div>
             </div>
 
@@ -180,7 +282,10 @@ export default function AdminProfile() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-md">
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="space-y-4 max-w-md"
+            >
               <div className="space-y-2">
                 <Label htmlFor="name">Full name</Label>
                 <Input
@@ -204,7 +309,10 @@ export default function AdminProfile() {
                       type="button"
                       size="sm"
                       disabled={
-                        isSavingName || !name || name.trim() === "" || name.trim() === user.name
+                        isSavingName ||
+                        !name ||
+                        name.trim() === "" ||
+                        name.trim() === user.name
                       }
                     >
                       {isSavingName ? "Saving..." : "Save changes"}
