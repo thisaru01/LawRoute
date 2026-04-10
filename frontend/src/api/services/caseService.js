@@ -4,6 +4,14 @@ export const getMyCases = () => {
   return axios.get("/cases/my");
 };
 
+export const getAllCasesForAdmin = (status) => {
+  const params = {};
+  if (status) {
+    params.status = status;
+  }
+  return axios.get("/cases/admin", { params });
+};
+
 export const closeCase = (id) => {
   return axios.patch(`/cases/${id}/close`);
 };
@@ -18,6 +26,14 @@ export const getCaseMeetings = (caseId) => {
 
 export const scheduleCaseMeeting = (caseId, payload) => {
   return axios.post(`/cases/${caseId}/meetings`, payload);
+};
+
+export const joinCaseMeeting = (meetingId) => {
+  return axios.get(`/cases/meetings/${meetingId}/join`);
+};
+
+export const updateCaseMeeting = (meetingId, payload) => {
+  return axios.patch(`/cases/meetings/${meetingId}`, payload);
 };
 
 export const getCaseDocuments = (caseId) => {

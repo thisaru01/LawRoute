@@ -11,7 +11,7 @@ export const scheduleCaseMeeting = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const { date, time, method, meetingLink, location } = req.body;
+    const { date, time, method, location } = req.body;
 
     if (!date || !time || !method) {
       return res.status(400).json({
@@ -24,13 +24,6 @@ export const scheduleCaseMeeting = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "method must be either 'online' or 'physical'",
-      });
-    }
-
-    if (method === "online" && !meetingLink) {
-      return res.status(400).json({
-        success: false,
-        message: "meetingLink is required for online meetings",
       });
     }
 
@@ -47,7 +40,6 @@ export const scheduleCaseMeeting = async (req, res, next) => {
       date,
       time,
       method,
-      meetingLink,
       location,
     });
 
@@ -116,6 +108,32 @@ export const updateCaseMeeting = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: meeting,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Get a protected join link for an online meeting (assigned users only)
+export const joinCaseMeeting = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { id } = req.params;
+
+    const meetingLink = await caseMeetingService.getJoinableCaseMeetingLink({
+      meetingId: id,
+      currentUserId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: { meetingLink },
     });
   } catch (error) {
     return next(error);

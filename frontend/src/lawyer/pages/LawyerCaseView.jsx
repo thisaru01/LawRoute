@@ -41,6 +41,7 @@ export default function LawyerCaseDetails() {
       caseViewData.scheduleForm,
       caseViewData.handleScheduleChange,
       caseViewData.handleScheduleConfirm,
+      caseViewData.handleJoinMeeting,
       caseViewData.documents,
       caseViewData.documentsLoading,
       caseViewData.documentsError,

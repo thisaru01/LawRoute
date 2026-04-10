@@ -24,6 +24,29 @@ export const getMyCases = async (req, res, next) => {
   }
 };
 
+// Admin: get all cases with optional status filter
+export const getAllCasesForAdmin = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { status } = req.query;
+
+    const cases = await caseService.getAllCasesForAdmin({ status });
+
+    return res.status(200).json({
+      success: true,
+      data: cases,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // Get case details by id
 export const getCaseById = async (req, res, next) => {
   try {
