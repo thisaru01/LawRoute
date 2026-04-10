@@ -80,6 +80,40 @@ export const getDocumentById = async ({ id }) => {
   return doc;
 };
 
+export const updateDocument = async ({ id, title, description, user }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid document id");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!user || !user._id) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  if (user.role !== "admin") {
+    const err = new Error("Only admins can update documents");
+    err.status = 403;
+    throw err;
+  }
+
+  const doc = await Document.findById(cleanId);
+  if (!doc) {
+    const err = new Error("Document not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (title !== undefined) doc.title = title;
+  if (description !== undefined) doc.description = description;
+
+  await doc.save();
+  return doc;
+};
 export const deleteDocument = async ({ id, user }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
@@ -124,5 +158,6 @@ export default {
   createDocument,
   getAllDocuments,
   getDocumentById,
+  updateDocument,
   deleteDocument,
 };

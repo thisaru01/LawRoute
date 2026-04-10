@@ -136,3 +136,18 @@ export const deleteDocument = async (req, res, next) => {
       .json({ success: false, message: err.message || "Server error" });
   }
 };
+
+// Admin: update document title/description
+export const updateDocument = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+    const document = await documentService.updateDocument({ id, title, description, user: req.user });
+    return res.status(200).json({ success: true, document });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};

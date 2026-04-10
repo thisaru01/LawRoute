@@ -14,13 +14,14 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { FilePlus, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { FilePlus, FileText, ExternalLink, Trash2, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
 import AdminUploadDocumentContent from "@/admin/components/documents/AdminUploadDocumentContent";
+import EditDocumentDialog from "@/lawyer/components/cases/EditDocumentDialog";
 
-function DocumentCard({ doc, onDelete }) {
+function DocumentCard({ doc, onDelete, onEdit }) {
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
   const extension =
     doc.fileType?.toUpperCase() ||
@@ -150,6 +151,16 @@ function DocumentCard({ doc, onDelete }) {
               </AlertDialogContent>
             </AlertDialog>
           )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onEdit && onEdit(doc)}
+              className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              aria-label="Edit document"
+            >
+              <Edit2 className="h-3 w-3" />
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -175,11 +186,31 @@ export default function AdminDocuments() {
     loading,
     error,
     isUploading,
+    isUpdating,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleDelete,
+    handleUpdateDocument,
   } = useAdminDocuments();
+
+  const [editingDoc, setEditingDoc] = React.useState(null);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+
+  const openEdit = (doc) => {
+    setEditingDoc(doc);
+    setIsEditOpen(true);
+  };
+
+  const closeEdit = () => {
+    setIsEditOpen(false);
+    setEditingDoc(null);
+  };
+
+  const onConfirmEdit = async (docId, title, description) => {
+    const ok = await handleUpdateDocument(docId, title, description);
+    return ok;
+  };
 
   return (
     <AlertDialog>
@@ -240,6 +271,7 @@ export default function AdminDocuments() {
                         key={doc._id || doc.id}
                         doc={doc}
                         onDelete={handleDelete}
+                        onEdit={openEdit}
                       />
                     ))}
                   </div>
@@ -255,6 +287,13 @@ export default function AdminDocuments() {
         onSelectFile={handleSelectFile}
         onConfirm={handleUploadDocumentConfirm}
         isUploading={isUploading}
+      />
+      <EditDocumentDialog
+        doc={editingDoc}
+        isOpen={isEditOpen}
+        onClose={closeEdit}
+        onConfirm={onConfirmEdit}
+        isUpdating={isUpdating}
       />
     </AlertDialog>
   );
