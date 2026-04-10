@@ -47,6 +47,31 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     };
   }, [caseId]);
 
+  const refreshMeetings = useCallback(async () => {
+    if (!caseId) return;
+    setMeetingsLoading(true);
+    try {
+      const res = await getCaseMeetings(caseId);
+      const list = res?.data?.data;
+      setMeetings(Array.isArray(list) ? list : []);
+      setMeetingsError(null);
+    } catch (err) {
+      setMeetingsError(err);
+      setMeetings([]);
+    } finally {
+      setMeetingsLoading(false);
+    }
+  }, [caseId]);
+
+  // Listen for global refresh events (used by dialog after cancel)
+  useEffect(() => {
+    const handler = () => {
+      refreshMeetings();
+    };
+    window.addEventListener("meetings:refresh", handler);
+    return () => window.removeEventListener("meetings:refresh", handler);
+  }, [refreshMeetings]);
+
   const handleScheduleChange = useCallback((field, value) => {
     setScheduleForm((prev) => ({ ...prev, [field]: value }));
   }, []);
@@ -56,7 +81,51 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     if (!caseId) return;
     setIsScheduling(true);
     try {
-      await scheduleCaseMeeting(caseId, scheduleForm);
+      // Frontend validation: match backend rules and prevent scheduling past times
+      if (!scheduleForm.date || typeof scheduleForm.date !== "string") {
+        throw new Error("Date is required");
+      }
+
+      if (!scheduleForm.time || typeof scheduleForm.time !== "string") {
+        throw new Error("Time is required");
+      }
+
+      if (
+        !scheduleForm.method ||
+        !["online", "physical"].includes(scheduleForm.method)
+      ) {
+        throw new Error("Method must be either 'online' or 'physical'");
+      }
+
+      if (
+        scheduleForm.method === "physical" &&
+        (!scheduleForm.location || !scheduleForm.location.trim())
+      ) {
+        throw new Error("Location is required for physical meetings");
+      }
+
+      // Prevent scheduling in the past: combine date + time and compare with now
+      const meetingDate = new Date(`${scheduleForm.date}T${scheduleForm.time}`);
+      if (Number.isNaN(meetingDate.getTime())) {
+        throw new Error("Invalid date or time");
+      }
+
+      const now = new Date();
+      if (meetingDate.getTime() <= now.getTime()) {
+        throw new Error("Cannot schedule meetings in the past");
+      }
+
+      const payload = {
+        date: scheduleForm.date,
+        time: scheduleForm.time,
+        method: scheduleForm.method,
+      };
+
+      if (scheduleForm.method === "physical") {
+        payload.location = scheduleForm.location;
+      }
+
+      await scheduleCaseMeeting(caseId, payload);
       setScheduleForm(INITIAL_SCHEDULE_FORM);
       const res = await getCaseMeetings(caseId);
       const list = res?.data?.data;
@@ -73,6 +142,24 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     }
   }, [caseId, scheduleForm, canScheduleMeetings]);
 
+  const handleJoinMeeting = useCallback(async (meetingId) => {
+    try {
+      const { joinCaseMeeting } = await import("@/api/services/caseService");
+      const res = await joinCaseMeeting(meetingId);
+      const link = res?.data?.data?.meetingLink;
+      if (!link) {
+        throw new Error("Meeting link not available");
+      }
+      window.open(link, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      const message =
+        err?.message ||
+        err?.original?.response?.data?.message ||
+        "Failed to join meeting";
+      toast.error(message);
+    }
+  }, []);
+
   return {
     meetings,
     meetingsLoading,
@@ -81,5 +168,7 @@ export function useCaseMeetings(caseId, canScheduleMeetings) {
     scheduleForm,
     handleScheduleChange,
     handleScheduleConfirm,
+    handleJoinMeeting,
+    refreshMeetings,
   };
 }
