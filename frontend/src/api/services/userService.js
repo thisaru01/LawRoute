@@ -14,3 +14,7 @@ export const updateProfilePhoto = (file) => {
 
   return axios.put("/users/me/profile-photo", formData);
 };
+
+export const changePassword = ({ currentPassword, newPassword }) => {
+  return axios.put("/users/me/password", { currentPassword, newPassword });
+};
