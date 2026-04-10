@@ -36,6 +36,7 @@ export default function ExpertiseSection({
   onSave,
   setIsEditing,
   onRetry,
+  LANGUAGE_OPTIONS,
 }) {
   const [isAddingLanguage, setIsAddingLanguage] = useState(false);
   const [editingLanguageIndex, setEditingLanguageIndex] = useState(-1);
@@ -58,6 +59,26 @@ export default function ExpertiseSection({
     responsibilities: "",
     majorCasesSummary: "",
   });
+
+  // Date Validation Logic
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isValidStartDate = 
+    !workHistoryForm.startDate || workHistoryForm.startDate < todayStr;
+  
+  const isValidEndDate = 
+    !workHistoryForm.endDate || 
+    !workHistoryForm.startDate || 
+    workHistoryForm.endDate >= workHistoryForm.startDate;
+
+  const startDateError = workHistoryForm.startDate && !isValidStartDate 
+    ? "Start date must be in the past." 
+    : null;
+    
+  const endDateError = workHistoryForm.endDate && workHistoryForm.startDate && !isValidEndDate
+    ? "End date cannot be before the start date."
+    : null;
+
+  const hasHistoryDateError = !!startDateError || !!endDateError;
 
   const handleAddWorkHistory = () => {
     if (!workHistoryForm.lawFirm || !workHistoryForm.position) return;
@@ -190,19 +211,27 @@ export default function ExpertiseSection({
             ))}
             {isAddingLanguage && (
               <div className="flex items-center gap-2">
-                <Input
-                  size="sm"
-                  className="h-8 w-32"
-                  placeholder="e.g., Sinhala"
+                <Select
                   value={languageForm}
-                  onChange={(e) => setLanguageForm(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleAddLanguage()}
-                />
+                  onValueChange={(value) => setLanguageForm(value)}
+                >
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGE_OPTIONS.filter(opt => !form.languages?.includes(opt.value)).map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-green-600"
+                  className="h-8 w-8 text-green-600 disabled:opacity-50"
                   onClick={handleAddLanguage}
+                  disabled={!languageForm}
                 >
                   <Check className="w-4 h-4" />
                 </Button>
@@ -210,7 +239,10 @@ export default function ExpertiseSection({
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 text-gray-400"
-                  onClick={() => setIsAddingLanguage(false)}
+                  onClick={() => {
+                    setIsAddingLanguage(false);
+                    setLanguageForm("");
+                  }}
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -459,6 +491,8 @@ export default function ExpertiseSection({
                           type="date"
                           size="sm"
                           value={workHistoryForm.startDate?.split("T")[0]}
+                          max={todayStr}
+                          className={startDateError ? "border-red-400 focus-visible:ring-red-200" : ""}
                           onChange={(e) =>
                             setWorkHistoryForm({
                               ...workHistoryForm,
@@ -466,6 +500,9 @@ export default function ExpertiseSection({
                             })
                           }
                         />
+                        {startDateError && (
+                          <p className="text-[10px] text-red-500 font-medium">{startDateError}</p>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase text-muted-foreground">
@@ -475,6 +512,8 @@ export default function ExpertiseSection({
                           type="date"
                           size="sm"
                           value={workHistoryForm.endDate?.split("T")[0]}
+                          min={workHistoryForm.startDate}
+                          className={endDateError ? "border-red-400 focus-visible:ring-red-200" : ""}
                           onChange={(e) =>
                             setWorkHistoryForm({
                               ...workHistoryForm,
@@ -482,6 +521,9 @@ export default function ExpertiseSection({
                             })
                           }
                         />
+                        {endDateError && (
+                          <p className="text-[10px] text-red-500 font-medium">{endDateError}</p>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -528,8 +570,9 @@ export default function ExpertiseSection({
                         size="sm"
                         className="bg-blue-600 px-6 text-white"
                         onClick={() => handleUpdateWorkHistory(idx)}
+                        disabled={hasHistoryDateError}
                       >
-                        Update Experience
+                        {hasHistoryDateError ? "Fix Dates" : "Update Experience"}
                       </Button>
                     </div>
                   </div>
@@ -652,7 +695,8 @@ export default function ExpertiseSection({
                       <Input
                         type="date"
                         size="sm"
-                        className="bg-white h-8"
+                        className={`bg-white h-8 ${startDateError ? "border-red-400 focus-visible:ring-red-200" : ""}`}
+                        max={todayStr}
                         value={workHistoryForm.startDate}
                         onChange={(e) =>
                           setWorkHistoryForm({
@@ -661,6 +705,9 @@ export default function ExpertiseSection({
                           })
                         }
                       />
+                      {startDateError && (
+                        <p className="text-[10px] text-red-500 font-medium">{startDateError}</p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase text-blue-600/60">
@@ -669,7 +716,8 @@ export default function ExpertiseSection({
                       <Input
                         type="date"
                         size="sm"
-                        className="bg-white h-8"
+                        className={`bg-white h-8 ${endDateError ? "border-red-400 focus-visible:ring-red-200" : ""}`}
+                        min={workHistoryForm.startDate}
                         value={workHistoryForm.endDate}
                         onChange={(e) =>
                           setWorkHistoryForm({
@@ -678,6 +726,9 @@ export default function ExpertiseSection({
                           })
                         }
                       />
+                      {endDateError && (
+                        <p className="text-[10px] text-red-500 font-medium">{endDateError}</p>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -726,8 +777,9 @@ export default function ExpertiseSection({
                       size="sm"
                       className="bg-blue-600 px-8 text-white"
                       onClick={handleAddWorkHistory}
+                      disabled={hasHistoryDateError}
                     >
-                      Add Record
+                      {hasHistoryDateError ? "Fix Dates" : "Add Record"}
                     </Button>
                   </div>
                 </div>

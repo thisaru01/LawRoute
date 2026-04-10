@@ -59,6 +59,12 @@ const MEMBERSHIP_OPTIONS = [
   { value: "Chartered Institute of Arbitrators (CIArb)", label: "Chartered Institute of Arbitrators (CIArb)" },
 ];
 
+const LANGUAGE_OPTIONS = [
+  { value: "Sinhala", label: "Sinhala" },
+  { value: "Tamil", label: "Tamil" },
+  { value: "English", label: "English" },
+];
+
 const loadingCard = (
   <Card className="mt-6">
     <CardHeader>
@@ -367,6 +373,7 @@ export default function LawyerProfileDetails({
             onSave={onSaveSection}
             setIsEditing={setIsEditingSkills}
             onRetry={onRetry}
+            LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
           />
 
           <QualificationsSection
@@ -379,13 +386,6 @@ export default function LawyerProfileDetails({
             onRetry={onRetry}
           />
 
-          {error ? (
-            <p className="text-sm text-destructive">
-              {error?.message || "Request failed"}
-            </p>
-          ) : null}
-
-          {success ? <p className="text-sm text-green-700">{success}</p> : null}
         </div>
       </div>
     </div>

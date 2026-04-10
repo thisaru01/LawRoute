@@ -613,6 +613,60 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
     throw error;
   }
 
+  // Validate work history dates if provided
+  if (lawyerProfile.experience?.workHistory?.length > 0) {
+    const now = new Date();
+    lawyerProfile.experience.workHistory.forEach((job, idx) => {
+      if (job.startDate) {
+        const start = new Date(job.startDate);
+        if (start >= now) {
+          const error = new Error(`Work History #${idx + 1}: Start date must be in the past.`);
+          error.statusCode = 422;
+          throw error;
+        }
+        
+        if (job.endDate) {
+          const end = new Date(job.endDate);
+          if (end < start) {
+            const error = new Error(`Work History #${idx + 1}: End date cannot be before the start date.`);
+            error.statusCode = 422;
+            throw error;
+          }
+        }
+      }
+    });
+  }
+
+  // Validate education years if provided
+  if (lawyerProfile.education?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.education.forEach((edu, idx) => {
+      if (edu.graduationYear) {
+        const year = Number(edu.graduationYear);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Education #${idx + 1}: Graduation year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
+  // Validate certification years if provided
+  if (lawyerProfile.certifications?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.certifications.forEach((cert, idx) => {
+      if (cert.year) {
+        const year = Number(cert.year);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Certification #${idx + 1}: Issued year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
   lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile, user);
 
   try {

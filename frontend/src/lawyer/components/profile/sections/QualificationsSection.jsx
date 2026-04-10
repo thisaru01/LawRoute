@@ -45,6 +45,23 @@ export default function QualificationsSection({
     year: "",
   });
 
+  const currentYear = new Date().getFullYear();
+  const minYear = 1950;
+
+  // Education Validation
+  const eduYear = Number(educationForm.graduationYear);
+  const isEduYearValid = !educationForm.graduationYear || (eduYear >= minYear && eduYear <= currentYear);
+  const eduYearError = educationForm.graduationYear && !isEduYearValid
+    ? `Year must be between ${minYear} and ${currentYear}`
+    : null;
+
+  // Certification Validation
+  const certYear = Number(certificationForm.year);
+  const isCertYearValid = !certificationForm.year || (certYear >= minYear && certYear <= currentYear);
+  const certYearError = certificationForm.year && !isCertYearValid
+    ? `Year must be between ${minYear} and ${currentYear}`
+    : null;
+
   const handleAddEducation = () => {
     if (!educationForm.degree || !educationForm.institute) return;
     const newList = [
@@ -171,17 +188,25 @@ export default function QualificationsSection({
                         })
                       }
                     />
-                    <Input
-                      type="number"
-                      placeholder="Graduation Year"
-                      value={educationForm.graduationYear}
-                      onChange={(e) =>
-                        setEducationForm({
-                          ...educationForm,
-                          graduationYear: e.target.value,
-                        })
-                      }
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        type="number"
+                        placeholder="Graduation Year"
+                        value={educationForm.graduationYear}
+                        min={minYear}
+                        max={currentYear}
+                        className={eduYearError ? "border-red-400 focus-visible:ring-red-200" : ""}
+                        onChange={(e) =>
+                          setEducationForm({
+                            ...educationForm,
+                            graduationYear: e.target.value,
+                          })
+                        }
+                      />
+                      {eduYearError && (
+                        <p className="text-[10px] text-red-500 font-medium pl-1">{eduYearError}</p>
+                      )}
+                    </div>
                     <div className="flex justify-end gap-2 mt-1">
                       <Button
                         variant="ghost"
@@ -192,10 +217,11 @@ export default function QualificationsSection({
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-black text-white px-4"
+                        className="bg-black text-white px-4 disabled:opacity-50"
                         onClick={() => handleUpdateEducation(idx)}
+                        disabled={!!eduYearError || !educationForm.graduationYear}
                       >
-                        Save Entry
+                        {eduYearError ? "Fix Year" : "Save Entry"}
                       </Button>
                     </div>
                   </div>
@@ -265,17 +291,25 @@ export default function QualificationsSection({
                     })
                   }
                 />
-                <Input
-                  type="number"
-                  placeholder="Graduation Year"
-                  value={educationForm.graduationYear}
-                  onChange={(e) =>
-                    setEducationForm({
-                      ...educationForm,
-                      graduationYear: e.target.value,
-                    })
-                  }
-                />
+                <div className="space-y-1">
+                  <Input
+                    type="number"
+                    placeholder="Graduation Year"
+                    value={educationForm.graduationYear}
+                    min={minYear}
+                    max={currentYear}
+                    className={eduYearError ? "border-red-400 focus-visible:ring-red-200" : ""}
+                    onChange={(e) =>
+                      setEducationForm({
+                        ...educationForm,
+                        graduationYear: e.target.value,
+                      })
+                    }
+                  />
+                  {eduYearError && (
+                    <p className="text-[10px] text-red-500 font-medium pl-1">{eduYearError}</p>
+                  )}
+                </div>
                 <div className="flex justify-end gap-2 mt-1">
                   <Button
                     variant="ghost"
@@ -286,10 +320,11 @@ export default function QualificationsSection({
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-black text-white px-4"
+                    className="bg-black text-white px-4 disabled:opacity-50"
                     onClick={handleAddEducation}
+                    disabled={!!eduYearError || !educationForm.graduationYear}
                   >
-                    Add Entry
+                    {eduYearError ? "Fix Year" : "Add Entry"}
                   </Button>
                 </div>
               </div>
@@ -349,17 +384,25 @@ export default function QualificationsSection({
                         })
                       }
                     />
-                    <Input
-                      type="number"
-                      placeholder="Issued Year"
-                      value={certificationForm.year}
-                      onChange={(e) =>
-                        setCertificationForm({
-                          ...certificationForm,
-                          year: e.target.value,
-                        })
-                      }
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        type="number"
+                        placeholder="Issued Year"
+                        value={certificationForm.year}
+                        min={minYear}
+                        max={currentYear}
+                        className={certYearError ? "border-red-400 focus-visible:ring-red-200" : ""}
+                        onChange={(e) =>
+                          setCertificationForm({
+                            ...certificationForm,
+                            year: e.target.value,
+                          })
+                        }
+                      />
+                      {certYearError && (
+                        <p className="text-[10px] text-red-500 font-medium pl-1">{certYearError}</p>
+                      )}
+                    </div>
                     <div className="flex justify-end gap-2 mt-1">
                       <Button
                         variant="ghost"
@@ -370,10 +413,11 @@ export default function QualificationsSection({
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-black text-white px-4"
+                        className="bg-black text-white px-4 disabled:opacity-50"
                         onClick={() => handleUpdateCertification(idx)}
+                        disabled={!!certYearError || !certificationForm.year}
                       >
-                        Save Entry
+                        {certYearError ? "Fix Year" : "Save Entry"}
                       </Button>
                     </div>
                   </div>
@@ -443,17 +487,25 @@ export default function QualificationsSection({
                     })
                   }
                 />
-                <Input
-                  type="number"
-                  placeholder="Issued Year"
-                  value={certificationForm.year}
-                  onChange={(e) =>
-                    setCertificationForm({
-                      ...certificationForm,
-                      year: e.target.value,
-                    })
-                  }
-                />
+                <div className="space-y-1">
+                  <Input
+                    type="number"
+                    placeholder="Issued Year"
+                    value={certificationForm.year}
+                    min={minYear}
+                    max={currentYear}
+                    className={certYearError ? "border-red-400 focus-visible:ring-red-200" : ""}
+                    onChange={(e) =>
+                      setCertificationForm({
+                        ...certificationForm,
+                        year: e.target.value,
+                      })
+                    }
+                  />
+                  {certYearError && (
+                    <p className="text-[10px] text-red-500 font-medium pl-1">{certYearError}</p>
+                  )}
+                </div>
                 <div className="flex justify-end gap-2 mt-1">
                   <Button
                     variant="ghost"
@@ -464,10 +516,11 @@ export default function QualificationsSection({
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-black text-white px-4"
+                    className="bg-black text-white px-4 disabled:opacity-50"
                     onClick={handleAddCertification}
+                    disabled={!!certYearError || !certificationForm.year}
                   >
-                    Add Entry
+                    {certYearError ? "Fix Year" : "Add Entry"}
                   </Button>
                 </div>
               </div>
