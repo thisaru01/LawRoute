@@ -12,7 +12,7 @@ const router = express.Router();
 // Get logged-in user's basic info
 router.get("/me", protect, getMe);
 
-// Update logged-in user's basic info (excluding profilePhoto image upload)
+// Update logged-in user's basic info
 router.put("/me", protect, updateMe);
 
 // Upload and update logged-in user's profile photo via Cloudinary
