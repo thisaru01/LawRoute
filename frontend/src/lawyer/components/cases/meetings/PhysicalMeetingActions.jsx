@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import ScheduleMeetingContent from "@/lawyer/components/cases/meetings/ScheduleMeetingContent";
 import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
+import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
 // Action buttons inside MeetingDialog for physical meetings (update/cancel)
 function PhysicalMeetingActions({
@@ -67,38 +68,15 @@ function PhysicalMeetingActions({
   };
 
   // Cancel handler obeys 24h rule and confirms via window.confirm
-  const handleCancel = async () => {
-    const now = new Date();
-    const meetingDate = meeting.date
-      ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
-      : null;
-    const diffMinutes = meetingDate
-      ? (meetingDate.getTime() - now.getTime()) / 60000
-      : Infinity;
-    const cancelAllowed = diffMinutes > 24 * 60;
-    if (!cancelAllowed) {
-      toast.error("Cannot cancel meetings within 24 hours of the start time.");
-      return;
-    }
-
-    const ok = window.confirm("Are you sure you want to cancel this meeting?");
-    if (!ok) return;
-
-    try {
-      await updateCaseMeeting(meeting._id, {
-        status: "cancelled",
-      });
-      toast.success("Meeting cancelled");
-      onClose();
-      window.dispatchEvent(new CustomEvent("meetings:refresh"));
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to cancel meeting",
-      );
-    }
-  };
+  // compute cancel permission for rendering
+  const now = new Date();
+  const meetingDate = meeting.date
+    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+    : null;
+  const diffMinutes = meetingDate
+    ? (meetingDate.getTime() - now.getTime()) / 60000
+    : Infinity;
+  const cancelAllowed = diffMinutes > 24 * 60;
 
   return (
     <div className="flex gap-2">
@@ -121,9 +99,43 @@ function PhysicalMeetingActions({
         />
       </AlertDialog>
 
-      <Button variant="destructive" onClick={handleCancel}>
-        Cancel Meeting
-      </Button>
+      {/** Cancel: use confirm dialog when allowed, otherwise show explanatory toast */}
+      {!cancelAllowed ? (
+        <Button
+          variant="destructive"
+          onClick={() =>
+            toast.error(
+              "Cannot cancel meetings within 24 hours of the start time.",
+            )
+          }
+        >
+          Cancel Meeting
+        </Button>
+      ) : (
+        <ConfirmDialog
+          trigger={<Button variant="destructive">Cancel Meeting</Button>}
+          title="Cancel this meeting?"
+          description={
+            "Are you sure you want to cancel this meeting? This action cannot be undone."
+          }
+          confirmLabel="Yes, cancel"
+          confirmClass="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          onConfirm={async () => {
+            try {
+              await updateCaseMeeting(meeting._id, { status: "cancelled" });
+              toast.success("Meeting cancelled");
+              onClose();
+              window.dispatchEvent(new CustomEvent("meetings:refresh"));
+            } catch (err) {
+              toast.error(
+                err.response?.data?.message ||
+                  err.message ||
+                  "Failed to cancel meeting",
+              );
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
