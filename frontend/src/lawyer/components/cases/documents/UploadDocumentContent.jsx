@@ -22,14 +22,21 @@ export default function UploadDocumentContent({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  // Reset fields when dialog closes; prefill title from file name
   useEffect(() => {
     if (!selectedFile) {
-      setTitle("");
-      setDescription("");
-    } else if (!title) {
-      setTitle(selectedFile.name.split(".").slice(0, -1).join(".") || selectedFile.name);
+      Promise.resolve().then(() => {
+        setTitle("");
+        setDescription("");
+      });
+      return;
     }
+
+    const inferredTitle =
+      selectedFile.name.split(".").slice(0, -1).join(".") || selectedFile.name;
+
+    Promise.resolve().then(() => {
+      setTitle((current) => current || inferredTitle);
+    });
   }, [selectedFile]);
 
   // Pass minimal payload back up to parent for actual upload
@@ -56,9 +63,11 @@ export default function UploadDocumentContent({
             </p>
           )}
         </div>
-        
+
         <div className="space-y-1.5">
-          <Label htmlFor="document-title">Title <span className="text-destructive">*</span></Label>
+          <Label htmlFor="document-title">
+            Title <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="document-title"
             placeholder="E.g., Defendant statement"

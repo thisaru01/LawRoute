@@ -25,9 +25,18 @@ export default function EditDocumentDialog({
   // When a document is selected and dialog opens, preload its values
   useEffect(() => {
     if (doc && isOpen) {
-      setTitle(doc.title || "");
-      setDescription(doc.description || "");
+      const t = doc.title || "";
+      const d = doc.description || "";
+      Promise.resolve().then(() => {
+        setTitle(t);
+        setDescription(d);
+      });
+      return;
     }
+    Promise.resolve().then(() => {
+      setTitle("");
+      setDescription("");
+    });
   }, [doc, isOpen]);
 
   // Confirm handler delegates update logic back to parent via onConfirm
