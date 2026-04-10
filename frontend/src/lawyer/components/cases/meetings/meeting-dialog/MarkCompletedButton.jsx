@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
 import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
+// Small confirm dialog wrapper for marking a meeting as completed
 function MarkCompletedButton({ canMarkCompleted, meetingId, onAfterUpdate }) {
   if (!canMarkCompleted) return null;
 

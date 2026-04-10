@@ -1,6 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Skeleton version of MeetingCard while list data loads
 function MeetingCardSkeleton() {
   return (
     <div className="flex flex-col gap-2 rounded-lg border bg-background p-4 shadow-sm">

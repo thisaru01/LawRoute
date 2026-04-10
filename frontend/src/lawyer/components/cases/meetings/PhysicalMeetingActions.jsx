@@ -5,6 +5,7 @@ import ScheduleMeetingContent from "@/lawyer/components/cases/meetings/ScheduleM
 import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
 
+// Action buttons inside MeetingDialog for physical meetings (update/cancel)
 function PhysicalMeetingActions({
   meeting,
   canScheduleMeetings,
@@ -16,6 +17,7 @@ function PhysicalMeetingActions({
 }) {
   if (meeting.method !== "physical" || !canScheduleMeetings) return null;
 
+  // Update handler uses same 24h and "no past" rules as online meetings
   const handleUpdate = async () => {
     const now = new Date();
     const meetingDateOrig = meeting.date
@@ -64,6 +66,7 @@ function PhysicalMeetingActions({
     }
   };
 
+  // Cancel handler obeys 24h rule and confirms via window.confirm
   const handleCancel = async () => {
     const now = new Date();
     const meetingDate = meeting.date

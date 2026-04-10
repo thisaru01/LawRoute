@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
 import ConfirmDialog from "@/components/consultation-requests/ConfirmDialog";
 
+// Action buttons inside MeetingDialog for online meetings (update/cancel/join)
 function OnlineMeetingActions({
   meeting,
   canScheduleMeetings,
@@ -25,6 +26,7 @@ function OnlineMeetingActions({
     onJoin && onJoin(meeting._id);
   };
 
+  // For citizens: single Join button that respects unlock rules
   if (!canScheduleMeetings) {
     return (
       <Button onClick={handleJoin}>
@@ -43,6 +45,7 @@ function OnlineMeetingActions({
   const cancelAllowedLocal = diffMinutesLocal > 24 * 60;
   const updateAllowedLocal = diffMinutesLocal > 24 * 60;
 
+  // Inside 24h window: block cancellation with an explanatory button
   if (!cancelAllowedLocal) {
     return (
       <>

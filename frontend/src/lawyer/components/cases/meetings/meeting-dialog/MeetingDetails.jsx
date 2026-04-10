@@ -1,5 +1,6 @@
 import React from "react";
 
+// Static informational block about where/how the meeting happens
 function MeetingDetails({ meeting }) {
   return (
     <div>

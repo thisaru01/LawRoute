@@ -3,6 +3,7 @@ import { Calendar, MapPin, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+// Inline actions for online meetings in the case meetings grid
 function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
   const now = new Date();
   const meetingDate = meeting.date
@@ -77,6 +78,7 @@ function OnlineMeetingActions({ meeting, onJoin, isLawyer }) {
   );
 }
 
+// Compact card summarizing a single meeting row
 function MeetingCard({ meeting, onJoin, isLawyer, onOpen }) {
   const methodLabel = meeting.method === "physical" ? "In-person" : "Online";
   const isOnline = meeting.method === "online";

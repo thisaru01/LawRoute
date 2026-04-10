@@ -14,6 +14,7 @@ import MarkCompletedButton from "./meeting-dialog/MarkCompletedButton";
 import OnlineMeetingActions from "./OnlineMeetingActions";
 import PhysicalMeetingActions from "./PhysicalMeetingActions";
 
+//  dialog showing details + controls for a single meeting
 export default function MeetingDialog({
   open,
   onOpenChange,
@@ -31,6 +32,7 @@ export default function MeetingDialog({
     location: "",
   });
 
+  // When a meeting is loaded, sync its values into the local form state
   React.useEffect(() => {
     if (!meeting) return;
     setScheduleForm({
@@ -56,6 +58,7 @@ export default function MeetingDialog({
   const diffMinutes = meetingDate
     ? (meetingDate.getTime() - now.getTime()) / 60000
     : Infinity;
+  // Only allow marking completed once time has passed and it's not cancelled
   const canMarkCompleted =
     canScheduleMeetings &&
     meeting.status !== "completed" &&

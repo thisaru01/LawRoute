@@ -12,6 +12,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+// AlertDialog body for uploading a new case document
 export default function UploadDocumentContent({
   selectedFile,
   onSelectFile,
@@ -21,6 +22,7 @@ export default function UploadDocumentContent({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  // Reset fields when dialog closes; prefill title from file name
   useEffect(() => {
     if (!selectedFile) {
       setTitle("");
@@ -30,6 +32,7 @@ export default function UploadDocumentContent({
     }
   }, [selectedFile]);
 
+  // Pass minimal payload back up to parent for actual upload
   const handleConfirm = () => {
     onConfirm({ title, description });
   };

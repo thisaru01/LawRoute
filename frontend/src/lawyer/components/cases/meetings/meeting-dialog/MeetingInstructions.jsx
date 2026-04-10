@@ -1,5 +1,6 @@
 import React from "react";
 
+// Short checklist for how to join/behave during the meeting
 function MeetingInstructions({ meeting, canScheduleMeetings }) {
   if (meeting.method === "physical") return null;
 
