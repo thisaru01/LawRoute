@@ -250,11 +250,13 @@ describe("articleService", () => {
 
     it("allows author to archive their own article", async () => {
       const saveMock = jest.fn().mockResolvedValue(true);
+      const populateMock = jest.fn().mockResolvedValue(true);
       const article = {
         _id: "a1",
         author: TEST_USER_ID,
         status: "pending",
         save: saveMock,
+        populate: populateMock,
       };
 
       jest.spyOn(Article, "findById").mockResolvedValue(article);
@@ -266,8 +268,48 @@ describe("articleService", () => {
       });
 
       expect(saveMock).toHaveBeenCalled();
+      expect(populateMock).toHaveBeenCalledWith("author", "name email");
       expect(res.deleted).toBe(false);
       expect(res.article.status).toBe("archived");
+    });
+
+    it("sends a status email via template when admin publishes another user's article", async () => {
+      const saveMock = jest.fn().mockResolvedValue(true);
+      const populateMock = jest.fn().mockResolvedValue(true);
+      const article = {
+        _id: "a1",
+        author: "author-1",
+        title: "Test Article",
+        status: "pending",
+        save: saveMock,
+        populate: populateMock,
+      };
+
+      jest.spyOn(Article, "findById").mockResolvedValue(article);
+
+      const leanMock = jest.fn().mockResolvedValue({
+        name: "Alice Author",
+        email: "alice@example.com",
+      });
+
+      const userFindSpy = jest.spyOn(User, "findById").mockReturnValue({
+        select: jest.fn().mockReturnValue({ lean: leanMock }),
+      });
+
+      const res = await updateArticleStatus({
+        id: "507f1f77bcf86cd799439011",
+        status: "published",
+        user: { _id: "admin-1", role: "admin" },
+      });
+
+      expect(saveMock).toHaveBeenCalled();
+      expect(populateMock).toHaveBeenCalledWith("author", "name email");
+
+      // Email flow: service must look up the author to build the email
+      expect(userFindSpy).toHaveBeenCalledWith("author-1");
+
+      expect(res.deleted).toBe(false);
+      expect(res.article.status).toBe("published");
     });
   });
 

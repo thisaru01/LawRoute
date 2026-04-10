@@ -93,7 +93,7 @@ export default function AdminArticleCreate({ redirectPath = "/admin/articles/pen
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full min-h-[180px] rounded-lg border border-input px-3 py-2 text-base"
+                  className="w-full min-h-45 rounded-lg border border-input px-3 py-2 text-base"
                   placeholder="Article body"
                 />
                 {/* <FieldDescription>Accepts HTML or plain text. Consider pasting formatted content.</FieldDescription> */}
