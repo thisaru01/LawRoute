@@ -3,6 +3,7 @@ import {
   getMe,
   updateMe,
   updateProfilePhoto,
+  changePassword,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import upload from "../middleware/uploadMiddleware.js";
@@ -12,7 +13,7 @@ const router = express.Router();
 // Get logged-in user's basic info
 router.get("/me", protect, getMe);
 
-// Update logged-in user's basic info (excluding profilePhoto image upload)
+// Update logged-in user's basic info
 router.put("/me", protect, updateMe);
 
 // Upload and update logged-in user's profile photo via Cloudinary
@@ -22,5 +23,8 @@ router.put(
   upload.single("profilePhoto"),
   updateProfilePhoto,
 );
+
+// Change password for logged-in user
+router.put("/me/password", protect, changePassword);
 
 export default router;
