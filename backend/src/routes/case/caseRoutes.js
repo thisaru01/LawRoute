@@ -3,6 +3,7 @@ import {
   getMyCases,
   getCaseById,
   closeCase,
+  getAllCasesForAdmin,
 } from "../../controllers/case/caseController.js";
 import {
   uploadCaseDocument,
@@ -14,6 +15,7 @@ import {
   scheduleCaseMeeting,
   getCaseMeetings,
   updateCaseMeeting,
+  joinCaseMeeting,
 } from "../../controllers/case/caseMeetingController.js";
 import {
   validateCreateCaseMeeting,
@@ -26,6 +28,15 @@ const router = express.Router();
 
 // Get cases related to the logged-in user
 router.get("/my", protect, authorizeRoles("user", "lawyer"), getMyCases);
+
+// Admin: Get all cases with optional status filter
+//   GET /api/cases/admin?status=open|closed
+router.get(
+  "/admin",
+  protect,
+  authorizeRoles("admin"),
+  getAllCasesForAdmin,
+);
 
 // Get case details by id
 router.get("/:id", protect, authorizeRoles("user", "lawyer"), getCaseById);
@@ -45,6 +56,14 @@ router.get(
   protect,
   authorizeRoles("user", "lawyer"),
   getCaseMeetings,
+);
+
+// Get a protected join link for an online meeting
+router.get(
+  "/meetings/:id/join",
+  protect,
+  authorizeRoles("user", "lawyer"),
+  joinCaseMeeting,
 );
 
 // Update a meeting (lawyer only)

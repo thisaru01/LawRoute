@@ -40,9 +40,15 @@ const CaseMeetingSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["scheduled", "completed", "cancelled"],
+      enum: ["scheduled", "incomplete", "completed", "cancelled"],
       default: "scheduled",
     },
+    assignedUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );

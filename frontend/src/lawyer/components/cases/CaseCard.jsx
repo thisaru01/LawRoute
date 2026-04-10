@@ -14,6 +14,7 @@ export default function CaseCard({
   clickable = false,
   onClick,
   primaryPerson,
+  meta,
 }) {
   const displayName = primaryPerson?.name || caseItem?.user?.name || "Citizen";
   const displayEmail = primaryPerson?.email || caseItem?.user?.email || "";
@@ -82,6 +83,13 @@ export default function CaseCard({
       <p className="line-clamp-2 text-sm text-muted-foreground leading-relaxed">
         {summary}
       </p>
+
+      {/* Meta (e.g. lawyer info for admin cards) */}
+      {meta && (
+        <div className="mt-2 px-2 py-1.5 rounded bg-secondary/50 border border-secondary">
+          <p className="text-xs font-medium text-foreground truncate">{meta}</p>
+        </div>
+      )}
 
       {/* Footer: opened date */}
       {createdAt && (

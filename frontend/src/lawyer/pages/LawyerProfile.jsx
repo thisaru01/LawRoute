@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import {
   getMyLawyerProfile,
@@ -77,7 +78,9 @@ const toFormState = (profile) => {
     officeAddress: contactInfo.officeAddress || "",
     location: contactInfo.location || "",
     languages: Array.isArray(basicInfo.languages) ? basicInfo.languages : [],
-    practiceAreas: Array.isArray(basicInfo.practiceAreas) ? basicInfo.practiceAreas : [],
+    practiceAreas: Array.isArray(basicInfo.practiceAreas)
+      ? basicInfo.practiceAreas
+      : [],
     barRegistrationNumber: profile?.barRegistrationNumber || "",
     memberships: listToCsv(profile?.memberships),
     education: Array.isArray(educationQualifications.education)
@@ -86,7 +89,9 @@ const toFormState = (profile) => {
     certifications: Array.isArray(educationQualifications.certifications)
       ? educationQualifications.certifications
       : [],
-    workHistory: Array.isArray(experience.workHistory) ? experience.workHistory : [],
+    workHistory: Array.isArray(experience.workHistory)
+      ? experience.workHistory
+      : [],
   };
 };
 
@@ -190,7 +195,7 @@ export default function LawyerProfile() {
     const value =
       event?.target?.type === "checkbox"
         ? event.target.checked
-        : event?.target?.value ?? "";
+        : (event?.target?.value ?? "");
 
     setForm((prev) => ({
       ...prev,
@@ -222,8 +227,14 @@ export default function LawyerProfile() {
       setForm(toFormState(updatedProfile));
       setProfileCompleted(Boolean(updatedProfile?.profileCompleted));
       setSuccess("Section updated successfully.");
+      toast.success("Section updated successfully.");
     } catch (err) {
       setError(err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update section";
+      toast.error(msg);
     } finally {
       setSavingSection("");
     }
@@ -252,8 +263,14 @@ export default function LawyerProfile() {
       });
 
       setSuccess("Profile photo updated successfully.");
+      toast.success("Profile photo updated successfully.");
     } catch (err) {
       setError(err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to upload profile photo";
+      toast.error(msg);
     } finally {
       setIsUploadingPhoto(false);
     }
