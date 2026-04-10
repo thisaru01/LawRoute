@@ -42,7 +42,7 @@ const ChecklistItem = ({ label, isCompleted }) => (
     ) : (
       <XCircle className="h-4 w-4 text-rose-500" />
     )}
-    <span className={isCompleted ? "text-muted-foreground" : "font-medium text-rose-600"}>
+    <span className={isCompleted ? "text-gray-900 font-medium" : "font-bold text-rose-600"}>
       {label}
     </span>
   </div>

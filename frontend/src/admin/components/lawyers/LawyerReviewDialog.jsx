@@ -59,7 +59,7 @@ const Field = ({ label, value, copyable = false }) => {
     <div className="group flex flex-col gap-0.5">
       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{label}</span>
       <div className="flex items-center gap-1.5 min-h-5">
-        <span className="text-sm text-gray-700 break-all">{value || <span className="text-gray-300 italic">—</span>}</span>
+        <span className="text-sm text-gray-900 font-medium break-all">{value || <span className="text-gray-300 italic">—</span>}</span>
         {copyable && value && (
           <button onClick={copy} className="p-0.5 rounded text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-600 transition-all">
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -154,7 +154,7 @@ export default function LawyerReviewDialog({
 
               {/* Bio */}
               <Section icon={Briefcase} title="About">
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-sm text-gray-800 leading-relaxed font-medium">
                   {basic.bio || <span className="italic text-gray-400">No biography provided.</span>}
                 </p>
               </Section>
@@ -185,10 +185,10 @@ export default function LawyerReviewDialog({
                   <div className="space-y-3">
                     {edu.education.map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{item.degree}</p>
-                          <p className="text-xs text-gray-500">{item.institute} • {item.graduationYear}</p>
+                          <p className="text-sm font-bold text-gray-950">{item.degree}</p>
+                          <p className="text-xs text-gray-700 font-medium">{item.institute} • {item.graduationYear}</p>
                         </div>
                       </div>
                     ))}
@@ -204,10 +204,10 @@ export default function LawyerReviewDialog({
                   <div className="space-y-3">
                     {edu.certifications.map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{item.title}</p>
-                          <p className="text-xs text-gray-500">{item.issuer} • {item.year}</p>
+                          <p className="text-sm font-bold text-gray-950">{item.title}</p>
+                          <p className="text-xs text-gray-700 font-medium">{item.issuer} • {item.year}</p>
                         </div>
                       </div>
                     ))}
@@ -223,11 +223,11 @@ export default function LawyerReviewDialog({
                   <div className="space-y-4">
                     {exp.workHistory.map((w, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                        <div className="mt-0.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{w.position}</p>
-                          <p className="text-xs text-gray-500">{w.organization} • {w.year}</p>
-                          {w.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{w.description}</p>}
+                          <p className="text-sm font-bold text-gray-950">{w.position}</p>
+                          <p className="text-xs text-gray-700 font-medium">{w.organization} • {w.year}</p>
+                          {w.description && <p className="text-xs text-gray-800 mt-1 line-clamp-2 font-medium">{w.description}</p>}
                         </div>
                       </div>
                     ))}
@@ -278,15 +278,7 @@ export default function LawyerReviewDialog({
                 </div>
               </Section>
 
-              <Separator />
-
-              {/* Quick tips */}
-              <div className="text-xs text-gray-400 space-y-1.5">
-                <p className="font-semibold uppercase tracking-widest text-gray-400 mb-2">Admin Tips</p>
-                <div className="flex gap-1.5 items-start"><ChevronRight className="w-3 h-3 mt-0.5 flex-shrink-0" />Verify the Bar ID against official records.</div>
-                <div className="flex gap-1.5 items-start"><ChevronRight className="w-3 h-3 mt-0.5 flex-shrink-0" />Check that the profile photo is professional.</div>
-                <div className="flex gap-1.5 items-start"><ChevronRight className="w-3 h-3 mt-0.5 flex-shrink-0" />Confirm contact info is complete.</div>
-              </div>
+              {/* Quick tips removed */}
             </div>
           </div>
         </div>

@@ -406,8 +406,11 @@ export const findLawyerProfileById = async (id) => {
   return mapLawyerProfileResponse(lawyerProfile);
 };
 
-// Return lawyer profiles for admin review, optionally filtered by verification status.
-export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) => {
+// Return lawyer profiles for admin review, optionally filtered by verification status and profile completion.
+export const findLawyerProfilesForAdmin = async ({
+  verificationStatus,
+  profileCompleted,
+} = {}) => {
   if (
     verificationStatus !== undefined &&
     !VERIFICATION_STATUSES.includes(verificationStatus)
@@ -423,6 +426,10 @@ export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) =>
     filter.verificationStatus = verificationStatus;
   }
 
+  if (profileCompleted !== undefined) {
+    filter.profileCompleted = profileCompleted === true || profileCompleted === "true";
+  }
+
   const lawyerProfiles = await LawyerProfile.find(filter)
     .populate({
       path: "user",
@@ -436,6 +443,7 @@ export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) =>
     .filter((lawyerProfile) => Boolean(lawyerProfile.user))
     .map(mapLawyerProfileResponse);
 };
+
 
 // Update verification status for a lawyer profile after validating the target user is a lawyer.
 export const updateLawyerVerificationStatusByAdmin = async ({
