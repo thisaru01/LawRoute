@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { submitCivilIssue } from "@/api/services/civilIssueService";
+import { useEffect, useState } from "react";
+import { submitCivilIssue, updateCivilIssue } from "@/api/services/civilIssueService";
 import { useCivilIssueAttachments } from "@/citizen/components/civil-issues/hooks/useCivilIssueAttachments.js";
 import { useCountdownRedirect } from "@/citizen/components/civil-issues/hooks/useCountdownRedirect.js";
 
@@ -84,19 +84,42 @@ const getFieldErrors = (data) => ({
 
 const hasAnyFieldError = (errors) => Object.values(errors).some(Boolean);
 
-export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
+const createInitialFormState = () => ({
+  category: "",
+  subject: "",
+  district: "",
+  exactLocation: "",
+  exactLocationSelected: false,
+  postalAreaOrZip: "",
+  whatHappened: "",
+  whenItHappened: "",
+  impactOnPeople: "",
+  contactNumber: "",
+  isPublic: false,
+});
+
+const mapIssueToFormData = (issue) => ({
+  category: issue?.category || "",
+  subject: issue?.subject || "",
+  district: issue?.district || "",
+  exactLocation: issue?.exactLocation || "",
+  exactLocationSelected: Boolean(issue?.exactLocation),
+  postalAreaOrZip: issue?.postalAreaOrZip || "",
+  whatHappened: issue?.whatHappened || "",
+  whenItHappened: typeof issue?.whenItHappened === "string" ? issue.whenItHappened.slice(0, 10) : "",
+  impactOnPeople: issue?.impactOnPeople || "",
+  contactNumber: issue?.contactNumber || "",
+  isPublic: issue?.isPublic === true,
+});
+
+export function useCivilIssueSubmitForm({
+  mode = "create",
+  issueId,
+  initialData = null,
+  onSuccess = () => {},
+} = {}) {
   const [formData, setFormData] = useState({
-    category: "",
-    subject: "",
-    district: "",
-    exactLocation: "",
-    exactLocationSelected: false,
-    postalAreaOrZip: "",
-    whatHappened: "",
-    whenItHappened: "",
-    impactOnPeople: "",
-    contactNumber: "",
-    isPublic: false,
+    ...createInitialFormState(),
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +142,15 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
   const fieldErrors = getFieldErrors(formData);
   const canSubmit = !hasAnyFieldError(fieldErrors);
   const showValidationErrors = submitAttempted;
+  const isEditMode = mode === "edit";
+
+  useEffect(() => {
+    if (!initialData) {
+      return;
+    }
+
+    setFormData(mapIssueToFormData(initialData));
+  }, [initialData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,23 +166,38 @@ export function useCivilIssueSubmitForm({ onSuccess = () => {} } = {}) {
     setBusy(true);
 
     try {
-      const data = new FormData();
-      data.append("category", formData.category);
-      data.append("subject", normalizeText(formData.subject));
-      data.append("district", formData.district);
-      data.append("exactLocation", normalizeText(formData.exactLocation));
-      data.append("postalAreaOrZip", formData.postalAreaOrZip);
-      data.append("whatHappened", formData.whatHappened);
-      data.append("whenItHappened", formData.whenItHappened);
-      data.append("impactOnPeople", formData.impactOnPeople);
-      data.append("contactNumber", formData.contactNumber);
-      data.append("isPublic", String(formData.isPublic === true));
+      if (isEditMode) {
+        await updateCivilIssue(issueId, {
+          subject: normalizeText(formData.subject),
+          district: formData.district,
+          exactLocation: normalizeText(formData.exactLocation),
+          postalAreaOrZip: formData.postalAreaOrZip,
+          whatHappened: formData.whatHappened,
+          whenItHappened: formData.whenItHappened,
+          impactOnPeople: formData.impactOnPeople,
+          contactNumber: formData.contactNumber,
+          isPublic: formData.isPublic === true,
+        });
+      } else {
+        const data = new FormData();
+        data.append("category", formData.category);
+        data.append("subject", normalizeText(formData.subject));
+        data.append("district", formData.district);
+        data.append("exactLocation", normalizeText(formData.exactLocation));
+        data.append("postalAreaOrZip", formData.postalAreaOrZip);
+        data.append("whatHappened", formData.whatHappened);
+        data.append("whenItHappened", formData.whenItHappened);
+        data.append("impactOnPeople", formData.impactOnPeople);
+        data.append("contactNumber", formData.contactNumber);
+        data.append("isPublic", String(formData.isPublic === true));
 
-      attachments.forEach((file) => {
-        data.append("attachments", file);
-      });
+        attachments.forEach((file) => {
+          data.append("attachments", file);
+        });
 
-      await submitCivilIssue(data);
+        await submitCivilIssue(data);
+      }
+
       setCountdown(20);
       setSuccess(true);
     } catch (err) {
