@@ -98,6 +98,7 @@ export default function CitizenConsultationRequests() {
           <CitizenConsultationRequestCard
             key={request?._id}
             request={request}
+            onAction={refresh}
           />
         ))}
       </div>

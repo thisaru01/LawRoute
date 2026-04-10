@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/auth/useAuth";
 import RequestConsultationModal from "./RequestConsultationModal";
 
-//  Expertise display map 
+//  Expertise display map
 export const EXPERTISE_LABELS = {
   general: "General",
   civil: "Civil Law",
@@ -26,22 +27,33 @@ export const EXPERTISE_LABELS = {
 };
 
 const EXPERTISE_COLORS = {
-  general:           "bg-slate-100    text-slate-700   dark:bg-slate-800   dark:text-slate-300",
-  civil:             "bg-blue-50      text-blue-700    dark:bg-blue-950    dark:text-blue-300",
-  criminal:          "bg-red-50       text-red-700     dark:bg-red-950     dark:text-red-300",
-  commercial:        "bg-amber-50     text-amber-700   dark:bg-amber-950   dark:text-amber-300",
-  corporate:         "bg-violet-50    text-violet-700  dark:bg-violet-950  dark:text-violet-300",
-  family:            "bg-pink-50      text-pink-700    dark:bg-pink-950    dark:text-pink-300",
-  land:              "bg-green-50     text-green-700   dark:bg-green-950   dark:text-green-300",
-  labour:            "bg-orange-50    text-orange-700  dark:bg-orange-950  dark:text-orange-300",
-  tax:               "bg-teal-50      text-teal-700    dark:bg-teal-950    dark:text-teal-300",
-  constitutional:    "bg-indigo-50    text-indigo-700  dark:bg-indigo-950  dark:text-indigo-300",
-  administrative:    "bg-cyan-50      text-cyan-700    dark:bg-cyan-950    dark:text-cyan-300",
-  environmental:     "bg-emerald-50   text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-  intellectual_property: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300",
+  general:
+    "bg-slate-100    text-slate-700   dark:bg-slate-800   dark:text-slate-300",
+  civil:
+    "bg-blue-50      text-blue-700    dark:bg-blue-950    dark:text-blue-300",
+  criminal:
+    "bg-red-50       text-red-700     dark:bg-red-950     dark:text-red-300",
+  commercial:
+    "bg-amber-50     text-amber-700   dark:bg-amber-950   dark:text-amber-300",
+  corporate:
+    "bg-violet-50    text-violet-700  dark:bg-violet-950  dark:text-violet-300",
+  family:
+    "bg-pink-50      text-pink-700    dark:bg-pink-950    dark:text-pink-300",
+  land: "bg-green-50     text-green-700   dark:bg-green-950   dark:text-green-300",
+  labour:
+    "bg-orange-50    text-orange-700  dark:bg-orange-950  dark:text-orange-300",
+  tax: "bg-teal-50      text-teal-700    dark:bg-teal-950    dark:text-teal-300",
+  constitutional:
+    "bg-indigo-50    text-indigo-700  dark:bg-indigo-950  dark:text-indigo-300",
+  administrative:
+    "bg-cyan-50      text-cyan-700    dark:bg-cyan-950    dark:text-cyan-300",
+  environmental:
+    "bg-emerald-50   text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  intellectual_property:
+    "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300",
 };
 
-//  Helpers 
+//  Helpers
 function getInitials(name = "") {
   return name
     .split(" ")
@@ -59,7 +71,7 @@ function getPracticeAreaNames(areas = []) {
     .slice(0, 4);
 }
 
-//  Component 
+//  Component
 /**
  * Public-facing lawyer directory card.
  * @param {{ lawyer: object }} props
@@ -69,21 +81,22 @@ export default function LawyerCard({ lawyer }) {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const name            = lawyer?.user?.name || "—";
-  const photo           = lawyer?.user?.profilePhoto || "";
-  const title           = lawyer?.basicInfo?.professionalTitle || "";
-  const bio             = lawyer?.basicInfo?.bio || "";
-  const expertise       = lawyer?.expertise || "general";
-  const isFree          = Boolean(lawyer?.isFree);
-  const years           = lawyer?.experience?.totalYearsExperience ?? null;
-  const location        = lawyer?.basicInfo?.contactInfo?.location || "";
-  const languages       = Array.isArray(lawyer?.basicInfo?.languages)
+  const name = lawyer?.user?.name || "—";
+  const photo = lawyer?.user?.profilePhoto || "";
+  const title = lawyer?.basicInfo?.professionalTitle || "";
+  const bio = lawyer?.basicInfo?.bio || "";
+  const expertise = lawyer?.expertise || "general";
+  const isFree = Boolean(lawyer?.isFree);
+  const years = lawyer?.experience?.totalYearsExperience ?? null;
+  const location = lawyer?.basicInfo?.contactInfo?.location || "";
+  const languages = Array.isArray(lawyer?.basicInfo?.languages)
     ? lawyer.basicInfo.languages.slice(0, 3)
     : [];
-  const practiceAreas   = getPracticeAreaNames(lawyer?.basicInfo?.practiceAreas);
-  const initials        = getInitials(name);
-  const expertiseLabel  = EXPERTISE_LABELS[expertise] || expertise;
-  const expertiseColor  = EXPERTISE_COLORS[expertise] || EXPERTISE_COLORS.general;
+  const practiceAreas = getPracticeAreaNames(lawyer?.basicInfo?.practiceAreas);
+  const initials = getInitials(name);
+  const expertiseLabel = EXPERTISE_LABELS[expertise] || expertise;
+  const expertiseColor =
+    EXPERTISE_COLORS[expertise] || EXPERTISE_COLORS.general;
 
   return (
     <Card className="flex flex-col gap-0 overflow-hidden border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
@@ -108,7 +121,9 @@ export default function LawyerCard({ lawyer }) {
               )}
             </div>
             {title && (
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">{title}</p>
+              <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                {title}
+              </p>
             )}
           </div>
         </div>
@@ -174,16 +189,18 @@ export default function LawyerCard({ lawyer }) {
         <Button variant="outline" className="w-full sm:w-auto" asChild>
           <Link to={`/lawyers/${lawyer?.id || ""}`}>View Profile</Link>
         </Button>
-        <Button className="w-full sm:w-auto" onClick={() => {
-          if (!isAuthenticated) {
-            navigate("/auth?redirect=/find-a-lawyer");
-          } else if (role !== "user") {
-            // A more sophisticated toast could be used here; using basic alert for now
-            alert("Only citizens can request a consultation.");
-          } else {
-            setIsModalOpen(true);
-          }
-        }}>
+        <Button
+          className="w-full sm:w-auto"
+          onClick={() => {
+            if (!isAuthenticated) {
+              navigate("/auth?redirect=/find-a-lawyer");
+            } else if (role !== "user") {
+              toast.error("Only citizens can request a consultation.");
+            } else {
+              setIsModalOpen(true);
+            }
+          }}
+        >
           Request Consultation
         </Button>
       </CardFooter>
