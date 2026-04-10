@@ -1,5 +1,6 @@
-import { useProfileForm } from "@/hooks/lawyer/useProfileForm";
+import { useProfileForm, validateBarNumber } from "@/hooks/lawyer/useProfileForm";
 import { useProfileData } from "@/hooks/lawyer/useProfileData";
+import { toast } from "sonner";
 import LawyerProfileDetails from "@/lawyer/components/profile/LawyerProfileDetails";
 
 export default function LawyerProfile() {
@@ -19,6 +20,17 @@ export default function LawyerProfile() {
   } = useProfileData(resetForm);
 
   const onSaveSection = async (section) => {
+    // 1. Validation Logic
+    if (section === "about") {
+      const barError = validateBarNumber(form.barRegistrationNumber);
+      if (barError) {
+        toast.error("Validation Failed", {
+          description: barError,
+        });
+        return;
+      }
+    }
+
     const payload = toSectionPayload(form, section);
     if (!payload) return;
 
