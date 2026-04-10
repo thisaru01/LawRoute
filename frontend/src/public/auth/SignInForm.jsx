@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -6,6 +7,19 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { forgotPassword } from "@/api/services/authService";
+import { toast } from "sonner";
 
 export default function SignInForm({
   idPrefix,
@@ -16,6 +30,23 @@ export default function SignInForm({
   busy,
   error,
 }) {
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  async function handleSendForgot() {
+    if (!forgotEmail) return toast.error("Please enter an email");
+    setIsSending(true);
+    try {
+      await forgotPassword({ email: forgotEmail });
+      toast.success("If that email exists, a reset link was sent");
+      setIsForgotOpen(false);
+    } catch (err) {
+      toast.error(err?.message || "Failed to send reset email");
+    } finally {
+      setIsSending(false);
+    }
+  }
   return (
     <form
       className="w-full"
@@ -41,12 +72,46 @@ export default function SignInForm({
         <Field>
           <div className="flex items-center justify-between">
             <FieldLabel htmlFor={`${idPrefix}-password`}>Password</FieldLabel>
-            <button
-              type="button"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Forgot?
-            </button>
+            <AlertDialog open={isForgotOpen} onOpenChange={setIsForgotOpen}>
+              <div>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                    onClick={() => setForgotEmail(values.email || "")}
+                  >
+                    Forgot?
+                  </button>
+                </AlertDialogTrigger>
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Forgot password</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Enter the email for your account and we'll send a reset
+                      link.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+
+                  <div className="pt-2">
+                    <Input
+                      id={`${idPrefix}-forgot-email`}
+                      type="email"
+                      placeholder="you@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSendForgot}>
+                      {isSending ? "Sending..." : "Send reset email"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </div>
+            </AlertDialog>
           </div>
           <Input
             id={`${idPrefix}-password`}
