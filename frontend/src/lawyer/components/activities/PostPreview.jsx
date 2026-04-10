@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -52,7 +52,7 @@ export default function PostPreview({ post, onEdit, onDelete }) {
   const [showComments, setShowComments] = useState(false);
   const [isLiked, setIsLiked] = useState(false); // Initially false as we don't have isLiked from backend
   const [likeCount, setLikeCount] = useState(formatStatValue(post?.stats?.likeCount));
-  const [isLiking, setIsLiking] = useState(false);
+  const isLikingRef = useRef(false);
 
   const content = post.content || "";
   const isLongContent = content.length > 120 || content.split("\n").length > 3;
@@ -66,23 +66,38 @@ export default function PostPreview({ post, onEdit, onDelete }) {
       return;
     }
 
-    if (isLiking) return;
+    if (isLikingRef.current) return;
+    isLikingRef.current = true;
 
-    setIsLiking(true);
+    // Save previous state for rollback
+    const previousIsLiked = isLiked;
+    const previousLikeCount = likeCount;
+
+    // Optimistic UI update (Instant)
+    setIsLiked(!previousIsLiked);
+    setLikeCount(previousIsLiked ? Math.max(0, previousLikeCount - 1) : previousLikeCount + 1);
+
     try {
-      if (isLiked) {
+      if (previousIsLiked) {
         const response = await unlikePost(postId);
-        setLikeCount(response.data.likeCount);
-        setIsLiked(false);
+        // Sync with exact server count on success
+        if (response?.data?.likeCount !== undefined) {
+          setLikeCount(response.data.likeCount);
+        }
       } else {
         const response = await likePost(postId);
-        setLikeCount(response.data.likeCount);
-        setIsLiked(true);
+        // Sync with exact server count on success
+        if (response?.data?.likeCount !== undefined) {
+          setLikeCount(response.data.likeCount);
+        }
       }
     } catch (error) {
+      // Revert to old state on failure
+      setIsLiked(previousIsLiked);
+      setLikeCount(previousLikeCount);
       toast.error("Action failed. Try again.");
     } finally {
-      setIsLiking(false);
+      isLikingRef.current = false;
     }
   };
 
@@ -247,7 +262,7 @@ export default function PostPreview({ post, onEdit, onDelete }) {
         <div className="flex items-center justify-between gap-1 px-1 py-1.5 sm:gap-2 sm:px-2">
           <button 
             onClick={handleLike}
-            disabled={isLiking}
+            disabled={isLikingRef.current}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:p-3 sm:text-[14px]",
               isLiked 
@@ -255,11 +270,7 @@ export default function PostPreview({ post, onEdit, onDelete }) {
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
-            {isLiking ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={isLiked ? 2.5 : 2} fill={isLiked ? "currentColor" : "none"} />
-            )}
+            <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={isLiked ? 2.5 : 2} fill={isLiked ? "currentColor" : "none"} />
             <span>{isLiked ? "Liked" : "Like"}</span>
           </button>
           <button 
