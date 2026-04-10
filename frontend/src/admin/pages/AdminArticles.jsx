@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArticlesByStatus } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
+import { FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth/useAuth";
 import EmptyState from "@/components/consultation-requests/EmptyState";
@@ -24,6 +25,31 @@ export default function AdminArticles() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("own"); // 'own' | 'others'
   const { userId } = useAuth();
+
+  const emptyStateMessage = (() => {
+    if (safeStatus === "pending") {
+      if (tab === "own") {
+        return "You don't have any pending articles. Submit a new article to see it listed here.";
+      }
+      return "There are no pending articles from other authors at the moment.";
+    }
+
+    if (safeStatus === "published") {
+      if (tab === "own") {
+        return "You haven't published any articles yet. Once you publish, they'll appear here.";
+      }
+      return "No published articles from other authors match this filter yet.";
+    }
+
+    if (safeStatus === "rejected") {
+      if (tab === "own") {
+        return "None of your articles are currently rejected. If an article gets rejected, it will show up here with details.";
+      }
+      return "There are no rejected articles from other authors right now.";
+    }
+
+    return undefined;
+  })();
 
   useEffect(() => {
     let mounted = true;
@@ -107,7 +133,11 @@ export default function AdminArticles() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {!loading && !error && articles.length === 0 && (
-          <EmptyState title="No articles found." />
+          <EmptyState
+            title="No articles found."
+            message={emptyStateMessage}
+            icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
+          />
         )}
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

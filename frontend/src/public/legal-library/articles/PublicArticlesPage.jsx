@@ -3,6 +3,8 @@ import Navbar from "@/components/Navbar.jsx";
 import { getPublishedArticles } from "@/api/services/articleService";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import EmptyState from "@/components/consultation-requests/EmptyState";
+import { FileText } from "lucide-react";
 
 function formatDate(d) {
   try {
@@ -112,9 +114,11 @@ export default function PublicArticlesPage() {
             {!loading && !error && (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {articles.length === 0 ? (
-                  <p className="text-sm text-slate-500 col-span-full">
-                    No articles have been published yet.
-                  </p>
+                  <EmptyState
+                    title="No articles have been published yet."
+                    message={"Check back later for new articles published by verified authors."}
+                    icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
+                  />
                 ) : (
                   articles.map((article) => (
                     <ArticleCard key={article._id || article.id} article={article} />
@@ -154,7 +158,7 @@ function ArticleCard({ article }) {
           </>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+        <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-6 text-white">
           <div className="flex flex-col">
             <h3 className="mb-2 text-2xl font-semibold">
               {article?.title || "Untitled"}
