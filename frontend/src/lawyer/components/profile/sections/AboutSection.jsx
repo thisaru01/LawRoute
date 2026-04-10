@@ -53,7 +53,7 @@ export default function AboutSection({
   const hasValidationError = !!bioError || !!yearsError;
 
   return (
-      <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-gray-200/60">
+      <Card className="overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-blue-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
       <CardHeader className="border-b bg-gray-50/30">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
