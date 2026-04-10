@@ -200,4 +200,29 @@ describe("Consultation Request Routes", () => {
       expect(res.body.message).toBe("Request not found");
     });
   });
+
+  // PUT endpoint: update a consultation request
+  describe("PUT /api/consultation-requests/:id", () => {
+    it("should update a consultation request", async () => {
+      // mock user lookup from protect middleware
+      jest
+        .spyOn(User, "findById")
+        .mockResolvedValue({ _id: TEST_USER_ID, role: "user" });
+
+      // mock ConsultationRequest.findById used by service
+      jest.spyOn(ConsultationRequest, "findById").mockResolvedValue({
+        _id: "r1",
+        user: TEST_USER_ID,
+        status: "pending",
+        save: jest.fn().mockResolvedValue(true),
+      });
+
+      const res = await request(app)
+        .put("/api/consultation-requests/r1")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ summary: "Updated" });
+
+      expect(res.status).toBe(200);
+    });
+  });
 });
