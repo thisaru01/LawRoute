@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 
 const VERIFICATION_STATUSES = ["pending", "approved", "rejected"];
 
+const DEFAULT_PROFILE_PHOTO =
+  "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png";
+
 const ALLOWED_BASIC_FIELDS = [
   "professionalTitle",
   "contactInfo",
@@ -250,6 +253,9 @@ const computeProfileCompleted = (lawyerProfile, user) => {
     ALLOWED_EXPERTISE_VALUES.includes(lawyerProfile.expertise) &&
     lawyerProfile.expertise !== "general";
 
+  const hasCustomPhoto =
+    user?.profilePhoto && user?.profilePhoto !== DEFAULT_PROFILE_PHOTO;
+
   return Boolean(
     user?.name?.trim() &&
     basic.professionalTitle &&
@@ -258,7 +264,8 @@ const computeProfileCompleted = (lawyerProfile, user) => {
     hasValidExpertise &&
     hasEducation &&
     hasMemberships &&
-    lawyerProfile.barRegistrationNumber,
+    lawyerProfile.barRegistrationNumber &&
+    hasCustomPhoto,
   );
 };
 
