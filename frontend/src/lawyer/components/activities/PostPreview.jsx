@@ -39,7 +39,6 @@ const getRelativeTime = (dateStr) => {
 
 const getVisibilityIcon = (visibility) => {
   if (visibility === "private") return <Lock className="size-3" />;
-  if (visibility === "followers") return <Users className="size-3" />;
   return <Earth className="size-3" />;
 };
 
