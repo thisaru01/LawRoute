@@ -5,7 +5,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import MeetingDialog from "./MeetingDialog";
+import MeetingDialog from "./meetings/MeetingDialog";
 import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingContent";
 import { Separator } from "@/components/ui/separator";
 import { useCaseContext } from "@/lawyer/components/cases/CaseContext";
