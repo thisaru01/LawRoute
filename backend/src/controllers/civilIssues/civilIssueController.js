@@ -96,6 +96,17 @@ export const getAdminCivilIssues = async (req, res, next) => {
   }
 };
 
+// GET /api/civil-issues/admin/stats
+// Admin views status counts for the "other" triage queue.
+export const getAdminCivilIssueStats = async (req, res, next) => {
+  try {
+    const stats = await civilIssueService.getAdminCivilIssueStats();
+    res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/civil-issues/:id
 // Citizen or assigned authority views a single civil issue by ID.
 export const getCivilIssueById = async (req, res, next) => {

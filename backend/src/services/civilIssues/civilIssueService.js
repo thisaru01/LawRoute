@@ -225,6 +225,27 @@ export async function getAdminCivilIssues(status) {
     return issues;
 }
 
+/**
+ * Get status-based summary statistics for the admin triage queue (category: "other").
+ * Uses parallel countDocuments calls for maximum reliability and synchronization with list views.
+ */
+export async function getAdminCivilIssueStats() {
+    const statuses = ["pending", "in_progress", "resolved", "rejected"];
+    
+    // Perform counts in parallel for optimal performance
+    const countPromises = statuses.map(status => 
+        CivilIssue.countDocuments({ category: "other", status })
+    );
+    
+    const counts = await Promise.all(countPromises);
+    
+    // Map results back to a clean object
+    return statuses.reduce((acc, status, index) => {
+        acc[status] = counts[index];
+        return acc;
+    }, {});
+}
+
 // Get a single civil issue by ID, ensuring the requester is the reporter or assigned authority.
 export async function getIssueById({ issueId, currentUserId, currentUserRole }) {
     const issue = await CivilIssue.findById(issueId)

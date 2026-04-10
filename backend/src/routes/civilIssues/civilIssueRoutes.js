@@ -11,6 +11,7 @@ import {
   updateCivilIssueStatus,
   rejectCivilIssue,
   getPublicCivilIssues,
+  getAdminCivilIssueStats,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -57,6 +58,14 @@ router.get(
   protect,
   authorizeRoles("admin"),
   getAdminCivilIssues,
+);
+
+// Admin: view status counts for the "other" triage queue
+router.get(
+  "/admin/stats",
+  protect,
+  authorizeRoles("admin"),
+  getAdminCivilIssueStats,
 );
 
 // Citizen or Authority: view a single civil issue by ID

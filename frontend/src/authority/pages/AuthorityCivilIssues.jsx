@@ -2,6 +2,7 @@ import { RefreshCw } from "lucide-react";
 import { CIVIL_ISSUE_CATEGORIES } from "@/constants/civilIssueConstants.js";
 import AuthorityCivilIssueCard from "@/authority/components/civil-issues/AuthorityCivilIssueCard.jsx";
 import { useAuthorityCivilIssuesPage } from "@/authority/hooks/useAuthorityCivilIssuesPage.js";
+import DistrictFilter from "@/components/civil-issues/DistrictFilter";
 
 const CATEGORY_LABELS = Object.fromEntries(
   CIVIL_ISSUE_CATEGORIES.map(({ value, label }) => [value, label]),
@@ -17,6 +18,8 @@ export default function AuthorityCivilIssues() {
     openIssues,
     safeStatus,
     setOpenIssues,
+    districtFilter,
+    setDistrictFilter
   } = useAuthorityCivilIssuesPage();
 
   return (
@@ -26,13 +29,21 @@ export default function AuthorityCivilIssues() {
           <h1 className="text-2xl font-semibold">Civil Issues</h1>
           <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p>
         </div>
-        <button
-          type="button"
-          onClick={fetchIssues}
-          className="inline-flex items-center gap-2 self-start rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-        >
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
+
+        <div className="flex items-center gap-4">
+          <DistrictFilter 
+            value={districtFilter} 
+            onValueChange={setDistrictFilter} 
+          />
+          
+          <button
+            type="button"
+            onClick={fetchIssues}
+            className="inline-flex h-9 items-center gap-2 self-start rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 shadow-sm"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -59,6 +70,7 @@ export default function AuthorityCivilIssues() {
                   setOpenIssues((prev) => ({ ...prev, [issue._id]: nextOpen }))
                 }
                 categoryLabels={CATEGORY_LABELS}
+                onRefresh={fetchIssues}
               />
             );
           })}
