@@ -202,6 +202,9 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     article.status = "archived";
     article.publishedBy = null;
     await article.save();
+
+    // Ensure author is populated when returning to client
+    await article.populate("author", "name email");
     return { deleted: false, article };
   }
 
@@ -237,6 +240,9 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     article.status = status;
     await article.save();
 
+    // Ensure author is populated when returning to client
+    await article.populate("author", "name email");
+
     // Notify the article author via Handlebars-formatted email when an admin publishes or rejects
     try {
       const author = await User.findById(authorId).select("name email").lean();
@@ -268,6 +274,9 @@ export const updateArticleStatus = async ({ id, status, user }) => {
   article.publishedBy = null;
   article.status = status;
   await article.save();
+
+  // Ensure author is populated when returning to client
+  await article.populate("author", "name email");
   return { deleted: false, article };
 };
 
