@@ -85,7 +85,7 @@ export default function ArticleEditForm({ article, onCancel, onUpdated }) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full border rounded-md px-3 py-2 text-sm min-h-[180px]"
+          className="w-full border rounded-md px-3 py-2 text-sm min-h-45"
           required
         />
       </div>
