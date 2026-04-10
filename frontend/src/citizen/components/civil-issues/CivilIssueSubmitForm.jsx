@@ -12,8 +12,15 @@ import CivilIssueVisibilityToggle from "@/citizen/components/civil-issues/CivilI
 import CivilIssueSubmitActions from "@/citizen/components/civil-issues/CivilIssueSubmitActions.jsx";
 import CivilIssueAwarenessDialog from "@/public/civil-issues/components/CivilIssueAwarenessDialog.jsx";
 
-export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} }) {
+export default function CivilIssueSubmitForm({
+  mode = "create",
+  issueId,
+  initialData = null,
+  onCancel,
+  onSuccess = () => {},
+}) {
   const attachmentsInputRef = useRef(null);
+  const isEditMode = mode === "edit";
 
   const {
     MAX_FILE_SIZE_MB,
@@ -33,7 +40,7 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
     submitAttemptCount,
     success,
     onSuccess: handleSuccess,
-  } = useCivilIssueSubmitForm({ onSuccess });
+  } = useCivilIssueSubmitForm({ mode, issueId, initialData, onSuccess });
 
   const errorBannerRef = useRef(null);
 
@@ -47,7 +54,16 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
   }, [error, submitAttemptCount]);
 
   if (success) {
-    return <CivilIssueSubmitSuccess countdown={countdown} onRedirectNow={handleSuccess} />;
+    return (
+      <CivilIssueSubmitSuccess
+        countdown={countdown}
+        onRedirectNow={handleSuccess}
+        title={isEditMode ? "Issue Updated Successfully" : "Issue Submitted Successfully"}
+        description={isEditMode
+          ? "Your report details have been updated while the issue is still pending review."
+          : "Your report has been received and assigned to the relevant authority."}
+      />
+    );
   }
 
   return (
@@ -65,7 +81,7 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
         </div>
       )}
 
-      <CivilIssueSubmitInfoBanner />
+      {!isEditMode ? <CivilIssueSubmitInfoBanner /> : null}
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -81,11 +97,13 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
         </div>
       </div>
 
-      <CivilIssueCategoryField
-        value={formData.category}
-        onChange={(val) => setFormData((prev) => ({ ...prev, category: val }))}
-        error={showValidationErrors ? fieldErrors.category : ""}
-      />
+      {!isEditMode ? (
+        <CivilIssueCategoryField
+          value={formData.category}
+          onChange={(val) => setFormData((prev) => ({ ...prev, category: val }))}
+          error={showValidationErrors ? fieldErrors.category : ""}
+        />
+      ) : null}
 
       <CivilIssueDistrictField
         value={formData.district}
@@ -106,15 +124,17 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
         errors={showValidationErrors ? fieldErrors : {}}
       />
 
-      <CivilIssueAttachmentsSection
-        attachments={attachments}
-        maxFiles={MAX_FILES}
-        maxFileSizeMB={MAX_FILE_SIZE_MB}
-        inputRef={attachmentsInputRef}
-        onFileChange={handleFileChange}
-        onRemoveFile={removeFile}
-        onTriggerFileDialog={() => attachmentsInputRef.current?.click()}
-      />
+      {!isEditMode ? (
+        <CivilIssueAttachmentsSection
+          attachments={attachments}
+          maxFiles={MAX_FILES}
+          maxFileSizeMB={MAX_FILE_SIZE_MB}
+          inputRef={attachmentsInputRef}
+          onFileChange={handleFileChange}
+          onRemoveFile={removeFile}
+          onTriggerFileDialog={() => attachmentsInputRef.current?.click()}
+        />
+      ) : null}
 
       <CivilIssueVisibilityToggle
         checked={formData.isPublic}
@@ -125,6 +145,8 @@ export default function CivilIssueSubmitForm({ onCancel, onSuccess = () => {} })
         busy={busy}
         disableSubmit={busy}
         onCancel={onCancel}
+        submitLabel={isEditMode ? "Save Changes" : "Complete Submission"}
+        busyLabel={isEditMode ? "Saving..." : "Submitting..."}
       />
     </form>
   );

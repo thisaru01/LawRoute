@@ -1,200 +1,38 @@
-import { useEffect, useState } from "react";
-import { Image as ImageIcon, Video } from "lucide-react";
-import { createPost, getMyPosts, updatePost, deletePost } from "@/api/services/socialService";
+import { usePosts } from "@/hooks/lawyer/usePosts";
+import { usePostForm } from "@/hooks/lawyer/usePostForm";
 import CreatePostModal from "@/lawyer/components/activities/CreatePostModal";
 import PublishedPostsList from "@/lawyer/components/activities/PublishedPostsList";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-const POSTS_BATCH_SIZE = 20;
-
-const initialFormState = {
-  postType: "legal_awareness",
-  visibility: "public",
-  content: "",
-  tags: "",
-};
-
-const parseTags = (tagsValue) => {
-  if (typeof tagsValue !== 'string') return [];
-  return tagsValue.split(",").map((tag) => tag.trim()).filter(Boolean);
-};
-
-const loadAllMyPosts = async () => {
-  const collectedPosts = [];
-  let cursor;
-
-  while (true) {
-    const response = await getMyPosts({ limit: POSTS_BATCH_SIZE, cursor });
-    const batch = response?.data?.posts || [];
-
-    collectedPosts.push(...batch);
-
-    if (batch.length < POSTS_BATCH_SIZE) {
-      break;
-    }
-
-    cursor = batch[batch.length - 1]?.createdAt;
-
-    if (!cursor) {
-      break;
-    }
-  }
-
-  return collectedPosts;
-};
+import { Image as ImageIcon, Video } from "lucide-react";
 
 export default function LawyerProfileActivities() {
-  const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [fetchError, setFetchError] = useState("");
-  const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [fileInputKey, setFileInputKey] = useState(0);
-  const [form, setForm] = useState(initialFormState);
+  const {
+    posts,
+    setPosts,
+    isLoading,
+    isRefreshing,
+    fetchError,
+    successMessage,
+    setSuccessMessage,
+    refreshPosts,
+    deletePost,
+  } = usePosts();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
-
-  const refreshPosts = async ({ silent = false } = {}) => {
-    if (silent) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    setFetchError("");
-
-    try {
-      const myPosts = await loadAllMyPosts();
-      setPosts(myPosts);
-    } catch (error) {
-      setFetchError(error?.message || "Unable to load your posts.");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshPosts();
-  }, []);
-
-  const handleChange = (field) => (value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const openCreateModal = () => {
-    setEditingPost(null);
-    setForm(initialFormState);
-    setFormError("");
-    setFileInputKey(prev => prev + 1);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (post) => {
-    setEditingPost(post);
-    setForm({
-      postType: post.postType || "legal_awareness",
-      visibility: post.visibility || "public",
-      content: post.content || "",
-      tags: Array.isArray(post.tags) ? post.tags.join(", ") : "",
-    });
-    setFormError("");
-    setFileInputKey(prev => prev + 1);
-    setIsModalOpen(true);
-  };
-
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-
-    setFetchError("");
-    setSuccessMessage("");
-    try {
-      await deletePost(postId);
-      setPosts((prev) => prev.filter(p => (p._id || p.id) !== postId));
-      setSuccessMessage("Post deleted successfully.");
-    } catch (error) {
-      setFetchError(error?.response?.data?.message || error?.message || "Failed to delete post.");
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setFormError("");
-    setSuccessMessage("");
-
-    const content = form.content.trim();
-    const tags = parseTags(form.tags);
-
-    // Grabbing media from the native form submission event target which is bound in the Modal
-    const mediaFiles = Array.from(event.currentTarget.media?.files || []);
-
-    if (!content && mediaFiles.length === 0 && !editingPost) {
-      setFormError("Write a post or add at least one attachment.");
-      return;
-    }
-
-    const payload = new FormData();
-    payload.append("postType", form.postType);
-    payload.append("visibility", form.visibility);
-
-    if (content) {
-      payload.append("content", content);
-    } else {
-      payload.append("content", "");
-    }
-
-    if (tags.length > 0) {
-      payload.append("tags", JSON.stringify(tags));
-    }
-
-    for (const file of mediaFiles) {
-      payload.append("media", file);
-    }
-
-    setIsCreating(true);
-
-    try {
-      if (editingPost) {
-        const postId = editingPost._id || editingPost.id;
-        const response = await updatePost(postId, payload);
-        const updatedPost = response?.data?.post || response?.data;
-
-        if (updatedPost) {
-          setPosts((currentPosts) => currentPosts.map(p => (p._id || p.id) === (updatedPost._id || updatedPost.id) ? updatedPost : p));
-        } else {
-          await refreshPosts({ silent: true });
-        }
-        setSuccessMessage("Post updated successfully.");
-      } else {
-        const response = await createPost(payload);
-        const createdPost = response?.data?.post;
-
-        if (createdPost) {
-          setPosts((currentPosts) => [createdPost, ...currentPosts]);
-        } else {
-          await refreshPosts({ silent: true });
-        }
-        setSuccessMessage("Post created successfully.");
-      }
-
-      setForm(initialFormState);
-      setFileInputKey((currentKey) => currentKey + 1);
-
-      // Close the modal upon success
-      setIsModalOpen(false);
-      setEditingPost(null);
-
-    } catch (error) {
-      setFormError(error?.response?.data?.message || error?.message || "Unable to save your post.");
-    } finally {
-      setIsCreating(false);
-    }
-  };
+  const {
+    form,
+    isCreating,
+    formError,
+    fileInputKey,
+    isModalOpen,
+    setIsModalOpen,
+    editingPost,
+    handleChange,
+    openCreateModal,
+    openEditModal,
+    handleSubmit,
+  } = usePostForm(refreshPosts, setPosts);
 
   // We can derive the user's author info from their existing posts if available
   const author = posts[0]?.author || {};
@@ -239,7 +77,7 @@ export default function LawyerProfileActivities() {
         onOpenChange={setIsModalOpen}
         form={form}
         handleChange={handleChange}
-        handleSubmit={handleSubmit}
+        handleSubmit={(e) => handleSubmit(e, setSuccessMessage)}
         fileInputKey={fileInputKey}
         formError={formError}
         isCreating={isCreating}
@@ -253,8 +91,9 @@ export default function LawyerProfileActivities() {
         fetchError={fetchError}
         refreshPosts={refreshPosts}
         onEdit={openEditModal}
-        onDelete={handleDeletePost}
+        onDelete={deletePost}
       />
     </div>
   );
 }
+

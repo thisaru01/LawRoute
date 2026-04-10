@@ -21,6 +21,7 @@ import CitizenConsultationRequests from "./citizen/pages/CitizenConsultationRequ
 import CitizenCases from "./citizen/pages/CitizenCases.jsx";
 import CitizenCivilIssues from "./citizen/pages/CitizenCivilIssues.jsx";
 import CitizenCivilIssueSubmit from "./citizen/pages/CitizenCivilIssueSubmit.jsx";
+import CitizenCivilIssueEdit from "./citizen/pages/CitizenCivilIssueEditPage.jsx";
 import CitizenProfile from "./citizen/pages/CitizenProfile.jsx";
 import CitizenCaseDetails from "./citizen/pages/CitizenCaseView.jsx";
 
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="civil-issues">
             <Route index element={<Navigate to="pending" replace />} />
             <Route path="submit" element={<CitizenCivilIssueSubmit />} />
+            <Route path="edit/:id" element={<CitizenCivilIssueEdit />} />
             <Route path=":status" element={<CitizenCivilIssues />} />
           </Route>
           <Route path="*" element={<Navigate to="." replace />} />
