@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { POST_TYPES, VISIBILITY_OPTIONS } from "./constants";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const getInitials = (name) => {
   if (!name) return "Me";
@@ -135,29 +136,69 @@ export default function CreatePostModal({
                    type="button" 
                    variant="secondary" 
                    size="icon" 
-                   className="absolute right-3 top-3 z-10 size-8 rounded-full shadow-md"
+                   className="absolute right-3 top-3 z-20 size-8 rounded-full shadow-md hover:bg-destructive hover:text-destructive-foreground transition-colors"
                    onClick={clearSelection}
-                   title="Remove media"
+                   title="Clear all media"
                  >
                    <X className="size-4" />
                  </Button>
-                 <div className="flex w-full items-center justify-center overflow-hidden rounded-md bg-black/5 max-h-[300px]">
-                   {selectedPreviews[0].isImage ? (
-                     <img src={selectedPreviews[0].url} alt="Preview" className="object-contain max-h-[300px]" />
-                   ) : selectedPreviews[0].isVideo ? (
-                     <video src={selectedPreviews[0].url} controls className="object-contain max-h-[300px]" />
-                   ) : (
-                     <div className="flex flex-col items-center justify-center p-10 text-muted-foreground">
-                        <FileBadge className="size-16 mb-4 opacity-50" />
-                        <span className="font-medium text-sm">{selectedPreviews.length} file(s) selected</span>
-                     </div>
-                   )}
+                 
+                 <div className={cn(
+                    "grid w-full gap-[2px] rounded-md overflow-hidden bg-border/40",
+                    selectedPreviews.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                 )}>
+                   {selectedPreviews.slice(0, 4).map((preview, index) => {
+                     const isExtra = selectedPreviews.length > 4 && index === 3;
+                     
+                     let layoutClass = "relative flex items-center justify-center bg-background overflow-hidden";
+                     let mediaClass = "w-full h-full";
+                     
+                     if (selectedPreviews.length === 1) {
+                        layoutClass = cn(layoutClass, preview.isVideo ? "max-h-[300px]" : "max-h-[300px] bg-black/5");
+                        mediaClass = cn(mediaClass, "object-contain");
+                     } else if (selectedPreviews.length === 2) {
+                        layoutClass = cn(layoutClass, "aspect-[4/5] bg-black/5");
+                        mediaClass = cn(mediaClass, "object-cover");
+                     } else if (selectedPreviews.length === 3) {
+                        if (index === 0) layoutClass = cn(layoutClass, "col-span-2 aspect-[16/9] bg-black/5");
+                        else layoutClass = cn(layoutClass, "aspect-square bg-black/5");
+                        mediaClass = cn(mediaClass, "object-cover");
+                     } else {
+                        layoutClass = cn(layoutClass, "aspect-square bg-black/5");
+                        mediaClass = cn(mediaClass, "object-cover");
+                     }
+
+                     return (
+                       <div key={index} className={layoutClass}>
+                         {preview.isImage && (
+                           <img src={preview.url} alt="Preview" className={mediaClass} />
+                         )}
+                         {preview.isVideo && (
+                           <video 
+                             src={preview.url} 
+                             controls={selectedPreviews.length === 1}
+                             autoPlay={selectedPreviews.length > 1}
+                             muted={selectedPreviews.length > 1}
+                             loop
+                             className={cn(mediaClass, selectedPreviews.length > 1 && "pointer-events-none")} 
+                           />
+                         )}
+                         {(!preview.isImage && !preview.isVideo) && (
+                           <div className="flex flex-col items-center justify-center text-xs text-muted-foreground p-4 text-center">
+                             <FileBadge className="size-10 mb-2 opacity-50" />
+                             <span className="truncate max-w-full px-2">{preview.name}</span>
+                           </div>
+                         )}
+
+                         {isExtra && (
+                           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white backdrop-blur-[2px]">
+                             <span className="text-3xl font-bold tracking-tight shadow-black/50 drop-shadow-md">+{selectedPreviews.length - 4}</span>
+                           </div>
+                         )}
+                       </div>
+                     );
+                   })}
                  </div>
-                 {selectedPreviews.length > 1 && (
-                    <div className="mt-2 text-center text-xs font-semibold text-muted-foreground">
-                       + {selectedPreviews.length - 1} more file(s)
-                    </div>
-                 )}
               </div>
             )}
             
