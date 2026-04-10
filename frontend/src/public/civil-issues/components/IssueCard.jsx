@@ -6,9 +6,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Calendar, ChevronDown, Clock3, Info, MapPin, Phone, User } from "lucide-react";
+import { Calendar, ChevronDown, Clock3, Info, MapPin, Phone, User, Paperclip, ExternalLink } from "lucide-react";
 
 const hasValue = (value) => typeof value === "string" && value.trim().length > 0;
+
+const STATUS_STYLES = {
+  pending:     { border: "border-l-amber-400",  badge: "border-amber-200  bg-amber-50   text-amber-700" },
+  in_progress: { border: "border-l-blue-400",   badge: "border-blue-200   bg-blue-50    text-blue-700" },
+  resolved:    { border: "border-l-emerald-400", badge: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  rejected:    { border: "border-l-red-400",     badge: "border-red-200    bg-red-50     text-red-700" },
+};
+
+const getStatusStyles = (status) => STATUS_STYLES[status?.toLowerCase()] ?? { border: "border-l-slate-300", badge: "border-slate-200 bg-slate-50 text-slate-700" };
 
 const formatDateOnly = (value) => {
   if (!value) {
@@ -56,13 +65,15 @@ export default function IssueCard({
   const shouldShowReporterLabel =
     typeof reporterLabel === "string" && reporterLabel.trim().length > 0;
 
+  const statusStyles = getStatusStyles(issue.status);
+
   return (
     <Collapsible
       className="group"
       open={isOpen}
       onOpenChange={onToggle}
     >
-      <Card className="overflow-hidden border-slate-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
+      <Card className={`overflow-hidden border-slate-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg border-l-4 ${statusStyles.border}`}>
         <CollapsibleTrigger asChild>
           <Button
             type="button"
@@ -106,9 +117,9 @@ export default function IssueCard({
             <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-3">
               <Badge
                 variant="outline"
-                className="whitespace-nowrap border-slate-300 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium capitalize text-slate-700 sm:text-xs"
+                className={`whitespace-nowrap px-2.5 py-0.5 text-[11px] font-medium capitalize sm:text-xs ${statusStyles.badge}`}
               >
-                {issue.status}
+                {issue.status?.replace("_", " ")}
               </Badge>
               <span className="hidden text-xs font-medium text-slate-500 sm:inline">
                 {isOpen ? "Hide details" : "View details"}
@@ -129,6 +140,33 @@ export default function IssueCard({
                 <DetailRow label="Contact number" value={issue.contactNumber} icon={Phone} />
               ) : null}
             </div>
+
+            {Array.isArray(issue.attachments) && issue.attachments.length > 0 && (
+              <div className="mt-5 space-y-3 border-t border-slate-100 pt-5">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <span>Attachments</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {issue.attachments.map((url, idx) => {
+                    const fileName = url.split("/").pop() || `Attachment ${idx + 1}`;
+                    return (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex flex-1 items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 sm:flex-none"
+                        title={fileName}
+                      >
+                        <span className="truncate max-w-[200px]">{fileName}</span>
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {footerContent ? (
               <div className="mt-5 border-t border-slate-100 pt-4">
                 {footerContent}

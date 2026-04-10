@@ -197,6 +197,7 @@ export default function IssueFilters({
   };
 
   return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 sm:p-5">
     <div className="grid w-full gap-3 md:grid-cols-3 md:items-start">
       <div className="grid min-w-0 w-full gap-1.5">
         <Label htmlFor={locationInputId} className="ml-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Location / ZIP</Label>
@@ -302,6 +303,7 @@ export default function IssueFilters({
           </SelectContent>
         </Select>
       </div>
+    </div>
     </div>
   );
 }

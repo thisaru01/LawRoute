@@ -4,6 +4,7 @@ import User from "../../models/userModel.js";
 import { sendEmail } from "../email/emailService.js";
 import { statusUpdateTemplate, issueUpdatedCitizenTemplate, issueSubmittedTemplate } from "../email/civilIssueEmailTemplates.js";
 import { autocompleteSriLankaLocations } from "../location/locationService.js";
+import { cloudinary } from "../../config/cloudinary.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -266,6 +267,8 @@ export async function updateIssue({
     impactOnPeople,
     contactNumber,
     isPublic,
+    newAttachments,
+    retainedAttachments,
 }) {
     const issue = await CivilIssue.findById(issueId)
         .populate("reporterId", "name email");
@@ -309,6 +312,37 @@ export async function updateIssue({
     if (impactOnPeople !== undefined) issue.impactOnPeople = normalizeText(impactOnPeople);
     if (contactNumber !== undefined) issue.contactNumber = normalizeText(contactNumber);
     if (isPublic !== undefined) issue.isPublic = isPublic;
+
+    // Handle existing attachments retention and deletion
+    const finalRetainedAttachments = retainedAttachments !== undefined ? retainedAttachments : issue.attachments;
+    const deletedAttachments = issue.attachments.filter(url => !finalRetainedAttachments.includes(url));
+
+    if (deletedAttachments.length > 0) {
+        // Extract public IDs from Cloudinary URLs to delete them securely.
+        // A typical Cloudinary URL looks like: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder_name/public_id.jpg
+        const publicIdsToDelete = deletedAttachments.map(url => {
+            const urlParts = url.split("/");
+            const fileNameWithExt = urlParts.pop();
+            const folderPrefix = urlParts.pop(); // The folder is usually "lawroute_uploads" or similar based on config.
+            const publicId = fileNameWithExt.split(".")[0];
+            return `${folderPrefix}/${publicId}`; // Cloudinary often structures IDs as `folder/filename` if stored in a folder.
+        });
+
+        // Fire off deletion tasks asynchronously without blocking the primary save flow
+        Promise.allSettled(publicIdsToDelete.map(id => cloudinary.uploader.destroy(id)))
+            .catch(err => console.error("[Cloudinary] Failed to delete orphaned civil issue attachments:", err));
+    }
+
+    issue.attachments = finalRetainedAttachments;
+
+    if (newAttachments && newAttachments.length > 0) {
+        if (issue.attachments.length + newAttachments.length > 5) {
+            const error = new Error("Cannot upload more than 5 attachments in total.");
+            error.statusCode = 400;
+            throw error;
+        }
+        issue.attachments.push(...newAttachments);
+    }
 
     await issue.save();
 

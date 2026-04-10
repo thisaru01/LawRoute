@@ -90,6 +90,7 @@ router.patch(
   "/:id",
   protect,
   authorizeRoles("user"),
+  civilIssueUpload.array("attachments", 5),
   validateUpdateCivilIssue,
   updateCivilIssue,
 );

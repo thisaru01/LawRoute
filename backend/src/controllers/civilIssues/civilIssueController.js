@@ -117,7 +117,7 @@ export const getCivilIssueById = async (req, res, next) => {
 };
 
 // PATCH /api/civil-issues/:id
-// Citizen updates their own issue fields (only while pending).
+// Citizen updates their own issue fields (only while pending) and can optionally add more attachments.
 export const updateCivilIssue = async (req, res, next) => {
   try {
     const {
@@ -129,8 +129,22 @@ export const updateCivilIssue = async (req, res, next) => {
       whenItHappened,
       impactOnPeople,
       contactNumber,
-      isPublic,
     } = req.body;
+
+    const isPublic = req.body.isPublic !== undefined ? (req.body.isPublic === "true" || req.body.isPublic === true) : undefined;
+    const newAttachments = req.files ? req.files.map((file) => file.path) : [];
+
+    let retainedAttachments = [];
+    if (req.body.retainedAttachments) {
+      retainedAttachments = Array.isArray(req.body.retainedAttachments) 
+        ? req.body.retainedAttachments 
+        : [req.body.retainedAttachments];
+    } else if (req.body.retainedAttachments === "") {
+        retainedAttachments = [];
+    } else if (!Object.hasOwn(req.body, "retainedAttachments")) {
+       // if not sent, assume all are retained or it's an old client? The frontend sends it now. If it's empty, it sends nothing sometimes depending on FormData behavior. Actually, if FormData doesn't append it because array is empty, it will be missing. So if missing, retainedAttachments = [] is correct.
+       retainedAttachments = [];
+    }
 
     const issue = await civilIssueService.updateIssue({
       issueId: req.params.id,
@@ -144,6 +158,8 @@ export const updateCivilIssue = async (req, res, next) => {
       impactOnPeople,
       contactNumber,
       isPublic,
+      newAttachments,
+      retainedAttachments,
     });
 
     res.status(200).json({
@@ -152,6 +168,12 @@ export const updateCivilIssue = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    if (req.files?.length > 0) {
+      await Promise.allSettled(
+        req.files.map((file) => cloudinary.uploader.destroy(file.filename))
+      );
+    }
+
     if (error.statusCode) {
       return res
         .status(error.statusCode)
