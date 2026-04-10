@@ -8,9 +8,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import MeetingDetails from "./MeetingDetails";
-import MeetingInstructions from "./MeetingInstructions";
-import MarkCompletedButton from "./MarkCompletedButton";
+import MeetingDetails from "./meeting-dialog/MeetingDetails";
+import MeetingInstructions from "./meeting-dialog/MeetingInstructions";
+import MarkCompletedButton from "./meeting-dialog/MarkCompletedButton";
 import OnlineMeetingActions from "./OnlineMeetingActions";
 import PhysicalMeetingActions from "./PhysicalMeetingActions";
 

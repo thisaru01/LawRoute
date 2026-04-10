@@ -1,7 +1,7 @@
 import React from "react";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import ScheduleMeetingContent from "@/lawyer/components/cases/ScheduleMeetingContent";
+import ScheduleMeetingContent from "@/lawyer/components/cases/meetings/ScheduleMeetingContent";
 import { toast } from "sonner";
 import { updateCaseMeeting } from "@/api/services/caseService";
 
