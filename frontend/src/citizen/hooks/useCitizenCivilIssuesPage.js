@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getMyCivilIssues } from "@/api/services/civilIssueService";
 
-const allowedStatuses = new Set(["pending", "in_progress", "resolved"]);
+const allowedStatuses = new Set(["pending", "in_progress", "resolved", "rejected"]);
 
 export function useCitizenCivilIssuesPage() {
   const { status } = useParams();

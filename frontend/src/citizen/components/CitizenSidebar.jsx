@@ -58,6 +58,7 @@ const defaultItems = [
       { title: "Pending", href: "/citizen/civil-issues/pending" },
       { title: "In Progress", href: "/citizen/civil-issues/in_progress" },
       { title: "Resolved", href: "/citizen/civil-issues/resolved" },
+      { title: "Rejected", href: "/citizen/civil-issues/rejected" },
     ],
   },
 ];

@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Calendar, ChevronDown, Clock3, Info, MapPin, Phone, User, Paperclip, ExternalLink } from "lucide-react";
+import { Calendar, ChevronDown, Clock3, Info, MapPin, Phone, User, Paperclip, ExternalLink, CheckCircle2 } from "lucide-react";
 
 const hasValue = (value) => typeof value === "string" && value.trim().length > 0;
 
@@ -97,6 +97,11 @@ export default function IssueCard({
                       {reporterLabel}
                     </span>
                   ) : null}
+                  {issue.category && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 sm:text-xs">
+                      {categoryLabels?.[issue.category] || issue.category}
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
                     {issue.district}
@@ -130,6 +135,15 @@ export default function IssueCard({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="border-t border-slate-50 px-4 pb-6 pt-5 text-sm leading-relaxed text-slate-600 sm:px-8 sm:pt-6 animate-in slide-in-from-top-2 duration-300">
+            {issue.status === "resolved" && typeof issue.resolutionSummary === "string" && issue.resolutionSummary.trim().length > 0 && (
+              <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Authority Resolution</span>
+                </div>
+                <p className="text-sm font-medium leading-relaxed text-emerald-900">{issue.resolutionSummary}</p>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               <DetailRow label="Exact location" value={issue.exactLocation} icon={MapPin} />
               <DetailRow label="Postal area / zip" value={issue.postalAreaOrZip} icon={MapPin} />

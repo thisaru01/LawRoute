@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { submitCivilIssue, updateCivilIssue } from "@/api/services/civilIssueService";
 import { useCivilIssueAttachments } from "@/citizen/components/civil-issues/hooks/useCivilIssueAttachments.js";
 import { useCountdownRedirect } from "@/citizen/components/civil-issues/hooks/useCountdownRedirect.js";
@@ -223,13 +224,17 @@ export function useCivilIssueSubmitForm({
       }
 
       if (isEditMode) {
+        toast.success("Civil issue updated successfully.");
         onSuccess();
       } else {
+        toast.success("Civil issue submitted successfully.");
         setCountdown(20);
         setSuccess(true);
       }
     } catch (err) {
-      setError(err?.message || "Something went wrong while submitting.");
+      const errorMessage = err?.message || "Something went wrong while submitting.";
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setBusy(false);
     }
