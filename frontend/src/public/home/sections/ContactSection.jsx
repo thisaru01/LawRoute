@@ -3,7 +3,10 @@ import section6 from "@/assets/section6.jpg";
 
 export default function ContactSection() {
   return (
-    <section className="relative border-t border-slate-200 bg-white">
+    <section
+      id="contact"
+      className="relative border-t border-slate-200 bg-white"
+    >
       {/* Subtle background pattern to match hero */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
         <div

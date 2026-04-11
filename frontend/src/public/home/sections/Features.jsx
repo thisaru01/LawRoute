@@ -53,7 +53,7 @@ export default function Features() {
   const [firstFeature, ...otherFeatures] = FEATURES;
 
   return (
-    <section className="relative border-t border-slate-200 bg-white">
+    <section id="features" className="relative border-t border-slate-200 bg-white">
       {/* Subtle background pattern to match hero */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
         <div

@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LawRouteLogoWhite from "@/assets/LawRouteLogoWhite.png";
+import { useAuth } from "@/context/auth/useAuth";
+import { getDashboardPathForRole } from "@/context/auth/authRouting";
 
 const NAV_COLUMNS = [
   {
@@ -24,20 +26,32 @@ const NAV_COLUMNS = [
     links: [
       { label: "For lawyers", to: "/lawyer" },
       { label: "For authorities", to: "/authority" },
-      { label: "Publish articles", to: "/lawyer/articles" },
+      { label: "Publish articles", to: "/dashboard" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "About", to: "/" },
+      { label: "About", to: "/#features" },
       { label: "Contact", to: "/#contact" },
-      { label: "Support", to: "/auth" },
+      { label: "Support", to: "/#contact" },
     ],
   },
 ];
 
 export default function Footer() {
+  const navigate = useNavigate();
+  function navigateAndScroll(e, targetId) {
+    e.preventDefault();
+    navigate("/");
+    setTimeout(() => {
+      const el = document.getElementById(targetId);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 120);
+  }
+ 
+  const { role } = useAuth();
+  const dashboardPath = getDashboardPathForRole(role) || "/dashboard";
   const year = new Date().getFullYear();
 
   return (
@@ -68,16 +82,47 @@ export default function Footer() {
                   {col.title}
                 </p>
                 <ul className="space-y-2">
-                  {col.links.map((item) => (
-                    <li key={item.label}>
-                      <Link
-                        to={item.to}
-                        className="text-sm text-slate-200/80 transition-colors hover:text-white"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
+                  {col.links.map((item) => {
+                    if (item.to === "/#contact") {
+                      return (
+                        <li key={item.label}>
+                          <a
+                            href="/#contact"
+                            onClick={(e) => navigateAndScroll(e, "contact")}
+                            className="text-sm text-slate-200/80 transition-colors hover:text-white"
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      );
+                    }
+
+                    if (item.to === "/#features") {
+                      return (
+                        <li key={item.label}>
+                          <a
+                            href="/#features"
+                            onClick={(e) => navigateAndScroll(e, "features")}
+                            className="text-sm text-slate-200/80 transition-colors hover:text-white"
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      );
+                    }
+
+                    const to = item.to === "/dashboard" ? dashboardPath : item.to;
+                    return (
+                      <li key={item.label}>
+                        <Link
+                          to={to}
+                          className="text-sm text-slate-200/80 transition-colors hover:text-white"
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
