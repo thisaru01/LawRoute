@@ -289,7 +289,6 @@ describe("articleService", () => {
 
       const leanMock = jest.fn().mockResolvedValue({
         name: "Alice Author",
-        email: "alice@example.com",
       });
 
       const userFindSpy = jest.spyOn(User, "findById").mockReturnValue({
