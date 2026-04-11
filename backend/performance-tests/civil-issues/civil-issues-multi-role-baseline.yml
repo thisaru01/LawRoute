@@ -1,0 +1,130 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 20
+      arrivalRate: 1
+      name: "Warm up realistic mixed load"
+    - duration: 60
+      arrivalRate: 3
+      name: "Sustained realistic mixed load"
+    - duration: 20
+      arrivalRate: 2
+      name: "Cool down realistic mixed load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Citizen: Login and submit civil issue"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: citizenToken
+      - think: 1
+      - post:
+          url: "/api/civil-issues"
+          headers:
+            Authorization: "Bearer {{ citizenToken }}"
+          expect:
+            - statusCode: 201
+          json:
+            category: "land"
+            subject: "Road damage near school"
+            district: "Colombo"
+            exactLocation: "Bambalapitiya"
+            postalAreaOrZip: "00400"
+            whatHappened: "A road segment is damaged after heavy rain."
+            whenItHappened: "2026-04-10"
+            impactOnPeople: "Traffic is blocked and school buses are delayed."
+            contactNumber: "0771234567"
+            isPublic: true
+
+  - name: "Citizen: Login and browse own + public issues"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: citizenToken
+      - think: 1
+      - get:
+          url: "/api/civil-issues/my"
+          headers:
+            Authorization: "Bearer {{ citizenToken }}"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/civil-issues/public?page=1&limit=10"
+          expect:
+            - statusCode: 200
+
+  - name: "Authority: Login and read assigned queue"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.AUTHORITY_EMAIL }}"
+            password: "{{ $processEnvironment.AUTHORITY_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: authorityToken
+      - think: 1
+      - get:
+          url: "/api/civil-issues/assigned"
+          headers:
+            Authorization: "Bearer {{ authorityToken }}"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/civil-issues/assigned?district=Colombo"
+          headers:
+            Authorization: "Bearer {{ authorityToken }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Admin: Login, paginated queue, stats"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.ADMIN_EMAIL }}"
+            password: "{{ $processEnvironment.ADMIN_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: adminToken
+      - think: 2
+      - get:
+          url: "/api/civil-issues/admin?status=pending&page=1&limit=20"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+      - think: 2
+      - get:
+          url: "/api/civil-issues/admin/stats"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200

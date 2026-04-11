@@ -1,0 +1,47 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      name: "Warm up civil issue submit"
+    - duration: 30
+      arrivalRate: 3
+      name: "Steady civil issue submit"
+    - duration: 10
+      arrivalRate: 2
+      name: "Cool down civil issue submit"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Citizen: Login and submit civil issue"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - think: 1
+      - post:
+          url: "/api/civil-issues"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 201
+          json:
+            category: "land"
+            subject: "Road damage near school"
+            district: "Colombo"
+            exactLocation: "Bambalapitiya"
+            postalAreaOrZip: "00400"
+            whatHappened: "A road section is damaged after heavy rain."
+            whenItHappened: "2026-04-10"
+            impactOnPeople: "Traffic is blocked and school buses are delayed."
+            contactNumber: "0771234567"
+            isPublic: true
