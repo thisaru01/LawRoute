@@ -4,10 +4,15 @@ import {
   submitCivilIssue,
   getMyCivilIssues,
   getAssignedCivilIssues,
+  getAdminCivilIssues,
   getCivilIssueById,
   updateCivilIssue,
   deleteCivilIssue,
   updateCivilIssueStatus,
+  rejectCivilIssue,
+  getPublicCivilIssues,
+  getAdminCivilIssueStats,
+  getAuthorityStats,
 } from "../../controllers/civilIssues/civilIssueController.js";
 
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
@@ -16,11 +21,16 @@ import {
   validateSubmitCivilIssue,
   validateUpdateCivilIssue,
   validateUpdateCivilIssueStatus,
+  validateRejectCivilIssue,
 } from "../../validations/civilIssueValidation.js";
 
 import civilIssueUpload from "../../middleware/upload/civilIssueUpload.js";
 
 const router = express.Router();
+
+// Public: view all publicly visible civil issues (no auth required)
+// Must be defined BEFORE /:id to prevent Express treating 'public' as an ID.
+router.get("/public", getPublicCivilIssues);
 
 // Citizen: submit a new civil issue (auto-routed to correct authority by category)
 router.post(
@@ -43,11 +53,34 @@ router.get(
   getAssignedCivilIssues,
 );
 
+// Admin: view shared civil issues in the "other" triage queue
+router.get(
+  "/admin",
+  protect,
+  authorizeRoles("admin"),
+  getAdminCivilIssues,
+);
+
+// Admin: view status counts for the "other" triage queue
+router.get(
+  "/admin/stats",
+  protect,
+  authorizeRoles("admin"),
+  getAdminCivilIssueStats,
+);
+
+router.get(
+  "/authority/stats",
+  protect,
+  authorizeRoles("authority"),
+  getAuthorityStats,
+);
+
 // Citizen or Authority: view a single civil issue by ID
 router.get(
   "/:id",
   protect,
-  authorizeRoles("user", "authority"),
+  authorizeRoles("user", "authority", "admin"),
   getCivilIssueById,
 );
 
@@ -55,16 +88,26 @@ router.get(
 router.patch(
   "/:id/status",
   protect,
-  authorizeRoles("authority"),
+  authorizeRoles("authority", "admin"),
   validateUpdateCivilIssueStatus,
   updateCivilIssueStatus,
 );
 
-// Citizen: update own issue description/district (only while pending)
+// Authority/Admin: reject a civil issue with a required note (must be before /:id)
+router.patch(
+  "/:id/reject",
+  protect,
+  authorizeRoles("authority", "admin"),
+  validateRejectCivilIssue,
+  rejectCivilIssue,
+);
+
+// Citizen: update own issue fields (only while pending)
 router.patch(
   "/:id",
   protect,
   authorizeRoles("user"),
+  civilIssueUpload.array("attachments", 5),
   validateUpdateCivilIssue,
   updateCivilIssue,
 );

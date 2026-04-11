@@ -5,12 +5,18 @@ const { Schema } = mongoose;
 const ArticleSchema = new Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  category: { type: String },
+  category: {
+    type: String,
+    required: true,
+    enum: ["Family", "Property", "Work", "Consumer", "Finance"],
+  },
+  
+  imagecardUrl: { type: String, default: null },
+  imagecardPublicId: { type: String, default: null },
   imageUrl: { type: String, default: null },
   imagePublicId: { type: String, default: null },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
   authorRole: { type: String, enum: ["admin", "lawyer"], required: true },
-  // Admin user who published the article (if status === "published")
   publishedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   status: {
     type: String,

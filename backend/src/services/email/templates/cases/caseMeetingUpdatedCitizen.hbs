@@ -1,0 +1,42 @@
+<div style="font-family: Arial, Helvetica, sans-serif; color: #111827;">
+  <h2 style="color:#16a34a;">Your Case Meeting Was Updated</h2>
+
+  <p>Dear {{citizenName}},</p>
+
+  <p>
+    Your lawyer
+    <strong>{{lawyerName}}</strong>
+    has updated the details of an upcoming meeting for your case on
+    <strong>LawRoute</strong>.
+  </p>
+
+  <p><strong>Updated meeting details:</strong></p>
+  <ul>
+    <li><strong>Date:</strong> {{date}}</li>
+    <li><strong>Time:</strong> {{time}}</li>
+    <li><strong>Method:</strong> {{method}}</li>
+    {{#if location}}
+      <li><strong>Location:</strong> {{location}}</li>
+    {{/if}}
+  </ul>
+
+  <p>
+    Please log in to LawRoute to review these changes and prepare for your
+    meeting.
+  </p>
+
+  <p>
+    <a
+      href="{{loginUrl}}"
+      style="display:inline-block;padding:8px 14px;background:#16a34a;color:white;border-radius:6px;text-decoration:none;"
+    >Review on LawRoute</a>
+  </p>
+
+  <p style="color:#6b7280;margin-top:18px;">Thanks,<br />The LawRoute Team</p>
+
+  <hr style="border:none;border-top:1px solid #e6e6e6;margin:18px 0;" />
+
+  <p style="color:#9ca3af;font-size:12px;">©
+    {{currentYear}}
+    LawRoute. All rights reserved.</p>
+</div>

@@ -3,6 +3,9 @@ import jwt from "jsonwebtoken";
 import User from "../../models/userModel.js";
 import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
+import { validateCreateArticleInput } from "../../validations/articles/articleValidation.js";
+import { sendEmail } from "../email/emailService.js";
+import { articleStatusUpdateTemplate } from "../email/articleEmailTemplates.js";
 
 const VALID_STATUSES = ["pending", "published", "rejected", "archived"];
 
@@ -13,25 +16,19 @@ export const createArticle = async ({
   user,
   imageUrl,
   imagePublicId,
+  imagecardUrl,
+  imagecardPublicId,
 }) => {
-  if (!user || !user._id) {
-    const err = new Error("Unauthorized");
-    err.status = 401;
-    throw err;
-  }
+  validateCreateArticleInput({
+    user,
+    title,
+    content,
+    category,
+    imageUrl,
+    imagecardUrl,
+  });
 
   const role = user.role;
-  if (!["admin", "lawyer"].includes(role)) {
-    const err = new Error("Only admins or lawyers can create articles");
-    err.status = 403;
-    throw err;
-  }
-
-  if (!title || !content) {
-    const err = new Error("Title and content are required");
-    err.status = 400;
-    throw err;
-  }
 
   const status = "pending";
 
@@ -39,6 +36,8 @@ export const createArticle = async ({
     title,
     content,
     category,
+    imagecardUrl: imagecardUrl || null,
+    imagecardPublicId: imagecardPublicId || null,
     imageUrl: imageUrl || null,
     imagePublicId: imagePublicId || null,
     author: user._id,
@@ -102,18 +101,48 @@ export const getAllArticles = async ({ authHeader, query }) => {
   if (query.category) filter.category = query.category;
   if (query.author) filter.author = query.author;
 
-  // When an admin lists articles without specifying an author, exclude their own
-  // articles from the general list. If an author is specified (including the
-  // admin themselves), do not exclude.
-  let queryFilter = { ...filter };
-  if (isAdmin && adminId && !query.author) {
-    queryFilter.author = { $ne: adminId };
-  } else {
-    queryFilter = filter;
-  }
+  const queryFilter = { ...filter };
 
   const articles = await Article.find(queryFilter)
     .populate("author", "name email")
+    .sort({ createdAt: -1 });
+
+  return articles;
+};
+
+// Return pending articles authored by others (exclude the requester).
+export const getPendingOthersArticles = async ({ authHeader, extraQuery = {} }) => {
+  let requesterId = null;
+  let requesterRole = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select("role");
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+      }
+    } catch (e) {
+      // ignore invalid token
+    }
+  }
+
+  // Require a valid requester id
+  if (!requesterId) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+
+  const filter = { status: "pending", ...extraQuery };
+
+  // Exclude the requester's own articles
+  filter.author = { $ne: requesterId };
+
+  const articles = await Article.find(filter)
+    .populate("author", "name email role")
     .sort({ createdAt: -1 });
 
   return articles;
@@ -141,33 +170,57 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     throw err;
   }
 
-  // Allow publishing/rejecting only when the current status is "pending"
-  if (article.status !== "pending" && ["published", "rejected"].includes(status)) {
-    const err = new Error("Only pending articles can be published or rejected");
+  // Prevent reverting a published article back to pending
+  if (String(article.status) === "published" && status === "pending") {
+    const err = new Error("Published articles cannot be changed back to pending");
     err.status = 400;
     throw err;
   }
 
-  // Guard: status changes are admin-only at the route level, but
-  // we still enforce presence of a valid user object here.
+  // Guard: require authenticated user
   if (!user || !user._id) {
     const err = new Error("Unauthorized");
     err.status = 401;
     throw err;
   }
 
-  // Business rule for publishing/rejecting:
-  // - An admin may publish or reject only OTHER users' articles.
-  // - An admin must NOT publish or reject their own article.
-  //   (e.g., admin1 can publish/reject articles of admin2/3/4 and lawyers,
-  //    but not articles authored by admin1.)
+  const actingUserId = String(user._id);
+  const authorId = String(article.author);
+  const actingRole = user.role;
 
+  // ARCHIVE: only the article's author may archive the article, any status
+  if (status === "archived") {
+    if (actingUserId !== authorId) {
+      const err = new Error("Only the article author can archive this article");
+      err.status = 403;
+      throw err;
+    }
+
+    article.status = "archived";
+    article.publishedBy = null;
+    await article.save();
+
+    // Ensure author is populated when returning to client
+    await article.populate("author", "name email");
+    return { deleted: false, article };
+  }
+
+  // PUBLISH / REJECT: only admins may perform these, and only from pending
   if (["published", "rejected"].includes(status)) {
-    const actingAdminId = String(user._id);
-    const authorId = String(article.author);
+    if (actingRole !== "admin") {
+      const err = new Error("Only admins can publish or reject articles");
+      err.status = 403;
+      throw err;
+    }
+
+    if (article.status !== "pending") {
+      const err = new Error("Only pending articles can be published or rejected");
+      err.status = 400;
+      throw err;
+    }
 
     // Disallow an admin publishing/rejecting their own article
-    if (actingAdminId === authorId) {
+    if (actingUserId === authorId) {
       const err = new Error(
         "Admins cannot publish or reject their own articles. Ask another admin to review and take action.",
       );
@@ -175,22 +228,54 @@ export const updateArticleStatus = async ({ id, status, user }) => {
       throw err;
     }
 
-    // For published status, record which admin published it
     if (status === "published") {
       article.publishedBy = user._id;
     } else {
       article.publishedBy = null;
     }
-  } else {
-    article.publishedBy = null;
+
+    article.status = status;
+    await article.save();
+
+    // Ensure author is populated when returning to client
+    await article.populate("author", "name email");
+
+    // Notify the article author via Handlebars-formatted email when an admin publishes or rejects
+    try {
+      const author = await User.findById(authorId).select("name email").lean();
+      if (author?.email) {
+        const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const authorName = author.name || "there";
+        const articleTitle = article.title || "your article";
+
+        const { subject, html } = articleStatusUpdateTemplate({
+          authorName,
+          articleTitle,
+          status,
+          loginUrl,
+        });
+
+        // Fire-and-forget; log any failure but do not block the response
+        sendEmail({ to: author.email, subject, html }).catch((err) => {
+          console.error("[Email] Failed to send article status notification:", err.message);
+        });
+      }
+    } catch (err) {
+      console.error("[Email] Error preparing article status notification:", err.message);
+    }
+    return { deleted: false, article };
   }
 
+  article.publishedBy = null;
   article.status = status;
   await article.save();
+
+  // Ensure author is populated when returning to client
+  await article.populate("author", "name email");
   return { deleted: false, article };
 };
 
-export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId }) => {
+export const updateArticle = async ({ id, user, title, content, category, imageUrl, imagePublicId, imagecardUrl, imagecardPublicId, removeImage, removeImagecard }) => {
   const cleanId = String(id).replace(/[<>]/g, "");
 
   if (!mongoose.Types.ObjectId.isValid(cleanId)) {
@@ -240,6 +325,33 @@ export const updateArticle = async ({ id, user, title, content, category, imageU
   if (content !== undefined) article.content = content;
   if (category !== undefined) article.category = category;
 
+  // Handle explicit removal flags (delete existing assets if requested)
+  if (removeImage) {
+    if (article.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagePublicId);
+      } catch (e) {
+        console.error("Failed to delete article image from Cloudinary", e);
+      }
+    }
+
+    article.imageUrl = null;
+    article.imagePublicId = null;
+  }
+
+  if (removeImagecard) {
+    if (article.imagecardPublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagecardPublicId);
+      } catch (e) {
+        console.error("Failed to delete article imagecard from Cloudinary", e);
+      }
+    }
+
+    article.imagecardUrl = null;
+    article.imagecardPublicId = null;
+  }
+
   // Handle image replacement: if a new image is provided, remove the old one from Cloudinary
   if (imagePublicId) {
     if (article.imagePublicId && article.imagePublicId !== imagePublicId) {
@@ -254,7 +366,68 @@ export const updateArticle = async ({ id, user, title, content, category, imageU
     article.imagePublicId = imagePublicId || null;
   }
 
+  // Handle imagecard replacement: if a new imagecard is provided, remove the old one from Cloudinary
+  if (imagecardPublicId) {
+    if (article.imagecardPublicId && article.imagecardPublicId !== imagecardPublicId) {
+      try {
+        await cloudinary.uploader.destroy(article.imagecardPublicId);
+      } catch (e) {
+        console.error("Failed to delete previous article imagecard from Cloudinary", e);
+      }
+    }
+
+    article.imagecardUrl = imagecardUrl || null;
+    article.imagecardPublicId = imagecardPublicId || null;
+  }
+
   await article.save();
+  return article;
+};
+
+export const getArticleById = async ({ id, authHeader }) => {
+  const cleanId = String(id).replace(/[<>]/g, "");
+
+  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+    const err = new Error("Invalid article id");
+    err.status = 400;
+    throw err;
+  }
+
+  const article = await Article.findById(cleanId).populate('author', 'name email');
+  if (!article) {
+    const err = new Error("Article not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Determine requester role (if any)
+  let requesterId = null;
+  let requesterRole = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select("role");
+      if (user) {
+        requesterId = decoded.id;
+        requesterRole = user.role;
+      }
+    } catch (e) {
+      // ignore invalid token
+    }
+  }
+
+  // Public users may only see published articles
+  if (String(article.status) !== 'published') {
+    const isOwner = requesterId && String(article.author?._id || article.author) === String(requesterId);
+    const isAdmin = requesterRole === 'admin';
+    if (!isOwner && !isAdmin) {
+      const err = new Error('Article not available');
+      err.status = 403;
+      throw err;
+    }
+  }
+
   return article;
 };
 
@@ -291,7 +464,6 @@ export const deleteArticle = async ({ id, user }) => {
       throw err;
     }
   } else {
-    // For other statuses (e.g., rejected, archived), keep existing admin-only behavior
     if (!isAdmin) {
       const err = new Error("Only admins can delete articles with this status");
       err.status = 403;
@@ -308,6 +480,14 @@ export const deleteArticle = async ({ id, user }) => {
     }
   }
 
+  if (article.imagecardPublicId) {
+    try {
+      await cloudinary.uploader.destroy(article.imagecardPublicId);
+    } catch (e) {
+      console.error("Failed to delete article imagecard from Cloudinary", e);
+    }
+  }
+
   await article.deleteOne();
   return { success: true, message: "Article deleted successfully" };
 };
@@ -315,6 +495,7 @@ export const deleteArticle = async ({ id, user }) => {
 export default {
   createArticle,
   getAllArticles,
+  getArticleById,
   updateArticleStatus,
   updateArticle,
   deleteArticle,

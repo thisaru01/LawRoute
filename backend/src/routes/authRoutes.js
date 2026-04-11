@@ -8,6 +8,10 @@ const router = express.Router();
 router.post("/register", validateUserRegister, authController.register);
 router.post("/login", authController.login);
 
+// Forgot / reset
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+
 // Example protected route for testing
 router.get("/admin-only", protect, authorizeRoles("admin"), (req, res) => {
   res.json({

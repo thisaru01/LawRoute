@@ -64,7 +64,7 @@ const postSchema = new Schema(
     },
     visibility: {
       type: String,
-      enum: ["public", "followers", "private"],
+      enum: ["public", "private"],
       default: "public",
     },
     tags: {
@@ -78,7 +78,6 @@ const postSchema = new Schema(
     stats: {
       likeCount: { type: Number, default: 0, min: 0 },
       commentCount: { type: Number, default: 0, min: 0 },
-      shareCount: { type: Number, default: 0, min: 0 },
     },
   },
   { timestamps: true },

@@ -2,9 +2,6 @@ import * as articleService from "../../services/articles/articleService.js";
 
 
 // Create article
-// - Admins: article is immediately published
-// - Lawyers: article is created with status 'pending' and must be approved by admin
-// Expects `req.user` populated by authentication middleware with fields: `_id`, `role`
 export const createArticle = async (req, res, next) => {
   try {
     console.log("createArticle called - body:", req.body);
@@ -15,8 +12,15 @@ export const createArticle = async (req, res, next) => {
 
     const { title, content, category } = req.body;
 
-    const imageUrl = req.file?.path || null;
-    const imagePublicId = req.file?.filename || null;
+    // Files come from multer.fields; each key is an array
+    const imageFile = req.files?.image?.[0];
+    const imagecardFile = req.files?.imagecard?.[0];
+
+    const imageUrl = imageFile?.path || null;
+    const imagePublicId = imageFile?.filename || null;
+
+    const imagecardUrl = imagecardFile?.path || null;
+    const imagecardPublicId = imagecardFile?.filename || null;
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -29,13 +33,10 @@ export const createArticle = async (req, res, next) => {
         .json({ message: "Only admins or lawyers can create articles" });
     }
 
-    if (!title || !content) {
-      return res
-        .status(400)
-        .json({ message: "Title and content are required" });
+    if (!title || !content || !category || !imagecardUrl || !imageUrl) {
+      return res.status(400).json({ message: "Title, content, category, image, and imagecard files are required" });
     }
 
-    // All articles start as "pending" now, even for admins
     const status = "pending";
 
       const article = await articleService.createArticle({
@@ -45,6 +46,8 @@ export const createArticle = async (req, res, next) => {
         user: req.user,
         imageUrl,
         imagePublicId,
+        imagecardUrl,
+        imagecardPublicId,
       });
 
       console.log("article saved:", article._id, "status:", article.status);
@@ -58,8 +61,6 @@ export const createArticle = async (req, res, next) => {
 };
 
 // Get all articles
-// - Public: returns only published articles
-// - Admin (with valid Bearer token): returns all articles
 export const getAllArticles = async (req, res, next) => {
   try {
     const articles = await articleService.getAllArticles({ authHeader: req.headers.authorization, query: req.query });
@@ -73,9 +74,42 @@ export const getAllArticles = async (req, res, next) => {
   }
 };
 
+// Admin-only: get pending articles authored by others (exclude requester's own)
+export const getPendingOthersArticles = async (req, res, next) => {
+  try {
+    const extraQuery = {};
+    if (req.query.category) extraQuery.category = req.query.category;
+
+    const articles = await articleService.getPendingOthersArticles({
+      authHeader: req.headers.authorization,
+      extraQuery,
+    });
+
+    return res.status(200).json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
+// Public: get only published articles
+export const getPublishedArticles = async (req, res, next) => {
+  try {
+    const query = { ...req.query, status: "published" };
+    const articles = await articleService.getAllArticles({ authHeader: req.headers.authorization, query });
+
+    return res.status(200).json({ success: true, count: articles.length, articles });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
 // Get articles of the currently authenticated user (owner only)
-// - Uses JWT to identify the user; no user id in query
-// - Returns all statuses (pending, published, rejected, etc.) for that owner
 export const getMyArticles = async (req, res, next) => {
   try {
     if (!req.user || !req.user._id) {
@@ -98,16 +132,33 @@ export const getMyArticles = async (req, res, next) => {
   }
 };
 
-// Update article content/metadata
-// - Only for articles with status 'pending'
-// - Admins: can update any pending article
-// - Lawyers: can update only their own pending articles
+// Get single article by id
+export const getArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const article = await articleService.getArticleById({ id, authHeader: req.headers.authorization });
+    return res.status(200).json({ success: true, article });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res.status(err.status || 500).json({ success: false, message: err.message || "Server error" });
+  }
+};
+
+// Update article content
 export const updateArticle = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { title, content, category } = req.body;
-    const imageUrl = req.file?.path || null;
-    const imagePublicId = req.file?.filename || null;
+    const imageFile = req.files?.image?.[0];
+    const imagecardFile = req.files?.imagecard?.[0];
+
+    const imageUrl = imageFile?.path || null;
+    const imagePublicId = imageFile?.filename || null;
+
+    const imagecardUrl = imagecardFile?.path || null;
+    const imagecardPublicId = imagecardFile?.filename || null;
+    const removeImage = req.body?.removeImage === "true" || req.body?.removeImage === true;
+    const removeImagecard = req.body?.removeImagecard === "true" || req.body?.removeImagecard === true;
 
     const article = await articleService.updateArticle({
       id,
@@ -117,6 +168,10 @@ export const updateArticle = async (req, res, next) => {
       category,
       imageUrl,
       imagePublicId,
+      imagecardUrl,
+      imagecardPublicId,
+      removeImage,
+      removeImagecard,
     });
 
     return res.status(200).json({ success: true, article });
@@ -128,7 +183,6 @@ export const updateArticle = async (req, res, next) => {
   }
 };
 
-// export bottom of file (includes updateArticleStatus)
 
 // Update article status (admin only)
 export const updateArticleStatus = async (req, res, next) => {
@@ -151,13 +205,6 @@ export const updateArticleStatus = async (req, res, next) => {
 };
 
 // Delete article
-// - Pending status:
-//   * Admin can delete any pending article
-//   * Lawyer can delete only their own pending article
-// - Published status:
-//   * Only admin can delete, and only if they are NOT the admin who published it
-// - Other statuses:
-//   * Only admin can delete
 export const deleteArticle = async (req, res, next) => {
   try {
     const { id } = req.params;

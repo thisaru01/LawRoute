@@ -1,11 +1,53 @@
 import * as civilIssueService from "../../services/civilIssues/civilIssueService.js";
 import { cloudinary } from "../../config/cloudinary.js";
+import AuthorityProfile from "../../models/authorityProfileModel.js";
+
+/**
+ * GET /api/civil-issues/authority/stats
+ * Get status breakdown for the authority's assigned category.
+ */
+export const getAuthorityStats = async (req, res, next) => {
+  try {
+    const userId = req.user && req.user._id;
+
+    // Find the authority's profile to get their managed category
+    const authProfile = await AuthorityProfile.findOne({ user: userId });
+    
+    if (!authProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Authority profile not found.",
+      });
+    }
+
+    const stats = await civilIssueService.getCategoryStats(authProfile.managedCategory);
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // POST /api/civil-issues
 // Citizen submits a civil issue; system auto-routes it to the correct authority.
 export const submitCivilIssue = async (req, res, next) => {
   try {
-    const { category, district, description } = req.body;
+    const {
+      category,
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
+    // FormData sends booleans as strings, so normalise explicitly.
+    const isPublic = req.body.isPublic === "true" || req.body.isPublic === true;
 
     // Cloudinary automatically provides the secure URLs in the `path` property of each file
     const attachments = req.files ? req.files.map((file) => file.path) : [];
@@ -13,9 +55,16 @@ export const submitCivilIssue = async (req, res, next) => {
     const issue = await civilIssueService.createIssue({
       reporterId: req.user._id,
       category,
+      subject,
       district,
-      description,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
       attachments,
+      isPublic,
     });
 
     res.status(201).json({
@@ -65,6 +114,29 @@ export const getAssignedCivilIssues = async (req, res, next) => {
   }
 };
 
+// GET /api/civil-issues/admin
+// Admin views all "other" category civil issues as a shared triage queue.
+export const getAdminCivilIssues = async (req, res, next) => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status.trim() : "";
+    const issues = await civilIssueService.getAdminCivilIssues(status || undefined);
+    res.status(200).json({ success: true, data: issues });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/civil-issues/admin/stats
+// Admin views status counts for the "other" triage queue.
+export const getAdminCivilIssueStats = async (req, res, next) => {
+  try {
+    const stats = await civilIssueService.getAdminCivilIssueStats();
+    res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/civil-issues/:id
 // Citizen or assigned authority views a single civil issue by ID.
 export const getCivilIssueById = async (req, res, next) => {
@@ -72,6 +144,7 @@ export const getCivilIssueById = async (req, res, next) => {
     const issue = await civilIssueService.getIssueById({
       issueId: req.params.id,
       currentUserId: req.user._id,
+      currentUserRole: req.user.role,
     });
     res.status(200).json({ success: true, data: issue });
   } catch (error) {
@@ -85,16 +158,49 @@ export const getCivilIssueById = async (req, res, next) => {
 };
 
 // PATCH /api/civil-issues/:id
-// Citizen updates their own issue's description or district (only while pending).
+// Citizen updates their own issue fields (only while pending) and can optionally add more attachments.
 export const updateCivilIssue = async (req, res, next) => {
   try {
-    const { description, district } = req.body;
+    const {
+      subject,
+      district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+    } = req.body;
+
+    const isPublic = req.body.isPublic !== undefined ? (req.body.isPublic === "true" || req.body.isPublic === true) : undefined;
+    const newAttachments = req.files ? req.files.map((file) => file.path) : [];
+
+    let retainedAttachments = [];
+    if (req.body.retainedAttachments) {
+      retainedAttachments = Array.isArray(req.body.retainedAttachments) 
+        ? req.body.retainedAttachments 
+        : [req.body.retainedAttachments];
+    } else if (req.body.retainedAttachments === "") {
+        retainedAttachments = [];
+    } else if (!Object.hasOwn(req.body, "retainedAttachments")) {
+       // if not sent, assume all are retained or it's an old client? The frontend sends it now. If it's empty, it sends nothing sometimes depending on FormData behavior. Actually, if FormData doesn't append it because array is empty, it will be missing. So if missing, retainedAttachments = [] is correct.
+       retainedAttachments = [];
+    }
 
     const issue = await civilIssueService.updateIssue({
       issueId: req.params.id,
       reporterId: req.user._id,
-      description,
+      subject,
       district,
+      exactLocation,
+      postalAreaOrZip,
+      whatHappened,
+      whenItHappened,
+      impactOnPeople,
+      contactNumber,
+      isPublic,
+      newAttachments,
+      retainedAttachments,
     });
 
     res.status(200).json({
@@ -103,6 +209,12 @@ export const updateCivilIssue = async (req, res, next) => {
       data: issue,
     });
   } catch (error) {
+    if (req.files?.length > 0) {
+      await Promise.allSettled(
+        req.files.map((file) => cloudinary.uploader.destroy(file.filename))
+      );
+    }
+
     if (error.statusCode) {
       return res
         .status(error.statusCode)
@@ -142,7 +254,10 @@ export const updateCivilIssueStatus = async (req, res, next) => {
     const issue = await civilIssueService.updateIssueStatus({
       issueId: req.params.id,
       authorityId: req.user._id,
+      actorRole: req.user.role,
       status: req.body.status,
+      note: req.body.note,
+      resolutionSummary: req.body.resolutionSummary,
     });
 
     res.status(200).json({
@@ -156,6 +271,62 @@ export const updateCivilIssueStatus = async (req, res, next) => {
         .status(error.statusCode)
         .json({ success: false, message: error.message });
     }
+    next(error);
+  }
+};
+
+// PATCH /api/civil-issues/:id/reject
+// Assigned authority or admin rejects a civil issue with a note.
+export const rejectCivilIssue = async (req, res, next) => {
+  try {
+    const issue = await civilIssueService.rejectIssue({
+      issueId: req.params.id,
+      actorId: req.user._id,
+      actorRole: req.user.role,
+      note: req.body.note,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Civil issue rejected successfully.",
+      data: issue,
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
+// GET /api/civil-issues/public
+// Returns all publicly visible civil issues. No auth required.
+export const getPublicCivilIssues = async (req, res, next) => {
+  try {
+    const category = typeof req.query.category === "string" ? req.query.category.trim() : "";
+    const district = typeof req.query.district === "string" ? req.query.district.trim() : "";
+    const location = typeof req.query.location === "string" ? req.query.location.trim() : "";
+    const postcode = typeof req.query.postcode === "string" ? req.query.postcode.trim() : "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result = await civilIssueService.getPublicIssues({
+      category: category || undefined,
+      district: district || undefined,
+      location: location || undefined,
+      postcode: postcode || undefined,
+      page,
+      limit,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result.items,
+      pagination: result.pagination,
+    });
+  } catch (error) {
     next(error);
   }
 };

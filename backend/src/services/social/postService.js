@@ -1,7 +1,7 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
-import Follow from "../../models/social/followModel.js";
+// Follow model removed
 import { cloudinary } from "../../config/cloudinary.js";
 import mongoose from "mongoose";
 
@@ -10,6 +10,26 @@ const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
+};
+
+const POST_AUTHOR_POPULATE = "name email role profilePhoto";
+
+const applyPostPopulation = (query) =>
+  query
+    .populate("author", POST_AUTHOR_POPULATE);
+
+const ensureAuthenticatedUser = async (authUser) => {
+  if (!authUser || !authUser._id) {
+    throw buildError("Unauthorized", 401);
+  }
+
+  const user = await User.findById(authUser._id);
+
+  if (!user) {
+    throw buildError("User not found", 404);
+  }
+
+  return user;
 };
 
 // Ensure the authenticated user exists and has the lawyer role. 
@@ -31,13 +51,22 @@ const ensureLawyerUser = async (authUser) => {
   return user;
 };
 
-// Ensure a lawyer profile exists for the given lawyer user id. 
-const ensureLawyerProfileExists = async (userId) => {
+// Ensure the lawyer has an approved profile before post activity actions.
+const ensureApprovedLawyerProfile = async (userId) => {
   const profile = await LawyerProfile.findOne({ user: userId });
 
   if (!profile) {
-    await LawyerProfile.create({ user: userId });
+    throw buildError("Lawyer profile not found", 404);
   }
+
+  if (profile.verificationStatus !== "approved") {
+    throw buildError(
+      "Only approved lawyers can create, update, or delete posts",
+      403,
+    );
+  }
+
+  return profile;
 };
 
 // Convert uploaded Cloudinary files into the Post.media structure. 
@@ -129,7 +158,7 @@ const buildPaginationQuery = (baseQuery, cursor) => {
 // Create a new post as a lawyer user. 
 export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) => {
   const user = await ensureLawyerUser(authUser);
-  await ensureLawyerProfileExists(user._id);
+  await ensureApprovedLawyerProfile(user._id);
 
   const media = mapUploadedFilesToMedia(uploadedFiles);
   const content =
@@ -144,9 +173,7 @@ export const createPostByLawyer = async (authUser, payload, uploadedFiles = []) 
     media,
   });
 
-  const createdPost = await Post.findById(post._id)
-    .populate("author", "name email role profilePhoto")
-    .lean();
+  const createdPost = await applyPostPopulation(Post.findById(post._id)).lean();
 
   return createdPost;
 };
@@ -156,8 +183,7 @@ export const findFeedPosts = async ({ limit = 20, cursor } = {}) => {
   const query = buildPaginationQuery({ visibility: "public" }, cursor);
   const safeLimit = parseLimit(limit);
 
-  const posts = await Post.find(query)
-    .populate("author", "name email role profilePhoto")
+  const posts = await applyPostPopulation(Post.find(query))
     .sort({ createdAt: -1 })
     .limit(safeLimit)
     .lean();
@@ -175,26 +201,17 @@ export const findFeedPostsForLoggedUser = async (
   }
 
   const safeLimit = parseLimit(limit);
-  const followedLawyers = await Follow.distinct("followee", {
-    follower: authUser._id,
-  });
-
   const visibilityQuery = [
     { visibility: "public" },
     {
-      author: { $in: followedLawyers },
-      visibility: "followers",
-    },
-    {
       author: authUser._id,
-      visibility: { $in: ["public", "followers", "private"] },
+      visibility: { $in: ["public", "private"] },
     },
   ];
 
   const query = buildPaginationQuery({ $or: visibilityQuery }, cursor);
 
-  const posts = await Post.find(query)
-    .populate("author", "name email role profilePhoto")
+  const posts = await applyPostPopulation(Post.find(query))
     .sort({ createdAt: -1 })
     .limit(safeLimit)
     .lean();
@@ -209,8 +226,7 @@ export const findMyPosts = async (authUser, { limit = 20, cursor } = {}) => {
   const query = buildPaginationQuery({ author: user._id }, cursor);
   const safeLimit = parseLimit(limit);
 
-  const posts = await Post.find(query)
-    .populate("author", "name email role profilePhoto")
+  const posts = await applyPostPopulation(Post.find(query))
     .sort({ createdAt: -1 })
     .limit(safeLimit)
     .lean();
@@ -251,8 +267,7 @@ export const findPostsByLawyer = async (
   );
   const safeLimit = parseLimit(limit);
 
-  const posts = await Post.find(query)
-    .populate("author", "name email role profilePhoto")
+  const posts = await applyPostPopulation(Post.find(query))
     .sort({ createdAt: -1 })
     .limit(safeLimit)
     .lean();
@@ -292,6 +307,7 @@ export const updatePostByLawyer = async (
   uploadedFiles = [],
 ) => {
   const user = await ensureLawyerUser(authUser);
+  await ensureApprovedLawyerProfile(user._id);
   const post = await findOwnedPost(postId, user._id);
   const media = mapUploadedFilesToMedia(uploadedFiles);
   const hasReplaceMedia = payload.replaceMedia === true;
@@ -346,9 +362,7 @@ export const updatePostByLawyer = async (
 
   await post.save();
 
-  const updatedPost = await Post.findById(post._id)
-    .populate("author", "name email role profilePhoto")
-    .lean();
+  const updatedPost = await applyPostPopulation(Post.findById(post._id)).lean();
 
   return updatedPost;
 };
@@ -356,6 +370,7 @@ export const updatePostByLawyer = async (
 // Delete a lawyer-owned post and cleanup linked media from Cloudinary. 
 export const deletePostByLawyer = async (authUser, postId) => {
   const user = await ensureLawyerUser(authUser);
+  await ensureApprovedLawyerProfile(user._id);
   const post = await findOwnedPost(postId, user._id);
 
   const existingMediaPublicIds = (post.media || [])

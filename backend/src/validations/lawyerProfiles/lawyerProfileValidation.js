@@ -4,6 +4,9 @@ const ALLOWED_ROOT_FIELDS = [
   "basicInfo",
   "experience",
   "educationQualifications",
+  "barRegistrationNumber",
+  "memberships",
+  "expertise",
   "isFree",
   "profilePhoto",
   "professionalTitle",
@@ -32,8 +35,22 @@ const ALLOWED_EXPERIENCE_FIELDS = ["totalYearsExperience", "workHistory"];
 const ALLOWED_EDUCATION_FIELDS = [
   "education",
   "certifications",
-  "barRegistrationNumber",
-  "memberships",
+];
+
+const ALLOWED_EXPERTISE_VALUES = [
+  "general",
+  "civil",
+  "criminal",
+  "commercial",
+  "corporate",
+  "family",
+  "land",
+  "labour",
+  "tax",
+  "constitutional",
+  "administrative",
+  "environmental",
+  "intellectual_property",
 ];
 
 const isObject = (value) =>
@@ -41,6 +58,8 @@ const isObject = (value) =>
 
 const hasOnlyAllowedKeys = (obj, allowedFields) =>
   Object.keys(obj).every((key) => allowedFields.includes(key));
+
+const ALLOWED_VERIFICATION_STATUSES = ["pending", "approved", "rejected"];
 
 // Validate payload structure and allowed fields for lawyer profile update. 
 export const validateUpdateLawyerProfile = (req, res, next) => {
@@ -118,6 +137,67 @@ export const validateUpdateLawyerProfile = (req, res, next) => {
         message: "educationQualifications contains invalid fields",
       });
     }
+  }
+
+  if (hasOwn(body, "memberships") && !Array.isArray(body.memberships)) {
+    return res.status(400).json({
+      success: false,
+      message: "memberships must be an array",
+    });
+  }
+
+  if (
+    hasOwn(body, "barRegistrationNumber") &&
+    body.barRegistrationNumber !== null &&
+    typeof body.barRegistrationNumber !== "string"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "barRegistrationNumber must be a string or null",
+    });
+  }
+
+  if (
+    hasOwn(body, "expertise") &&
+    (typeof body.expertise !== "string" ||
+      !ALLOWED_EXPERTISE_VALUES.includes(body.expertise))
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: `expertise must be one of: ${ALLOWED_EXPERTISE_VALUES.join(", ")}.`,
+    });
+  }
+
+  return next();
+};
+
+// Validate payload for admin verification status updates.
+export const validateLawyerVerificationStatusUpdate = (req, res, next) => {
+  const { body } = req;
+
+  if (!isObject(body)) {
+    return res.status(400).json({
+      success: false,
+      message: "Request body must be a JSON object",
+    });
+  }
+
+  if (!hasOnlyAllowedKeys(body, ["verificationStatus"])) {
+    return res.status(400).json({
+      success: false,
+      message: "Request contains invalid fields",
+    });
+  }
+
+  if (
+    !hasOwn(body, "verificationStatus") ||
+    typeof body.verificationStatus !== "string" ||
+    !ALLOWED_VERIFICATION_STATUSES.includes(body.verificationStatus)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: `verificationStatus must be one of: ${ALLOWED_VERIFICATION_STATUSES.join(", ")}.`,
+    });
   }
 
   return next();

@@ -1,0 +1,54 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60 # seconds
+      arrivalRate: 5 # new virtual users per second
+      name: "Steady load on cases API"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Lawyer: Login, List Cases, Get Case Meetings"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.LAWYER_EMAIL }}"
+            password: "{{ $processEnvironment.LAWYER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - get:
+          url: "/api/cases/my"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.data[0]._id"
+              as: caseId
+      - get:
+          url: "/api/cases/{{ caseId }}/meetings"
+          headers:
+            Authorization: "Bearer {{ token }}"
+
+  - name: "Citizen: Login, List My Cases, Get Case Documents"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: userToken
+      - get:
+          url: "/api/cases/my"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+          capture:
+            - json: "$.data[0]._id"
+              as: userCaseId
+      - get:
+          url: "/api/cases/{{ userCaseId }}/documents"
+          headers:
+            Authorization: "Bearer {{ userToken }}"

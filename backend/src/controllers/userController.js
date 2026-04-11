@@ -1,4 +1,49 @@
 import User from "../models/userModel.js";
+import AuthorityProfile from "../models/authorityProfileModel.js";
+
+export const getMe = async (req, res, next) => {
+  try {
+    const userId = req.user && req.user._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    let extraData = {};
+    if (user.role === "authority") {
+      const authProfile = await AuthorityProfile.findOne({ user: user._id });
+      if (authProfile) {
+        extraData.managedCategory = authProfile.managedCategory;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePhoto: user.profilePhoto,
+        ...extraData,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const updateMe = async (req, res, next) => {
   try {
@@ -94,6 +139,45 @@ export const updateProfilePhoto = async (req, res, next) => {
         profilePhoto: updatedUser.profilePhoto,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user && req.user._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current and new passwords are required",
+      });
+    }
+
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: "Password changed" });
   } catch (error) {
     next(error);
   }

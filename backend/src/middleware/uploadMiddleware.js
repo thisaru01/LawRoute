@@ -10,11 +10,21 @@ export const createUpload = ({
 } = {}) => {
   const storage = new CloudinaryStorage({
     cloudinary,
-    params: async () => ({
-      folder: folder ? `law-route/${folder}` : "law-route",
-      resource_type: "auto",
-      allowed_formats: allowedFormats,
-    }),
+    params: async (req, file) => {
+      const p = {
+        folder: folder ? `law-route/${folder}` : "law-route",
+        resource_type: "auto",
+        allowed_formats: allowedFormats,
+      };
+      
+      if (file && file.originalname) {
+        const originalName = file.originalname.split('.').slice(0, -1).join('.');
+        // Sanitize name and append timestamp for uniqueness
+        p.public_id = `${originalName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+      }
+      
+      return p;
+    },
   });
 
   return multer({

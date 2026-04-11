@@ -48,6 +48,24 @@ export async function getCaseById({ caseId, currentUserId }) {
   return caseDoc;
 }
 
+// Admin: get all cases with optional status filter
+export async function getAllCasesForAdmin({ status }) {
+  const filter = {};
+
+  const normalizedStatus = String(status || "").toLowerCase();
+  if (normalizedStatus === "open" || normalizedStatus === "closed") {
+    filter.status = normalizedStatus;
+  }
+
+  const cases = await Case.find(filter)
+    .populate("user", "name email role")
+    .populate("lawyer", "name email role")
+    .populate("consultationRequest", "summary status createdAt")
+    .sort({ createdAt: -1 });
+
+  return cases;
+}
+
 // Close a case (assigned lawyer)
 export async function closeCase({ caseId, currentUserId }) {
   const caseDoc = await Case.findById(caseId)

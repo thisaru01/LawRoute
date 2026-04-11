@@ -35,7 +35,7 @@ const ensurePostExists = async (postId) => {
   }
 };
 
-// Create a comment (or reply) on a post and increment comment count. 
+// Create a comment on a post and increment comment count. 
 export const createCommentByUser = async (authUser, postId, payload) => {
   const user = ensureAuthenticatedUser(authUser);
   ensureValidObjectId(postId, "post");
@@ -46,20 +46,6 @@ export const createCommentByUser = async (authUser, postId, payload) => {
     author: user._id,
     content: payload.content,
   };
-
-  if (payload.parentComment) {
-    ensureValidObjectId(payload.parentComment, "parentComment");
-
-    const parentComment = await Comment.findById(payload.parentComment).select(
-      "post",
-    );
-
-    if (!parentComment || parentComment.post.toString() !== postId.toString()) {
-      throw buildError("Parent comment not found for this post", 404);
-    }
-
-    commentData.parentComment = payload.parentComment;
-  }
 
   const comment = await Comment.create(commentData);
 

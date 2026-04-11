@@ -1,0 +1,84 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Social features mixed load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Lawyer: Login, create, update, and delete post"
+    weight: 45
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.LAWYER_EMAIL }}"
+            password: "{{ $processEnvironment.LAWYER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - post:
+          url: "/api/social/posts"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            postType: "legal_awareness"
+            content: "Performance test post about legal awareness and public information."
+            visibility: "public"
+            tags:
+              - "civil"
+              - "awareness"
+          capture:
+            - json: "$.post._id"
+              as: postId
+      - put:
+          url: "/api/social/posts/{{ postId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            content: "Updated performance test post about legal awareness and public information."
+      - delete:
+          url: "/api/social/posts/{{ postId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+
+  - name: "Citizen: Login, browse feed, like, comment, unlike"
+    weight: 55
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - get:
+          url: "/api/social/feed"
+          capture:
+            - json: "$.posts[0]._id"
+              as: postId
+      - post:
+          url: "/api/social/posts/{{ postId }}/like"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - post:
+          url: "/api/social/posts/{{ postId }}/comments"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            content: "Performance test comment for the social feed."
+          capture:
+            - json: "$.comment._id"
+              as: commentId
+      - delete:
+          url: "/api/social/posts/{{ postId }}/like"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - delete:
+          url: "/api/social/comments/{{ commentId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"

@@ -1,5 +1,11 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
+import mongoose from "mongoose";
+
+const VERIFICATION_STATUSES = ["pending", "approved", "rejected"];
+
+const DEFAULT_PROFILE_PHOTO =
+  "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png";
 
 const ALLOWED_BASIC_FIELDS = [
   "professionalTitle",
@@ -9,13 +15,27 @@ const ALLOWED_BASIC_FIELDS = [
   "practiceAreas",
 ];
 
+const ALLOWED_EXPERTISE_VALUES = [
+  "general",
+  "civil",
+  "criminal",
+  "commercial",
+  "corporate",
+  "family",
+  "land",
+  "labour",
+  "tax",
+  "constitutional",
+  "administrative",
+  "environmental",
+  "intellectual_property",
+];
+
 const ALLOWED_EXPERIENCE_FIELDS = ["totalYearsExperience", "workHistory"];
 
 const ALLOWED_EDUCATION_FIELDS = [
   "education",
   "certifications",
-  "barRegistrationNumber",
-  "memberships",
 ];
 
 const LEGACY_BASIC_FIELD_MAP = {
@@ -105,6 +125,46 @@ const applyStructuredPayload = (lawyerProfile, body) => {
     applied = true;
   }
 
+  if (hasOwn(body, "barRegistrationNumber")) {
+    lawyerProfile.barRegistrationNumber = body.barRegistrationNumber;
+    applied = true;
+  }
+
+  if (hasOwn(body, "expertise")) {
+    lawyerProfile.expertise = body.expertise;
+    applied = true;
+  }
+
+  if (hasOwn(body, "memberships")) {
+    lawyerProfile.memberships = Array.isArray(body.memberships)
+      ? body.memberships
+      : [];
+    applied = true;
+  }
+
+  // Backward compatibility for clients still sending this under educationQualifications.
+  if (
+    educationQualifications &&
+    typeof educationQualifications === "object" &&
+    hasOwn(educationQualifications, "barRegistrationNumber")
+  ) {
+    lawyerProfile.barRegistrationNumber =
+      educationQualifications.barRegistrationNumber;
+    applied = true;
+  }
+
+  // Backward compatibility for old payloads that nested memberships under educationQualifications.
+  if (
+    educationQualifications &&
+    typeof educationQualifications === "object" &&
+    hasOwn(educationQualifications, "memberships")
+  ) {
+    lawyerProfile.memberships = Array.isArray(educationQualifications.memberships)
+      ? educationQualifications.memberships
+      : [];
+    applied = true;
+  }
+
   return applied;
 };
 
@@ -172,23 +232,43 @@ const applyLegacyPayload = (lawyerProfile, body) => {
   return applied;
 };
 
-// Compute whether minimum profile details are complete. 
-const computeProfileCompleted = (lawyerProfile) => {
+// Compute whether minimum profile details are complete.
+const computeProfileCompleted = (lawyerProfile, user) => {
   const basic = lawyerProfile.basicInfo || {};
-  const exp = lawyerProfile.experience || {};
+  const education = lawyerProfile.educationQualifications || {};
   const hasPracticeAreas =
     Array.isArray(basic.practiceAreas) && basic.practiceAreas.length > 0;
+  const hasContactInfo =
+    basic.contactInfo &&
+    typeof basic.contactInfo === "object" &&
+    !Array.isArray(basic.contactInfo) &&
+    Object.keys(basic.contactInfo).length > 0;
+  const hasEducation =
+    Array.isArray(education.education) && education.education.length > 0;
+  const hasMemberships =
+    Array.isArray(lawyerProfile.memberships) &&
+    lawyerProfile.memberships.length > 0;
+  const hasValidExpertise =
+    typeof lawyerProfile.expertise === "string" &&
+    ALLOWED_EXPERTISE_VALUES.includes(lawyerProfile.expertise) &&
+    lawyerProfile.expertise !== "general";
+
+  const hasCustomPhoto =
+    user?.profilePhoto && user?.profilePhoto !== DEFAULT_PROFILE_PHOTO;
 
   return Boolean(
+    user?.name?.trim() &&
     basic.professionalTitle &&
-    typeof exp.totalYearsExperience === "number" &&
-    exp.totalYearsExperience >= 0 &&
-    basic.bio &&
-    hasPracticeAreas,
+    hasContactInfo &&
+    hasPracticeAreas &&
+    hasValidExpertise &&
+    hasEducation &&
+    hasMemberships &&
+    lawyerProfile.barRegistrationNumber &&
+    hasCustomPhoto,
   );
 };
 
-// Map internal profile document to API response shape. 
 const mapLawyerProfileResponse = (lawyerProfile) => ({
   id: lawyerProfile._id,
   user: lawyerProfile.user
@@ -201,7 +281,9 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
       }
     : null,
   expertise: lawyerProfile.expertise,
-  isVerified: lawyerProfile.isVerified,
+  verificationStatus: lawyerProfile.verificationStatus || "pending",
+  barRegistrationNumber: lawyerProfile.barRegistrationNumber || null,
+  memberships: lawyerProfile.memberships || [],
   isFree: lawyerProfile.isFree,
   basicInfo: lawyerProfile.basicInfo || {},
   experience: lawyerProfile.experience || {},
@@ -211,6 +293,45 @@ const mapLawyerProfileResponse = (lawyerProfile) => ({
   updatedAt: lawyerProfile.updatedAt,
 });
 
+const ensureValidUserId = (userId) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error("Invalid user id");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const ensureLawyerUserById = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.role !== "lawyer") {
+    const error = new Error("Selected user is not a lawyer");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return user;
+};
+
+const findOrCreateLawyerProfileByUserId = async (userId) => {
+  let lawyerProfile = await LawyerProfile.findOne({ user: userId });
+
+  if (!lawyerProfile) {
+    lawyerProfile = await LawyerProfile.create({
+      user: userId,
+      verificationStatus: "pending",
+    });
+  }
+
+  return lawyerProfile;
+};
+
 // Return all lawyer profiles for public listing.
 export const findAllLawyerProfiles = async () => {
   const lawyerProfiles = await LawyerProfile.find({})
@@ -219,6 +340,154 @@ export const findAllLawyerProfiles = async () => {
     .lean();
 
   return lawyerProfiles.map(mapLawyerProfileResponse);
+};
+
+// Return only approved lawyer profiles for public listing.
+// Accepts optional { search, expertise, isFree } for filtering.
+export const findApprovedLawyerProfiles = async ({ search, expertise, isFree } = {}) => {
+  const filter = { verificationStatus: "approved" };
+
+  if (expertise && ALLOWED_EXPERTISE_VALUES.includes(expertise)) {
+    filter.expertise = expertise;
+  }
+
+  if (isFree === true || isFree === "true") {
+    filter.isFree = true;
+  }
+
+  const lawyerProfiles = await LawyerProfile.find(filter)
+    .populate({
+      path: "user",
+      select: "name email role profilePhoto",
+      match: { role: "lawyer" },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  let results = lawyerProfiles
+    .filter((lawyerProfile) => Boolean(lawyerProfile.user))
+    .map(mapLawyerProfileResponse);
+
+  // Post-populate text search on name, title, and bio
+  if (search && typeof search === "string" && search.trim()) {
+    const query = search.trim().toLowerCase();
+    results = results.filter(
+      (p) =>
+        p.user?.name?.toLowerCase().includes(query) ||
+        p.basicInfo?.professionalTitle?.toLowerCase().includes(query) ||
+        p.basicInfo?.bio?.toLowerCase().includes(query),
+    );
+  }
+
+  return results;
+};
+
+// Return a single lawyer profile by lawyer profile ID or associated user ID.
+export const findLawyerProfileById = async (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error("Invalid ID format");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Try fetching by LawyerProfile _id or user _id
+  let lawyerProfile = await LawyerProfile.findOne({
+    $or: [{ _id: id }, { user: id }],
+  })
+    .populate("user", "name email role profilePhoto")
+    .lean();
+
+  if (!lawyerProfile) {
+    const error = new Error("Lawyer profile not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return mapLawyerProfileResponse(lawyerProfile);
+};
+
+// Return lawyer profiles for admin review, optionally filtered by verification status and profile completion.
+export const findLawyerProfilesForAdmin = async ({
+  verificationStatus,
+  profileCompleted,
+} = {}) => {
+  if (
+    verificationStatus !== undefined &&
+    !VERIFICATION_STATUSES.includes(verificationStatus)
+  ) {
+    const error = new Error("Invalid verificationStatus filter");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const filter = {};
+
+  if (verificationStatus) {
+    filter.verificationStatus = verificationStatus;
+  }
+
+  if (profileCompleted !== undefined) {
+    filter.profileCompleted = profileCompleted === true || profileCompleted === "true";
+  }
+
+  const lawyerProfiles = await LawyerProfile.find(filter)
+    .populate({
+      path: "user",
+      select: "name email role profilePhoto",
+      match: { role: "lawyer" },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return lawyerProfiles
+    .filter((lawyerProfile) => Boolean(lawyerProfile.user))
+    .map(mapLawyerProfileResponse);
+};
+
+
+// Update verification status for a lawyer profile after validating the target user is a lawyer.
+export const updateLawyerVerificationStatusByAdmin = async ({
+  userId,
+  verificationStatus,
+}) => {
+  ensureValidUserId(userId);
+
+  if (!VERIFICATION_STATUSES.includes(verificationStatus)) {
+    const error = new Error("Invalid verificationStatus value");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await ensureLawyerUserById(userId);
+
+  const lawyerProfile = await findOrCreateLawyerProfileByUserId(userId);
+
+  if (verificationStatus === "approved") {
+    if (!lawyerProfile.profileCompleted) {
+      const error = new Error(
+        "Cannot approve lawyer before completing profile",
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!lawyerProfile.barRegistrationNumber) {
+      const error = new Error(
+        "Cannot approve lawyer without bar registration number",
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  lawyerProfile.verificationStatus = verificationStatus;
+  await lawyerProfile.save();
+
+  const populatedLawyerProfile = await LawyerProfile.findById(lawyerProfile._id)
+    .populate("user", "name email role profilePhoto")
+    .lean();
+
+  return mapLawyerProfileResponse(populatedLawyerProfile);
 };
 
 // Return or auto-create the authenticated lawyer profile.
@@ -248,7 +517,10 @@ export const findLawyerProfileByUser = async (authUser) => {
     .lean();
 
   if (!lawyerProfile) {
-    const createdProfile = await LawyerProfile.create({ user: user._id });
+    const createdProfile = await LawyerProfile.create({
+      user: user._id,
+      verificationStatus: "pending",
+    });
     lawyerProfile = await LawyerProfile.findById(createdProfile._id)
       .populate("user", "name email role profilePhoto")
       .lean();
@@ -282,7 +554,10 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
   let lawyerProfile = await LawyerProfile.findOne({ user: user._id });
 
   if (!lawyerProfile) {
-    lawyerProfile = await LawyerProfile.create({ user: user._id });
+    lawyerProfile = await LawyerProfile.create({
+      user: user._id,
+      verificationStatus: "pending",
+    });
   }
 
   ensureProfileSections(lawyerProfile);
@@ -299,9 +574,122 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
     throw error;
   }
 
-  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile);
+  // Validate bio length if provided
+  const bio = lawyerProfile.basicInfo?.bio;
+  if (bio && bio.trim().length < 50) {
+    const error = new Error("Bio must be at least 50 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+  if (bio && bio.trim().length > 1000) {
+    const error = new Error("Bio must not exceed 1000 characters.");
+    error.statusCode = 422;
+    throw error;
+  }
 
-  await lawyerProfile.save();
+  // Validate totalYearsExperience if provided
+  const years = lawyerProfile.experience?.totalYearsExperience;
+  if (years !== undefined && years !== null && years !== "") {
+    const yearsNum = Number(years);
+    if (isNaN(yearsNum) || yearsNum < 0 || yearsNum > 60) {
+      const error = new Error("Years of experience must be a number between 0 and 60.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  // Validate contact details if provided
+  const contact = lawyerProfile.basicInfo?.contactInfo || {};
+  if (contact.phone) {
+    const phoneClean = contact.phone.toString().replace(/\s+/g, "");
+    if (!/^(?:\+94|0)?7[0-9]{8}$/.test(phoneClean)) {
+      const error = new Error("Invalid Sri Lankan phone number format.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  if (contact.location !== undefined && (!contact.location || contact.location.trim() === "")) {
+    const error = new Error("Location is required.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  if (contact.officeAddress && contact.officeAddress.trim().length < 10) {
+    const error = new Error("Office address must be at least 10 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  // Validate work history dates if provided
+  if (lawyerProfile.experience?.workHistory?.length > 0) {
+    const now = new Date();
+    lawyerProfile.experience.workHistory.forEach((job, idx) => {
+      if (job.startDate) {
+        const start = new Date(job.startDate);
+        if (start >= now) {
+          const error = new Error(`Work History #${idx + 1}: Start date must be in the past.`);
+          error.statusCode = 422;
+          throw error;
+        }
+        
+        if (job.endDate) {
+          const end = new Date(job.endDate);
+          if (end < start) {
+            const error = new Error(`Work History #${idx + 1}: End date cannot be before the start date.`);
+            error.statusCode = 422;
+            throw error;
+          }
+        }
+      }
+    });
+  }
+
+  // Validate education years if provided
+  if (lawyerProfile.education?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.education.forEach((edu, idx) => {
+      if (edu.graduationYear) {
+        const year = Number(edu.graduationYear);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Education #${idx + 1}: Graduation year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
+  // Validate certification years if provided
+  if (lawyerProfile.certifications?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.certifications.forEach((cert, idx) => {
+      if (cert.year) {
+        const year = Number(cert.year);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Certification #${idx + 1}: Issued year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
+  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile, user);
+
+  try {
+    await lawyerProfile.save();
+  } catch (err) {
+    // Duplicate key on barRegistrationNumber
+    if (err.code === 11000 && err.keyPattern?.barRegistrationNumber) {
+      const friendlyError = new Error(
+        "This Bar Registration Number is already registered to another lawyer. Please check your number and try again."
+      );
+      friendlyError.statusCode = 409;
+      throw friendlyError;
+    }
+    throw err;
+  }
 
   return lawyerProfile;
 };

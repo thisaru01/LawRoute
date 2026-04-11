@@ -3,10 +3,13 @@
 
 export const CIVIL_ISSUE_CATEGORIES = [
     "land",
+    "matrimonial_family",
+    "labour_industrial",
+    "digital_emerging_rights",
     "police",
     "harassment",
     "public_services",
     "other",
 ];
 
-export const CIVIL_ISSUE_STATUSES = ["pending", "in_progress", "resolved"];
+export const CIVIL_ISSUE_STATUSES = ["pending", "in_progress", "resolved", "rejected"];
