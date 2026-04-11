@@ -60,7 +60,7 @@ export async function acceptConsultationRequest({ requestId, lawyerId }) {
         ]);
 
         if (citizen?.email) {
-          const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173/";
+          const loginUrl = process.env.FRONTEND_URL || "http://localhost:5173";
           const { subject, html } = consultationAcceptedCitizenTemplate({
             citizenName: citizen.name || "there",
             lawyerName: lawyer?.name || "your lawyer",
