@@ -151,6 +151,8 @@ export default function Features() {
                           ? `${feature.href}#lawyer-search`
                           : feature.href === "/legal-library/articles"
                           ? `${feature.href}#articles-list`
+                          : feature.href === "/civil-issues"
+                          ? `${feature.href}#issues-list`
                           : feature.href
                       }>{feature.ctaLabel}</Link>
                     </Button>
