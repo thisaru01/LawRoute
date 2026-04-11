@@ -4,7 +4,18 @@ import { getPublishedArticles } from "@/api/services/articleService";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import EmptyState from "@/components/consultation-requests/EmptyState";
-import { FileText } from "lucide-react";
+import { FileText, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  DEFAULT_ARTICLE_CATEGORIES,
+  useArticleCategories,
+} from "@/hooks/articles/useArticleCategories";
 
 function formatDate(d) {
   try {
@@ -29,6 +40,9 @@ export default function PublicArticlesPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("All");
+
+  const categories = useArticleCategories(DEFAULT_ARTICLE_CATEGORIES);
 
   useEffect(() => {
     let mounted = true;
@@ -56,6 +70,14 @@ export default function PublicArticlesPage() {
     };
   }, []);
 
+  const filteredArticles =
+    categoryFilter === "All"
+      ? articles
+      : articles.filter((article) => {
+          const value = String(article?.category || "").toLowerCase();
+          return value === String(categoryFilter).toLowerCase();
+        });
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
@@ -70,10 +92,52 @@ export default function PublicArticlesPage() {
               {/* <p className="mt-2 text-muted-foreground">
                 Articles & Guides
               </p> */}
-              <p className="text-sm sm:text-base text-slate-500 max-w-2xl">
-                Browse published legal articles written by verified lawyers and authorities. These do not replace legal advice, but can help you
-                understand common topics and procedures.
-              </p>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm sm:text-base text-muted-foreground max-w-2xl">
+                  Browse published legal articles written by verified lawyers and authorities. These do not replace legal advice, but can help you
+                  understand common topics and procedures.
+                </div>
+
+                <div className="pt-1 sm:pt-0">
+                  <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="inline-flex items-center gap-2 rounded-md px-4 py-1 text-sm"
+                    >
+                        <span className="font-medium text-foreground">
+                          {categoryFilter === "All" ? "All categories" : categoryFilter}
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-36 max-h-44 overflow-auto py-0 text-sm">
+                      <DropdownMenuItem
+                        className="py-1 px-3 text-sm"
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setCategoryFilter("All");
+                        }}
+                      >
+                        All
+                      </DropdownMenuItem>
+                      {categories.map((c) => (
+                        <DropdownMenuItem
+                          key={c}
+                          className="py-1 px-3 text-sm"
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setCategoryFilter(c);
+                          }}
+                        >
+                          {c}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             </div>
 
             {loading && (
@@ -113,14 +177,14 @@ export default function PublicArticlesPage() {
 
             {!loading && !error && (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {articles.length === 0 ? (
+                {filteredArticles.length === 0 ? (
                   <EmptyState
                     title="No articles have been published yet."
                     message={"Check back later for new articles published by verified authors."}
                     icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
                   />
                 ) : (
-                  articles.map((article) => (
+                  filteredArticles.map((article) => (
                     <ArticleCard key={article._id || article.id} article={article} />
                   ))
                 )}
