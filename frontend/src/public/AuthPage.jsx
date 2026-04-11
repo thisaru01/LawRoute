@@ -8,6 +8,8 @@ import SignUpForm from "@/public/auth/SignUpForm.jsx";
 import { useAuth } from "@/context/auth/useAuth";
 import { getDashboardPathForRole } from "@/context/auth/authRouting";
 import logoWhite from "@/assets/LawRouteLogoWhite.png";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -105,12 +107,15 @@ export default function AuthPage() {
               <div className="flex h-full items-center justify-center p-10">
                 <div className="w-full max-w-sm">
                   <div className="mb-8 space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      LawRoute
+                    <div className="flex flex-col items-start gap-6">
+                      <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+                        <ArrowLeft className="h-5 w-5" />
+                        <span className="ml-2 text-sm">Home</span>
+                      </Link>
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {title}
+                      </h1>
                     </div>
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {title}
-                    </h1>
                     <p className="text-sm text-muted-foreground">{subtitle}</p>
                   </div>
 
@@ -190,12 +195,15 @@ export default function AuthPage() {
           <div className="lg:hidden">
             <div className="grid gap-6 p-6 sm:p-10">
               <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  LawRoute
+                <div className="flex flex-col items-start gap-3">
+                  <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="ml-2 text-sm">Home</span>
+                  </Link>
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    {title}
+                  </h1>
                 </div>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {title}
-                </h1>
                 <p className="text-sm text-muted-foreground">{subtitle}</p>
               </div>
 
