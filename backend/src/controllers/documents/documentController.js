@@ -89,8 +89,6 @@ export const downloadDocument = async (req, res, next) => {
         .json({ success: false, message: "Document file not found" });
     }
 
-    // Proxy the remote file so we can set Content-Disposition with a proper filename
-    // and ensure the browser saves it as a .pdf. This avoids changing upload middleware.
     const fileUrl = document.fileUrl;
     const { URL } = await import("url");
     const parsed = new URL(fileUrl);
@@ -129,6 +127,21 @@ export const deleteDocument = async (req, res, next) => {
     const { id } = req.params;
     const result = await documentService.deleteDocument({ id, user: req.user });
     return res.status(200).json({ success: true, message: result.message });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
+};
+
+// Admin: update document title/description
+export const updateDocument = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+    const document = await documentService.updateDocument({ id, title, description, user: req.user });
+    return res.status(200).json({ success: true, document });
   } catch (err) {
     if (typeof next === "function") return next(err);
     return res

@@ -10,15 +10,13 @@ const ArticleSchema = new Schema({
     required: true,
     enum: ["Family", "Property", "Work", "Consumer", "Finance"],
   },
-  // Card image (uploaded PNG/JPG) shown in article cards/listings
+  
   imagecardUrl: { type: String, default: null },
   imagecardPublicId: { type: String, default: null },
-  // Main article image (optional upload)
   imageUrl: { type: String, default: null },
   imagePublicId: { type: String, default: null },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
   authorRole: { type: String, enum: ["admin", "lawyer"], required: true },
-  // Admin user who published the article (if status === "published")
   publishedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   status: {
     type: String,

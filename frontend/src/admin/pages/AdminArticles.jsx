@@ -1,14 +1,18 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArticlesByStatus } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
+import { FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth/useAuth";
+import EmptyState from "@/components/consultation-requests/EmptyState";
 
 const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
 export default function AdminArticles() {
   const { status } = useParams();
+  const location = useLocation();
   const normalizedStatus = (status ?? "pending").toLowerCase();
 
   const safeStatus = allowedStatuses.has(normalizedStatus)
@@ -21,8 +25,45 @@ export default function AdminArticles() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState("own"); // 'own' | 'others'
+  const initialTab =
+    location.state?.ownerScope === "others" ? "others" : "own";
+  const [tab, setTab] = useState(initialTab); // 'own' | 'others'
   const { userId } = useAuth();
+
+  const statusBadgeClassName = `ml-2 text-[11px] rounded-full px-3 py-1 capitalize border-none ${
+    safeStatus === "pending"
+      ? "bg-amber-50 text-amber-700"
+      : safeStatus === "published"
+        ? "bg-emerald-50 text-emerald-700"
+        : safeStatus === "rejected"
+          ? "bg-red-50 text-red-700"
+          : "bg-muted text-muted-foreground"
+  }`;
+
+  const emptyStateMessage = (() => {
+    if (safeStatus === "pending") {
+      if (tab === "own") {
+        return "You don't have any pending articles. Submit a new article to see it listed here.";
+      }
+      return "There are no pending articles from other authors at the moment.";
+    }
+
+    if (safeStatus === "published") {
+      if (tab === "own") {
+        return "You haven't published any articles yet. Once you publish, they'll appear here.";
+      }
+      return "No published articles from other authors match this filter yet.";
+    }
+
+    if (safeStatus === "rejected") {
+      if (tab === "own") {
+        return "None of your articles are currently rejected. If an article gets rejected, it will show up here with details.";
+      }
+      return "There are no rejected articles from other authors right now.";
+    }
+
+    return undefined;
+  })();
 
   useEffect(() => {
     let mounted = true;
@@ -89,8 +130,12 @@ export default function AdminArticles() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Articles</h1>
-      {/* <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p> */}
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl font-semibold">Articles</h1>
+        <Badge variant="secondary" className={statusBadgeClassName}>
+          {label}
+        </Badge>
+      </div>
 
       <div className="mt-3" aria-hidden={false}>
         <Tabs value={tab} onValueChange={(v) => setTab(v)}>
@@ -106,7 +151,11 @@ export default function AdminArticles() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {!loading && !error && articles.length === 0 && (
-          <p className="text-sm text-muted-foreground">No articles found.</p>
+          <EmptyState
+            title="No articles found."
+            message={emptyStateMessage}
+            icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
+          />
         )}
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -15,23 +15,19 @@ import articleUpload from "../../middleware/upload/articleUpload.js";
 
 const router = express.Router();
 
-// Create article (admins publish immediately; lawyers create pending articles)
 // Get all articles (public: only published; admin with token: all)
 router.get("/", getAllArticles);
 
 // Public: get only published articles
 router.get("/published", getPublishedArticles);
 
-
 // Get only the authenticated user's articles (owner), using token only
-// - Returns all statuses (pending, published, rejected, etc.) for that user
 router.get("/me", protect, authorizeRoles("admin", "lawyer"), getMyArticles);
 
-// Get single article by id (placed after /me to avoid conflicting with the '/me' route)
+// Get single article by id
 router.get("/:id", getArticle);
 
-// Create article with optional image upload
-// Accept both the main `image` and the `imagecard` upload fields
+// Create article 
 router.post(
   "/",
   protect,
@@ -56,13 +52,10 @@ router.put(
   updateArticle,
 );
 
-// Admin-only: update article status (e.g. pending -> published)
+// Admin-only: update article status (pending -> published)
 router.patch(
   "/:id/status",
   protect,
-  // Allow both admins and lawyers to call the status endpoint; the
-  // service enforces which roles may set which statuses (e.g., only
-  // admins can publish/reject; only the author can archive).
   authorizeRoles("admin", "lawyer"),
   updateArticleStatus,
 );
@@ -76,8 +69,6 @@ router.get(
 );
 
 // Delete article
-// - Pending: admin or owning lawyer (enforced in controller)
-// - Published: only admin who did NOT publish it (enforced in controller)
 router.delete(
   "/:id",
   protect,

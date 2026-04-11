@@ -1,0 +1,21 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60 # seconds
+      arrivalRate: 5 # new virtual users per second
+      name: "Browse and download documents"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  # Public users listing documents and opening a detail page
+  - name: "Public: List documents and view one"
+    flow:
+      - get:
+          url: "/api/documents"
+          capture:
+            - json: "$.documents[0]._id"
+              as: documentId
+      - get:
+          url: "/api/documents/{{ documentId }}"
