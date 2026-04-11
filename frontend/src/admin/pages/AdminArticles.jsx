@@ -4,6 +4,7 @@ import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArtic
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
 import { FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth/useAuth";
 import EmptyState from "@/components/consultation-requests/EmptyState";
 
@@ -25,6 +26,16 @@ export default function AdminArticles() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("own"); // 'own' | 'others'
   const { userId } = useAuth();
+
+  const statusBadgeClassName = `ml-2 text-[11px] rounded-full px-3 py-1 capitalize border-none ${
+    safeStatus === "pending"
+      ? "bg-amber-50 text-amber-700"
+      : safeStatus === "published"
+        ? "bg-emerald-50 text-emerald-700"
+        : safeStatus === "rejected"
+          ? "bg-red-50 text-red-700"
+          : "bg-muted text-muted-foreground"
+  }`;
 
   const emptyStateMessage = (() => {
     if (safeStatus === "pending") {
@@ -116,8 +127,12 @@ export default function AdminArticles() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Articles</h1>
-      {/* <p className="mt-2 text-sm text-muted-foreground">Status: {label}</p> */}
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl font-semibold">Articles</h1>
+        <Badge variant="secondary" className={statusBadgeClassName}>
+          {label}
+        </Badge>
+      </div>
 
       <div className="mt-3" aria-hidden={false}>
         <Tabs value={tab} onValueChange={(v) => setTab(v)}>
