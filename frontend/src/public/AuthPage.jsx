@@ -7,6 +7,7 @@ import SignInForm from "@/public/auth/SignInForm.jsx";
 import SignUpForm from "@/public/auth/SignUpForm.jsx";
 import { useAuth } from "@/context/auth/useAuth";
 import { getDashboardPathForRole } from "@/context/auth/authRouting";
+import logoWhite from "@/assets/LawRouteLogoWhite.png";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -153,17 +154,20 @@ export default function AuthPage() {
               <div className="relative flex h-full items-center justify-center overflow-hidden bg-primary p-10 text-primary-foreground">
                 <div className="absolute inset-0 bg-linear-to-br from-primary to-primary/70" />
                 <div className="relative w-full max-w-md space-y-10">
+                  <div>
+                    <img src={logoWhite} alt="LawRoute" className="h-24 mx-auto" />
+                  </div>
                   <div className="space-y-4">
                     <h2 className="text-4xl font-semibold tracking-tight">
                       Enter the future
-                      <br />
+                      
                       of legal support,
-                      <br />
+                      
                       today
                     </h2>
                     <p className="text-sm text-primary-foreground/80">
                       Find the right help, track your progress, and stay
-                      informed — all in one place.
+                      informed all in one place.
                     </p>
                   </div>
 
