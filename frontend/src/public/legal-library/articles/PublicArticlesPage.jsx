@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import { getPublishedArticles } from "@/api/services/articleService";
@@ -38,6 +39,7 @@ function truncate(str, n = 180) {
 }
 
 export default function PublicArticlesPage() {
+  const location = useLocation();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -79,12 +81,26 @@ export default function PublicArticlesPage() {
           return value === String(categoryFilter).toLowerCase();
         });
 
+  // Smooth-scroll to hash when navigated from another page (e.g. /legal-library/articles#articles-list)
+  useEffect(() => {
+    if (!location?.hash) return;
+    const id = location.hash.replace(/^#/, "");
+    const scrollToId = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+
+    scrollToId();
+    const raf = requestAnimationFrame(scrollToId);
+    return () => cancelAnimationFrame(raf);
+  }, [location]);
+
   return (
     <div className="min-h-screen bg-background text-slate-900">
       <Navbar />
 
       <main>
-        <section className="bg-background py-10 sm:py-14 border-b border-slate-200">
+        <section id="articles-list" className="bg-background py-10 sm:py-14 border-b border-slate-200">
           <div className="mx-auto w-full max-w-6xl px-4 space-y-6">
             <div className="space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
@@ -198,6 +214,8 @@ export default function PublicArticlesPage() {
     </div>
   );
 }
+
+
 
 function ArticleCard({ article }) {
   const hasImage = Boolean(article?.imagecardUrl || article?.imageUrl);

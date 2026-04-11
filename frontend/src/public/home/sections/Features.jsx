@@ -147,7 +147,11 @@ export default function Features() {
                       className="h-12 rounded-full bg-[#121212] px-8 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Link to={
-                        feature.href === "/find-a-lawyer" ? `${feature.href}#lawyer-search` : feature.href
+                        feature.href === "/find-a-lawyer"
+                          ? `${feature.href}#lawyer-search`
+                          : feature.href === "/legal-library/articles"
+                          ? `${feature.href}#articles-list`
+                          : feature.href
                       }>{feature.ctaLabel}</Link>
                     </Button>
                   </div>
