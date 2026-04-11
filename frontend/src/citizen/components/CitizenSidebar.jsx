@@ -10,6 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { setAuthToken } from "@/context/auth/authStorage";
+import LawRouteLogo from "@/assets/LawRouteLogo.png";
 
 import {
   Sidebar,
@@ -81,8 +82,12 @@ export function CitizenSidebar({ items = defaultItems, activeHref }) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Scale className="size-4" aria-hidden="true" />
+                <div className="flex aspect-square size-10 items-center justify-center overflow-hidden ">
+                  <img
+                    src={LawRouteLogo}
+                    alt="LawRoute"
+                    className="h-20 w-20 object-contain"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">LawRoute</span>

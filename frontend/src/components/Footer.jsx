@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LawRouteLogoWhite from "@/assets/LawRouteLogoWhite.png";
 
 const NAV_COLUMNS = [
   {
@@ -47,12 +48,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-3 sm:max-w-xs">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-600 text-xs font-semibold tracking-[0.18em]">
-                LR
-              </div>
-              <span className="text-sm font-semibold tracking-[0.18em] uppercase text-slate-100">
-                LawRoute
-              </span>
+              <img
+                src={LawRouteLogoWhite}
+                alt="LawRoute"
+                className="h-14 w-auto object-contain"
+              />
             </div>
             <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">
               A modern platform connecting citizens, lawyers, and authorities to
