@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "@/components/Navbar.jsx";
+import Footer from "@/components/Footer.jsx";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, ExternalLink } from "lucide-react";
 import { formatDateTime } from "@/lib/formatDateTime";
@@ -163,11 +164,7 @@ export default function PublicDocumentsPage() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-          © {new Date().getFullYear()} LawRoute
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

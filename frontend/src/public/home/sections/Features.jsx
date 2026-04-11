@@ -106,7 +106,7 @@ export default function Features() {
 
             {/* Image placeholder column */}
             <div className="order-2">
-              <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
+              <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-4/3">
                 <img src={section1} alt="Request consultations" className="h-full w-full object-cover" />
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function Features() {
 
                 {/* Image placeholder column */}
                 <div className={imageColClasses}>
-                  <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
+                  <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-4/3">
                     {feature.id === "legal-library" ? (
                       <img
                         src={section3}
