@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import ladyJustice from "@/assets/lady-justice.webp";
+import section6 from "@/assets/section6.jpg";
 
 export default function ContactSection() {
   return (
@@ -60,10 +60,10 @@ export default function ContactSection() {
           </div>
 
           {/* Right: illustration image */}
-          <div className="w-full max-w-md justify-self-center lg:justify-self-end">
-            <div className="relative overflow-hidden">
+          <div className="w-full max-w-lg justify-self-center lg:justify-self-end">
+            <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
               <img
-                src={ladyJustice}
+                src={section6}
                 alt="Illustration representing legal support"
                 className="h-full w-full object-cover"
               />
