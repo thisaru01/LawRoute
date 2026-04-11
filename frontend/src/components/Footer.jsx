@@ -93,7 +93,7 @@ export default function Footer() {
           </p>
 
           <div className="space-y-2 text-right sm:text-left">
-            <p className="text-slate-300">support@lawroute.lk</p>
+            <p className="text-slate-300">lawroutesl@gmail.com</p>
             <p>© {year} LawRoute. All rights reserved.</p>
           </div>
         </div>
