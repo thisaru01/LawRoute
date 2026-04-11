@@ -64,7 +64,7 @@ export default function ContactSection() {
 
           {/* Right: illustration image */}
           <div className="w-full max-w-lg justify-self-center lg:justify-self-end">
-            <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
+            <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-4/3">
               <img
                 src={section6}
                 alt="Illustration representing legal support"

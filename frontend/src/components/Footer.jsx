@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import LawRouteLogoWhite from "@/assets/LawRouteLogoWhite.png";
 import { useAuth } from "@/context/auth/useAuth";
 import { getDashboardPathForRole } from "@/context/auth/authRouting";
@@ -41,18 +41,48 @@ const NAV_COLUMNS = [
 
 export default function Footer() {
   const navigate = useNavigate();
-  function navigateAndScroll(e, targetId) {
+  const location = useLocation();
+
+  
+  function navigateAndScrollToPath(e, to) {
     e.preventDefault();
-    navigate("/");
-    setTimeout(() => {
-      const el = document.getElementById(targetId);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-    }, 120);
+    const target = to || "/";
+    const parts = target.split("#");
+    const base = parts[0] || "/";
+    const id = parts[1];
+
+    const navigateTo = base || "/";
+
+    const performScroll = () => {
+      if (id) {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    if (location.pathname === navigateTo) {
+      performScroll();
+      return;
+    }
+
+    navigate(navigateTo);
+    setTimeout(performScroll, 150);
   }
  
   const { role } = useAuth();
   const dashboardPath = getDashboardPathForRole(role) || "/dashboard";
   const year = new Date().getFullYear();
+
+  function handlePlainLinkClick(e, to) {
+    // If link targets the current path, force scroll to top
+    const target = to === "/dashboard" ? dashboardPath : to;
+    if (target && location.pathname === target) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
 
   return (
     <footer className="border-t border-slate-800 bg-black text-slate-200">
@@ -83,26 +113,13 @@ export default function Footer() {
                 </p>
                 <ul className="space-y-2">
                   {col.links.map((item) => {
-                    if (item.to === "/#contact") {
+                    // handle links like '/#contact' or '/path#id' with smooth scroll
+                    if (item.to && item.to.includes("#")) {
                       return (
                         <li key={item.label}>
                           <a
-                            href="/#contact"
-                            onClick={(e) => navigateAndScroll(e, "contact")}
-                            className="text-sm text-slate-200/80 transition-colors hover:text-white"
-                          >
-                            {item.label}
-                          </a>
-                        </li>
-                      );
-                    }
-
-                    if (item.to === "/#features") {
-                      return (
-                        <li key={item.label}>
-                          <a
-                            href="/#features"
-                            onClick={(e) => navigateAndScroll(e, "features")}
+                            href={item.to}
+                            onClick={(e) => navigateAndScrollToPath(e, item.to)}
                             className="text-sm text-slate-200/80 transition-colors hover:text-white"
                           >
                             {item.label}
@@ -116,6 +133,7 @@ export default function Footer() {
                       <li key={item.label}>
                         <Link
                           to={to}
+                          onClick={(e) => navigateAndScrollToPath(e, to)}
                           className="text-sm text-slate-200/80 transition-colors hover:text-white"
                         >
                           {item.label}
