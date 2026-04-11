@@ -34,7 +34,7 @@ export function RecentConsultations({ requests, isLoading }) {
   }
 
   return (
-    <Card className="border-none shadow-md dark:bg-zinc-900/50 dark:backdrop-blur-sm">
+    <Card className="group border-none shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-zinc-900/50 dark:backdrop-blur-sm border-t border-white/5">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Recent Consultations</CardTitle>
@@ -52,8 +52,11 @@ export function RecentConsultations({ requests, isLoading }) {
         {requests?.length > 0 ? (
           <div className="space-y-6">
             {requests.map((request) => (
-              <div key={request._id} className="flex items-start gap-4 transition-all hover:bg-muted/50 p-2 rounded-lg">
-                <Avatar className="h-10 w-10 border-2 border-primary/10">
+              <div 
+                key={request._id} 
+                className="flex items-start gap-4 transition-all duration-200 hover:bg-primary/5 hover:translate-x-1 p-3 rounded-xl group/item cursor-default"
+              >
+                <Avatar className="h-10 w-10 border-2 border-primary/10 transition-transform group-hover/item:scale-110">
                   <AvatarImage src={request.user?.profilePhoto} alt={request.user?.name} />
                   <AvatarFallback>{request.user?.name?.charAt(0)}</AvatarFallback>
                 </Avatar>

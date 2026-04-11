@@ -54,11 +54,12 @@ export function DashboardStats({ stats, isLoading }) {
       {items.map((item, index) => (
         <Card 
           key={index} 
-          className="group overflow-hidden border-none shadow-md transition-all hover:shadow-lg dark:bg-zinc-900/50 dark:backdrop-blur-sm"
+          className="group relative overflow-hidden border-none shadow-md transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-2xl dark:bg-zinc-900/50 dark:backdrop-blur-sm border-t border-white/5"
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-            <div className={`rounded-full p-2 ${item.bgColor} ${item.color} transition-transform group-hover:scale-110`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium opacity-80 group-hover:opacity-100 transition-opacity">{item.title}</CardTitle>
+            <div className={`rounded-full p-2.5 ${item.bgColor} ${item.color} shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}>
               <item.icon className="h-4 w-4" />
             </div>
           </CardHeader>
