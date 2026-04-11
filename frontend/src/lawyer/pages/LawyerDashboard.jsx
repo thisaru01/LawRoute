@@ -71,15 +71,15 @@ function QuickLinkCard({ title, description, href, icon }) {
     <Button 
       variant="outline" 
       asChild 
-      className="h-auto flex-col items-start gap-2 p-4 text-left hover:bg-muted/50 transition-all border-none shadow-sm dark:bg-zinc-900/40"
+      className="group h-auto flex-col items-start gap-3 p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-2xl border-none shadow-sm dark:bg-zinc-900/40 hover:bg-primary/5 active:scale-95"
     >
-      <a href={href}>
-        <div className="rounded-lg bg-primary/10 p-2 text-primary">
+      <a href={href} className="w-full">
+        <div className="rounded-xl bg-primary/10 p-3 text-primary transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-primary/20 shadow-sm">
           {icon}
         </div>
-        <div>
-          <div className="font-semibold">{title}</div>
-          <div className="text-xs text-muted-foreground line-clamp-1">{description}</div>
+        <div className="space-y-1 mt-1">
+          <div className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{title}</div>
+          <div className="text-xs text-muted-foreground line-clamp-1 opacity-80 group-hover:opacity-100">{description}</div>
         </div>
       </a>
     </Button>

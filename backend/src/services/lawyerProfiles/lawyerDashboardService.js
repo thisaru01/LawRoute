@@ -2,6 +2,7 @@ import ConsultationRequest from "../../models/consultation/consultationRequestMo
 import Case from "../../models/case/caseModel.js";
 import Article from "../../models/articles/articleModel.js";
 import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
+import User from "../../models/userModel.js";
 
 /**
  * Get aggregated dashboard statistics for a specific lawyer.
@@ -35,9 +36,25 @@ export async function getLawyerDashboardStats(lawyerId) {
     LawyerProfile.findOne({ user: lawyerId }).lean(),
   ]);
 
-  // Calculate profile completion percentage based on stored flag or logic
-  // lawyerProfile.profileCompleted is a boolean in this system.
-  const profileCompletion = lawyerProfile?.profileCompleted ? 100 : 40; // Defaulting to 40 if not completed for visual feedback
+  const user = await User.findById(lawyerId).select("name profilePhoto").lean();
+
+  // Define completion criteria based on lawyerProfileService.js logic
+  const DEFAULT_PHOTO = "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png";
+  
+  const sections = [
+    { id: "photo", label: "Professional Photo", isCompleted: !!(user?.profilePhoto && user.profilePhoto !== DEFAULT_PHOTO) },
+    { id: "title", label: "Professional Title", isCompleted: !!lawyerProfile?.basicInfo?.professionalTitle },
+    { id: "bio", label: "Professional Bio", isCompleted: !!(lawyerProfile?.basicInfo?.bio && lawyerProfile.basicInfo.bio.length >= 50) },
+    { id: "contact", label: "Contact Details", isCompleted: !!(lawyerProfile?.basicInfo?.contactInfo?.phone && lawyerProfile?.basicInfo?.contactInfo?.location) },
+    { id: "practice", label: "Practice Areas", isCompleted: !!(lawyerProfile?.basicInfo?.practiceAreas?.length > 0) },
+    { id: "expertise", label: "Primary Expertise", isCompleted: !!(lawyerProfile?.expertise && lawyerProfile.expertise !== "general") },
+    { id: "education", label: "Education Records", isCompleted: !!(lawyerProfile?.educationQualifications?.education?.length > 0) },
+    { id: "memberships", label: "Memberships", isCompleted: !!(lawyerProfile?.memberships?.length > 0) },
+    { id: "bar", label: "Bar Registration", isCompleted: !!lawyerProfile?.barRegistrationNumber },
+  ];
+
+  const completedCount = sections.filter(s => s.isCompleted).length;
+  const completionPercentage = Math.round((completedCount / sections.length) * 100);
 
   return {
     stats: {
@@ -61,9 +78,11 @@ export async function getLawyerDashboardStats(lawyerId) {
     recentConsultations,
     profileStatus: {
       isCompleted: !!lawyerProfile?.profileCompleted,
-      completionPercentage: profileCompletion,
+      completionPercentage,
       verificationStatus: lawyerProfile?.verificationStatus || "pending",
       barRegistrationNumber: lawyerProfile?.barRegistrationNumber || null,
+      sections,
+      nextAction: sections.find(s => !s.isCompleted)?.label || "None",
     },
   };
 }

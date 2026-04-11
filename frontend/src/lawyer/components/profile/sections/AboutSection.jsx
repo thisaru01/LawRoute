@@ -175,7 +175,7 @@ export default function AboutSection({
           )}
         </Field>
 
-        <Field className="md:col-span-2">
+        <Field>
           <FieldLabel htmlFor="memberships">
             Membership <span className="text-red-600 font-bold text-lg">*</span>
           </FieldLabel>
