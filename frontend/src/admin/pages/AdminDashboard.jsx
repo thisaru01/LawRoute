@@ -268,7 +268,10 @@ export default function AdminDashboard() {
                         {c?.lawyer?.name ? `• ${c.lawyer.name}` : ""}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="text-[11px]">
+                    <Badge
+                      variant="secondary"
+                      className="text-[11px] bg-blue-50 text-blue-700 border-none"
+                    >
                       open
                     </Badge>
                   </li>
@@ -308,7 +311,10 @@ export default function AdminDashboard() {
                         {a?.author?.name || "Author"}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="text-[11px]">
+                    <Badge
+                      variant="secondary"
+                      className="text-[11px] bg-amber-50 text-amber-700 border-none"
+                    >
                       pending
                     </Badge>
                   </li>
