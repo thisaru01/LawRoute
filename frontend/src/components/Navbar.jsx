@@ -1,5 +1,6 @@
 // no direct React hooks needed here
 import { Link, useNavigate } from "react-router-dom";
+import LawRouteLogo from "@/assets/LawRouteLogo.png";
 
 import {
   NavigationMenu,
@@ -57,14 +58,16 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-border bg-background">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-2">
         <Link
           to="/"
-          className="flex items-center gap-2 font-semibold text-foreground"
+          className="flex items-center gap-2 text-lg font-bold text-foreground py-1"
         >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">
-            LR
-          </span>
+          <img
+            src={LawRouteLogo}
+            alt="LawRoute"
+            className="h-12 w-auto object-contain"
+          />
           <span>LawRoute</span>
         </Link>
 
@@ -138,10 +141,11 @@ export default function Navbar() {
                   to="/"
                   className="flex items-center gap-2 font-semibold text-foreground"
                 >
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">
-                    LR
-                  </span>
-                  <span>LawRoute</span>
+                  <img
+                    src={LawRouteLogo}
+                    alt="LawRoute"
+                    className="h-10 w-auto object-contain"
+                  />
                 </Link>
               </div>
 

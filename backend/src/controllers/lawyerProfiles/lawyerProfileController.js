@@ -7,6 +7,7 @@ import {
   updateLawyerVerificationStatusByAdmin,
   updateLawyerProfileByUser,
 } from "../../services/lawyerProfiles/lawyerProfileService.js";
+import { getLawyerDashboardStats } from "../../services/lawyerProfiles/lawyerDashboardService.js";
 
 // Get all lawyer profiles for public browsing.
 export const getAllLawyerProfiles = async (req, res, next) => {
@@ -117,6 +118,19 @@ export const getLawyerProfileById = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       lawyerProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// Get aggregated dashboard statistics for the authenticated lawyer.
+export const getLawyerDashboard = async (req, res, next) => {
+  try {
+    const stats = await getLawyerDashboardStats(req.user._id);
+
+    return res.status(200).json({
+      success: true,
+      ...stats,
     });
   } catch (error) {
     next(error);

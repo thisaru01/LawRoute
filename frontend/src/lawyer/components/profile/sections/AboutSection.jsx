@@ -53,12 +53,12 @@ export default function AboutSection({
   const hasValidationError = !!bioError || !!yearsError;
 
   return (
-      <Card className="overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-blue-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
+    <Card className="group overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-amber-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
       <CardHeader className="border-b bg-gray-50/30">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border shadow-sm text-blue-600">
-              <Star className="w-5 h-5 text-amber-500 fill-amber-50" />
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 shadow-sm text-amber-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/30">
+              <Star className="w-6 h-6 text-amber-500 fill-amber-200/50" />
             </div>
             <div>
               <CardTitle className="text-xl">About & Identity</CardTitle>
@@ -175,7 +175,7 @@ export default function AboutSection({
           )}
         </Field>
 
-        <Field className="md:col-span-2">
+        <Field>
           <FieldLabel htmlFor="memberships">
             Membership <span className="text-red-600 font-bold text-lg">*</span>
           </FieldLabel>

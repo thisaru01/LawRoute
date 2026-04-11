@@ -8,6 +8,10 @@ export const updateMyLawyerProfile = (data) => {
   return axios.put("/lawyer-profile/me", data);
 };
 
+export const getLawyerDashboardStats = () => {
+  return axios.get("/lawyer-profile/dashboard/stats");
+};
+
 /**
  * Fetch approved lawyer profiles (public, no auth required).
  * @param {object} params - Optional filters: { search, expertise, isFree }

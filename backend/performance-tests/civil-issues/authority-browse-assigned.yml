@@ -1,0 +1,43 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      name: "Warm up authority processing"
+    - duration: 30
+      arrivalRate: 3
+      name: "Steady authority processing"
+    - duration: 10
+      arrivalRate: 1
+      name: "Cool down authority processing"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Authority: Login and review assigned queue"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.AUTHORITY_EMAIL }}"
+            password: "{{ $processEnvironment.AUTHORITY_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - think: 1
+      - get:
+          url: "/api/civil-issues/assigned"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/civil-issues/assigned?district=Colombo"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200

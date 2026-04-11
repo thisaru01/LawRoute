@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer.jsx";
 import LawyerCard, { EXPERTISE_LABELS } from "./components/LawyerCard";
 import LawyerCardSkeleton from "./components/LawyerCardSkeleton";
 import { useFindLawyers } from "./hooks/useFindLawyers";
@@ -75,7 +76,7 @@ export default function FindLawyerPage() {
   const hasActiveFilters = debouncedSearch || (expertise && expertise !== "all") || isFree;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       {/*  Page hero header & filters  */}
@@ -198,7 +199,7 @@ export default function FindLawyerPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 flex-1 w-full">
         {/*  Results header  */}
         {!isLoading && !error && (
           <p className="mb-4 text-sm text-muted-foreground">
@@ -252,6 +253,7 @@ export default function FindLawyerPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
