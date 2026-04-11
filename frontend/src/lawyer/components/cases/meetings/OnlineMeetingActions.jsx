@@ -21,7 +21,26 @@ function OnlineMeetingActions({
 }) {
   if (meeting.method !== "online") return null;
 
+  const now = new Date();
+  const meetingDate = meeting.date
+    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+    : null;
+  const diffMinutes = meetingDate
+    ? (meetingDate.getTime() - now.getTime()) / 60000
+    : Infinity;
+
+  const isLawyer = Boolean(canScheduleMeetings);
+  const lawyerUnlocked = isLawyer && diffMinutes <= 10;
+  const citizenUnlocked = !isLawyer && diffMinutes <= 0;
+
+  const joinDisabled =
+    meeting.status === "cancelled" ||
+    meeting.status === "completed" ||
+    !meetingDate ||
+    (isLawyer ? !lawyerUnlocked : !citizenUnlocked);
+
   const handleJoin = () => {
+    if (joinDisabled) return;
     onClose();
     onJoin && onJoin(meeting._id);
   };
@@ -29,21 +48,14 @@ function OnlineMeetingActions({
   // For citizens: single Join button that respects unlock rules
   if (!canScheduleMeetings) {
     return (
-      <Button onClick={handleJoin}>
-        {canScheduleMeetings ? "Start / Join" : "Join"}
+      <Button onClick={handleJoin} disabled={joinDisabled}>
+        Join
       </Button>
     );
   }
 
-  const nowLocal = new Date();
-  const meetingDateLocal = meeting.date
-    ? new Date(`${meeting.date}T${meeting.time || "00:00"}`)
-    : null;
-  const diffMinutesLocal = meetingDateLocal
-    ? (meetingDateLocal.getTime() - nowLocal.getTime()) / 60000
-    : Infinity;
-  const cancelAllowedLocal = diffMinutesLocal > 24 * 60;
-  const updateAllowedLocal = diffMinutesLocal > 24 * 60;
+  const cancelAllowedLocal = diffMinutes > 24 * 60;
+  const updateAllowedLocal = diffMinutes > 24 * 60;
 
   // Inside 24h window: block cancellation with an explanatory button
   if (!cancelAllowedLocal) {
@@ -60,7 +72,9 @@ function OnlineMeetingActions({
         >
           Cancel Meeting
         </Button>
-        <Button onClick={handleJoin}>Start / Join</Button>
+        <Button onClick={handleJoin} disabled={joinDisabled}>
+          Start / Join
+        </Button>
       </>
     );
   }
@@ -151,7 +165,6 @@ function OnlineMeetingActions({
               status: "cancelled",
             });
             toast.success("Meeting cancelled");
-            onClose();
             window.dispatchEvent(new CustomEvent("meetings:refresh"));
           } catch (err) {
             toast.error(
@@ -162,7 +175,9 @@ function OnlineMeetingActions({
           }
         }}
       />
-      <Button onClick={handleJoin}>Start / Join</Button>
+      <Button onClick={handleJoin} disabled={joinDisabled}>
+        Start / Join
+      </Button>
     </>
   );
 }
