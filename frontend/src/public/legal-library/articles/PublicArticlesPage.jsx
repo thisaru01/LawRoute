@@ -80,11 +80,11 @@ export default function PublicArticlesPage() {
         });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-background text-slate-900">
       <Navbar />
 
       <main>
-        <section className="bg-slate-50 py-10 sm:py-14 border-b border-slate-200">
+        <section className="bg-background py-10 sm:py-14 border-b border-slate-200">
           <div className="mx-auto w-full max-w-6xl px-4 space-y-6">
             <div className="space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
