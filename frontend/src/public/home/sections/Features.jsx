@@ -99,7 +99,7 @@ export default function Features() {
                   asChild
                   className="h-12 rounded-full bg-[#121212] px-8 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <Link to={firstFeature.href}>{firstFeature.ctaLabel}</Link>
+                  <Link to={`${firstFeature.href}#lawyer-search`}>{firstFeature.ctaLabel}</Link>
                 </Button>
               </div>
             </div>
@@ -146,7 +146,9 @@ export default function Features() {
                       asChild
                       className="h-12 rounded-full bg-[#121212] px-8 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      <Link to={feature.href}>{feature.ctaLabel}</Link>
+                      <Link to={
+                        feature.href === "/find-a-lawyer" ? `${feature.href}#lawyer-search` : feature.href
+                      }>{feature.ctaLabel}</Link>
                     </Button>
                   </div>
                 </div>
