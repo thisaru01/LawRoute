@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar.jsx";
 import Hero from "@/public/home/sections/Hero.jsx";
+import Features from "@/public/home/sections/Features.jsx";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
 
       <main>
         <Hero />
+        <Features />
       </main>
 
       <footer className="border-t border-slate-200 bg-white">
