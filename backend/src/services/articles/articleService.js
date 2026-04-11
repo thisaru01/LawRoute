@@ -101,8 +101,6 @@ export const getAllArticles = async ({ authHeader, query }) => {
   if (query.category) filter.category = query.category;
   if (query.author) filter.author = query.author;
 
-  // Build final query filter. Do NOT exclude admins' own articles from the
-  // general list — admins should be able to see their published articles.
   const queryFilter = { ...filter };
 
   const articles = await Article.find(queryFilter)
@@ -113,7 +111,6 @@ export const getAllArticles = async ({ authHeader, query }) => {
 };
 
 // Return pending articles authored by others (exclude the requester).
-// Only admins are allowed to call this via controller-level protection.
 export const getPendingOthersArticles = async ({ authHeader, extraQuery = {} }) => {
   let requesterId = null;
   let requesterRole = null;
@@ -269,8 +266,6 @@ export const updateArticleStatus = async ({ id, status, user }) => {
     return { deleted: false, article };
   }
 
-  // For any other status changes (none expected beyond VALID_STATUSES),
-  // fall back to previous behavior: clear publishedBy and set status.
   article.publishedBy = null;
   article.status = status;
   await article.save();
@@ -469,7 +464,6 @@ export const deleteArticle = async ({ id, user }) => {
       throw err;
     }
   } else {
-    // For other statuses (e.g., rejected, archived), keep existing admin-only behavior
     if (!isAdmin) {
       const err = new Error("Only admins can delete articles with this status");
       err.status = 403;

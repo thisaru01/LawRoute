@@ -89,8 +89,6 @@ export const downloadDocument = async (req, res, next) => {
         .json({ success: false, message: "Document file not found" });
     }
 
-    // Proxy the remote file so we can set Content-Disposition with a proper filename
-    // and ensure the browser saves it as a .pdf. This avoids changing upload middleware.
     const fileUrl = document.fileUrl;
     const { URL } = await import("url");
     const parsed = new URL(fileUrl);
