@@ -49,3 +49,37 @@ export const updateCivilIssue = (issueId, payload) => {
 export const deleteCivilIssue = (issueId) => {
   return axios.delete(`/civil-issues/${issueId}`);
 };
+/**
+ * Get all civil issues in the admin triage queue.
+ */
+export const getAdminCivilIssues = (status) => {
+  return axios.get("/civil-issues/admin", { params: { status } });
+};
+/**
+ * Update the status of a civil issue (Authority/Admin).
+ */
+export const updateCivilIssueStatus = (issueId, payload) => {
+  return axios.patch(`/civil-issues/${issueId}/status`, payload);
+};
+
+/**
+ * Reject a civil issue with a note (Authority/Admin).
+ */
+export const rejectCivilIssue = (issueId, note) => {
+  return axios.patch(`/civil-issues/${issueId}/reject`, { note });
+};
+
+/**
+ * Get status counts for the admin triage queue.
+ * Scoped to the "other" category managed by admins.
+ */
+export const getAdminCivilIssueStats = () => {
+  return axios.get("/civil-issues/admin/stats");
+};
+
+/**
+ * Get status counts for the authority's assigned category.
+ */
+export const getAuthorityCivilIssueStats = () => {
+  return axios.get("/civil-issues/authority/stats");
+};

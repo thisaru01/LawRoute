@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 
+// Shared form body for scheduling or updating a meeting (date/time/method)
 export default function ScheduleMeetingContent({
   scheduleForm,
   onChange,
@@ -41,6 +42,7 @@ export default function ScheduleMeetingContent({
     ? new Date(scheduleForm.date)
     : undefined;
 
+  // Default time to "now" if none selected yet
   React.useEffect(() => {
     if (!scheduleForm.time) {
       onChange("time", format(new Date(), "HH:mm:ss"));

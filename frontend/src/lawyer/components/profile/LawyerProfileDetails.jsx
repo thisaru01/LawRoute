@@ -48,6 +48,23 @@ const EXPERTISE_OPTIONS = [
   { value: "intellectual_property", label: "Intellectual Property" },
 ];
 
+const MEMBERSHIP_OPTIONS = [
+  { value: "Bar Association of Sri Lanka (BASL)", label: "Bar Association of Sri Lanka (BASL)" },
+  { value: "International Bar Association (IBA)", label: "International Bar Association (IBA)" },
+  { value: "Commonwealth Lawyers Association (CLA)", label: "Commonwealth Lawyers Association (CLA)" },
+  { value: "LAWASIA", label: "LAWASIA" },
+  { value: "Colombo Law Society", label: "Colombo Law Society" },
+  { value: "Asian Society of International Law", label: "Asian Society of International Law" },
+  { value: "World Jurist Association", label: "World Jurist Association" },
+  { value: "Chartered Institute of Arbitrators (CIArb)", label: "Chartered Institute of Arbitrators (CIArb)" },
+];
+
+const LANGUAGE_OPTIONS = [
+  { value: "Sinhala", label: "Sinhala" },
+  { value: "Tamil", label: "Tamil" },
+  { value: "English", label: "English" },
+];
+
 const loadingCard = (
   <Card className="mt-6">
     <CardHeader>
@@ -334,6 +351,7 @@ export default function LawyerProfileDetails({
             setIsEditing={setIsEditingAbout}
             onRetry={onRetry}
             EXPERTISE_OPTIONS={EXPERTISE_OPTIONS}
+            MEMBERSHIP_OPTIONS={MEMBERSHIP_OPTIONS}
             isVerified={verificationStatus === "approved"}
           />
 
@@ -355,6 +373,7 @@ export default function LawyerProfileDetails({
             onSave={onSaveSection}
             setIsEditing={setIsEditingSkills}
             onRetry={onRetry}
+            LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
           />
 
           <QualificationsSection
@@ -367,13 +386,6 @@ export default function LawyerProfileDetails({
             onRetry={onRetry}
           />
 
-          {error ? (
-            <p className="text-sm text-destructive">
-              {error?.message || "Request failed"}
-            </p>
-          ) : null}
-
-          {success ? <p className="text-sm text-green-700">{success}</p> : null}
         </div>
       </div>
     </div>

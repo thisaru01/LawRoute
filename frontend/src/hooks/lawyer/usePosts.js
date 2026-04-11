@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { getMyPosts, deletePost as deletePostApi } from "@/api/services/socialService";
 
 const POSTS_BATCH_SIZE = 20;
@@ -63,9 +64,12 @@ export function usePosts() {
       await deletePostApi(postId);
       setPosts((prev) => prev.filter(p => (p._id || p.id) !== postId));
       setSuccessMessage("Post deleted successfully.");
+      toast.success("Post deleted successfully.");
       return true;
     } catch (error) {
-      setFetchError(error?.response?.data?.message || error?.message || "Failed to delete post.");
+      const errMsg = error?.response?.data?.message || error?.message || "Failed to delete post.";
+      setFetchError(errMsg);
+      toast.error(errMsg);
       throw error;
     }
   };

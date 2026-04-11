@@ -25,11 +25,7 @@ import {
   getPostComments,
 } from "../../controllers/social/postCommentController.js";
 import { validateCreateComment } from "../../validations/social/commentValidation.js";
-import {
-  followLawyer,
-  unfollowLawyer,
-} from "../../controllers/social/followController.js";
-import { validateLawyerIdParam } from "../../validations/social/followValidation.js";
+// Removed follow imports
 
 const router = express.Router();
 
@@ -84,18 +80,6 @@ router.post(
 );
 router.delete("/comments/:commentId", protect, deleteComment);
 
-// Follow lawyer
-router.post(
-  "/lawyers/:lawyerId/follow",
-  protect,
-  validateLawyerIdParam,
-  followLawyer,
-);
-router.delete(
-  "/lawyers/:lawyerId/follow",
-  protect,
-  validateLawyerIdParam,
-  unfollowLawyer,
-);
+// Follow lawyer functionality removed
 
 export default router;

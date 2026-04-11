@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Earth, Lock, MessageSquare, MoreHorizontal, ThumbsUp, Users, Edit2, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/auth/useAuth";
 import { likePost, unlikePost } from "@/api/services/socialService";
 import CommentSection from "@/public/find-lawyer/components/profile/CommentSection";
+import MediaLightbox from "./MediaLightbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,6 @@ const getRelativeTime = (dateStr) => {
 
 const getVisibilityIcon = (visibility) => {
   if (visibility === "private") return <Lock className="size-3" />;
-  if (visibility === "followers") return <Users className="size-3" />;
   return <Earth className="size-3" />;
 };
 
@@ -52,7 +52,15 @@ export default function PostPreview({ post, onEdit, onDelete }) {
   const [showComments, setShowComments] = useState(false);
   const [isLiked, setIsLiked] = useState(false); // Initially false as we don't have isLiked from backend
   const [likeCount, setLikeCount] = useState(formatStatValue(post?.stats?.likeCount));
-  const [isLiking, setIsLiking] = useState(false);
+  const isLikingRef = useRef(false);
+  
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handleMediaClick = (index) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   const content = post.content || "";
   const isLongContent = content.length > 120 || content.split("\n").length > 3;
@@ -66,23 +74,38 @@ export default function PostPreview({ post, onEdit, onDelete }) {
       return;
     }
 
-    if (isLiking) return;
+    if (isLikingRef.current) return;
+    isLikingRef.current = true;
 
-    setIsLiking(true);
+    // Save previous state for rollback
+    const previousIsLiked = isLiked;
+    const previousLikeCount = likeCount;
+
+    // Optimistic UI update (Instant)
+    setIsLiked(!previousIsLiked);
+    setLikeCount(previousIsLiked ? Math.max(0, previousLikeCount - 1) : previousLikeCount + 1);
+
     try {
-      if (isLiked) {
+      if (previousIsLiked) {
         const response = await unlikePost(postId);
-        setLikeCount(response.data.likeCount);
-        setIsLiked(false);
+        // Sync with exact server count on success
+        if (response?.data?.likeCount !== undefined) {
+          setLikeCount(response.data.likeCount);
+        }
       } else {
         const response = await likePost(postId);
-        setLikeCount(response.data.likeCount);
-        setIsLiked(true);
+        // Sync with exact server count on success
+        if (response?.data?.likeCount !== undefined) {
+          setLikeCount(response.data.likeCount);
+        }
       }
     } catch (error) {
+      // Revert to old state on failure
+      setIsLiked(previousIsLiked);
+      setLikeCount(previousLikeCount);
       toast.error("Action failed. Try again.");
     } finally {
-      setIsLiking(false);
+      isLikingRef.current = false;
     }
   };
 
@@ -165,8 +188,11 @@ export default function PostPreview({ post, onEdit, onDelete }) {
 
       {/* Media Section */}
       {hasMedia && (
-        <div className="w-full border-y border-border/40 bg-muted/20">
-          {media.map((item, index) => {
+        <div className={cn(
+          "grid w-full gap-[2px] border-y border-border/40 bg-border/40 overflow-hidden",
+          media.length === 1 ? "grid-cols-1" : "grid-cols-2"
+        )}>
+          {media.slice(0, 4).map((item, index) => {
             const isImage =
               item.resourceType === "image" ||
               (typeof item.url === "string" && /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(item.url));
@@ -175,45 +201,74 @@ export default function PostPreview({ post, onEdit, onDelete }) {
               item.resourceType === "video" ||
               (typeof item.url === "string" && /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(item.url));
 
-            // Render only the first item in this view to match LinkedIn card style constraint
-            if (index > 0) return null;
-
-            if (isImage) {
-              return (
-                <div key={index} className="flex max-h-[350px] w-full items-center justify-center overflow-hidden bg-black/5">
-                  <img
-                    src={item.url}
-                    alt="Post attachment"
-                    className="max-h-[350px] w-full object-contain"
-                  />
-                </div>
-              );
-            }
-
-            if (isVideo) {
-              return (
-                <div key={index} className="flex max-h-[450px] w-full items-center justify-center overflow-hidden bg-black/90">
-                  <video
-                    src={item.url}
-                    controls
-                    preload="metadata"
-                    className="max-h-[450px] w-full object-contain"
-                  />
-                </div>
-              );
+            const isExtra = media.length > 4 && index === 3;
+            
+            // Layout classes for grid elements
+            let layoutClass = "relative flex items-center justify-center bg-background overflow-hidden";
+            let mediaClass = "w-full h-full";
+            
+            if (media.length === 1) {
+               layoutClass = cn(layoutClass, isVideo ? "max-h-[450px]" : "max-h-[500px] bg-black/5");
+               mediaClass = cn(mediaClass, "object-contain");
+            } else if (media.length === 2) {
+               layoutClass = cn(layoutClass, "aspect-[4/5] bg-black/5");
+               mediaClass = cn(mediaClass, "object-cover");
+            } else if (media.length === 3) {
+               if (index === 0) layoutClass = cn(layoutClass, "col-span-2 aspect-[16/9] bg-black/5");
+               else layoutClass = cn(layoutClass, "aspect-square bg-black/5");
+               mediaClass = cn(mediaClass, "object-cover");
+            } else {
+               layoutClass = cn(layoutClass, "aspect-square bg-black/5");
+               mediaClass = cn(mediaClass, "object-cover");
             }
 
             return (
-              <div
-                key={index}
-                className="flex h-32 w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground"
+              <div 
+                key={index} 
+                className={cn(layoutClass, "cursor-pointer group")}
+                onClick={() => handleMediaClick(index)}
               >
-                <span>{item.originalFilename || `Attachment ${index + 1}`}</span>
+                {isImage && (
+                  <img
+                    src={item.url}
+                    alt="Post attachment"
+                    className={cn(mediaClass, "transition-transform duration-300 group-hover:scale-[1.02]")}
+                  />
+                )}
+                {isVideo && (
+                  <video
+                    src={item.url}
+                    controls={media.length === 1}
+                    autoPlay={media.length > 1}
+                    muted={media.length > 1}
+                    loop
+                    preload="metadata"
+                    className={cn(mediaClass, media.length > 1 && "pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]")}
+                  />
+                )}
+                {(!isImage && !isVideo) && (
+                  <div className="flex flex-col items-center justify-center text-xs text-muted-foreground p-4 text-center group-hover:bg-black/10 w-full h-full transition-colors">
+                    <span>{item.originalFilename || `Attachment ${index + 1}`}</span>
+                  </div>
+                )}
+                
+                {isExtra && (
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white backdrop-blur-[2px] transition-colors group-hover:bg-black/60">
+                    <span className="text-3xl font-bold tracking-tight shadow-black/50 drop-shadow-md">+{media.length - 4}</span>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
+      
+      <MediaLightbox 
+        media={media}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
 
       <div className="mt-auto bg-card">
         {/* Stats Section */}
@@ -247,7 +302,7 @@ export default function PostPreview({ post, onEdit, onDelete }) {
         <div className="flex items-center justify-between gap-1 px-1 py-1.5 sm:gap-2 sm:px-2">
           <button 
             onClick={handleLike}
-            disabled={isLiking}
+            disabled={isLikingRef.current}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-lg p-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:p-3 sm:text-[14px]",
               isLiked 
@@ -255,11 +310,7 @@ export default function PostPreview({ post, onEdit, onDelete }) {
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
-            {isLiking ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={isLiked ? 2.5 : 2} fill={isLiked ? "currentColor" : "none"} />
-            )}
+            <ThumbsUp className="size-4 sm:size-4.5" strokeWidth={isLiked ? 2.5 : 2} fill={isLiked ? "currentColor" : "none"} />
             <span>{isLiked ? "Liked" : "Like"}</span>
           </button>
           <button 

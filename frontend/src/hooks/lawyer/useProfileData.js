@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 import {
   getMyLawyerProfile,
   updateMyLawyerProfile,
@@ -71,9 +72,11 @@ export function useProfileData(resetForm) {
       }
       
       setSuccess("Section updated successfully.");
+      toast.success("Profile section updated successfully.");
       return updatedProfile;
     } catch (err) {
       setError(err);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update section.");
       throw err;
     } finally {
       setSavingSection("");
@@ -103,9 +106,11 @@ export function useProfileData(resetForm) {
       });
 
       setSuccess("Profile photo updated successfully.");
+      toast.success("Profile photo updated successfully.");
       return updatedPhoto;
     } catch (err) {
       setError(err);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to upload photo.");
       throw err;
     } finally {
       setIsUploadingPhoto(false);

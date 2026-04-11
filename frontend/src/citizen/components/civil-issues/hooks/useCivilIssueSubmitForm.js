@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { submitCivilIssue, updateCivilIssue } from "@/api/services/civilIssueService";
 import { useCivilIssueAttachments } from "@/citizen/components/civil-issues/hooks/useCivilIssueAttachments.js";
 import { useCountdownRedirect } from "@/citizen/components/civil-issues/hooks/useCountdownRedirect.js";
@@ -127,8 +128,11 @@ export function useCivilIssueSubmitForm({
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitAttemptCount, setSubmitAttemptCount] = useState(0);
 
+  const [retainedAttachments, setRetainedAttachments] = useState([]);
+  const [remainingFilesAllowed, setRemainingFilesAllowed] = useState(MAX_FILES);
+
   const { attachments, handleFileChange, removeFile } = useCivilIssueAttachments({
-    maxFiles: MAX_FILES,
+    maxFiles: remainingFilesAllowed,
     maxFileSizeMB: MAX_FILE_SIZE_MB,
     onError: setError,
   });
@@ -150,7 +154,19 @@ export function useCivilIssueSubmitForm({
     }
 
     setFormData(mapIssueToFormData(initialData));
+    if (initialData.attachments) {
+      setRetainedAttachments(initialData.attachments);
+      setRemainingFilesAllowed(Math.max(0, MAX_FILES - initialData.attachments.length));
+    }
   }, [initialData]);
+
+  const removeExistingFile = (urlToRemove) => {
+    setRetainedAttachments((prev) => {
+      const updated = prev.filter((url) => url !== urlToRemove);
+      setRemainingFilesAllowed(Math.max(0, MAX_FILES - updated.length));
+      return updated;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -167,17 +183,26 @@ export function useCivilIssueSubmitForm({
 
     try {
       if (isEditMode) {
-        await updateCivilIssue(issueId, {
-          subject: normalizeText(formData.subject),
-          district: formData.district,
-          exactLocation: normalizeText(formData.exactLocation),
-          postalAreaOrZip: formData.postalAreaOrZip,
-          whatHappened: formData.whatHappened,
-          whenItHappened: formData.whenItHappened,
-          impactOnPeople: formData.impactOnPeople,
-          contactNumber: formData.contactNumber,
-          isPublic: formData.isPublic === true,
+        const data = new FormData();
+        data.append("subject", normalizeText(formData.subject));
+        data.append("district", formData.district);
+        data.append("exactLocation", normalizeText(formData.exactLocation));
+        data.append("postalAreaOrZip", formData.postalAreaOrZip);
+        data.append("whatHappened", formData.whatHappened);
+        data.append("whenItHappened", formData.whenItHappened);
+        data.append("impactOnPeople", formData.impactOnPeople);
+        data.append("contactNumber", formData.contactNumber);
+        data.append("isPublic", String(formData.isPublic === true));
+
+        retainedAttachments.forEach((url) => {
+          data.append("retainedAttachments", url);
         });
+
+        attachments.forEach((file) => {
+          data.append("attachments", file);
+        });
+
+        await updateCivilIssue(issueId, data);
       } else {
         const data = new FormData();
         data.append("category", formData.category);
@@ -198,10 +223,18 @@ export function useCivilIssueSubmitForm({
         await submitCivilIssue(data);
       }
 
-      setCountdown(20);
-      setSuccess(true);
+      if (isEditMode) {
+        toast.success("Civil issue updated successfully.");
+        onSuccess();
+      } else {
+        toast.success("Civil issue submitted successfully.");
+        setCountdown(20);
+        setSuccess(true);
+      }
     } catch (err) {
-      setError(err?.message || "Something went wrong while submitting.");
+      const errorMessage = err?.message || "Something went wrong while submitting.";
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setBusy(false);
     }
@@ -221,6 +254,8 @@ export function useCivilIssueSubmitForm({
     handleFileChange,
     handleSubmit,
     removeFile,
+    removeExistingFile,
+    retainedAttachments,
     setFormData,
     showValidationErrors,
     submitAttemptCount,
