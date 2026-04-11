@@ -62,8 +62,6 @@
   - See all consultation requests they’ve received in one place.
   - Accept or reject each request with a clear status.
   - Automatically turn an accepted request into an ongoing case.
-- The system:
-  - Redirects unauthenticated users to sign in before they can request a consultation, then brings them back to the same lawyer page.
 
 ### 📁 Case Management
 
@@ -73,7 +71,8 @@
 - Meetings:
   - Lawyers can schedule online or in‑person meetings for each case.
   - Both sides can see upcoming meetings with dates, times, and locations.
-  - Online meetings use a secure video link that only appears at the right time for the right people.
+  - The system can conduct online meetings via built-in secure video conferencing.
+  - Online meetings use a secure, link that only appears at the right time for the right people.
 - Documents:
   - Upload, view, and organize documents related to each case in one place.
   - Keep case files together instead of sharing them across multiple apps.
@@ -114,12 +113,12 @@
 
 | Layer        | Technology                                                           |
 | ------------ | -------------------------------------------------------------------- |
-| **Frontend** | React 19, Vite 8, TailwindCSS 4, shadcn/ui, React Router 7, Recharts |
-| **Backend**  | Node.js, Express 5, Mongoose 9 (MongoDB Atlas)                       |
+| **Frontend** | React 19, Vite 8, TailwindCSS 4, shadcn/ui, React Router 7           |
+| **Backend**  | Node.js, Express 5                                                   |
+| **Database** | MongoDB Atlas (Mongoose 9)                                           |
 | **Auth**     | JWT (JSON Web Tokens), bcryptjs                                      |
 | **Storage**  | Cloudinary (images, documents)                                       |
 | **Email**    | Nodemailer (Gmail SMTP) - password reset, notifications              |
-| **Location** | Geoapify API - Sri Lanka‑based location autocomplete                 |
 | **Testing**  | Jest 30, Supertest 7 (unit & integration), Artillery 2 (performance) |
 
 ---
@@ -212,19 +211,23 @@ LawRoute uses **JWT-based authentication** with role-based access control (RBAC)
 
 ### User Roles
 
-| Role          | Description                                                                                                |
-| ------------- | ---------------------------------------------------------------------------------------------------------- |
-| **user**      | Citizen - can submit civil issues, request consultations, manage cases, and access the legal library       |
-| **lawyer**    | Legal professional - can accept/reject consultations, manage cases, write articles, and maintain a profile |
-| **authority** | Government authority - can review and act on assigned civil issues                                         |
-| **admin**     | System administrator - full access to manage users, articles, documents, cases, and civil issues           |
+| Role          | Description          |
+| ------------- | -------------------- |
+| **user**      | Citizen              |
+| **lawyer**    | Legal professional   |
+| **authority** | Government authority |
+| **admin**     | System administrator |
 
 ### Auth Flow
 
 1. **Register** - `POST /api/auth/register` creates a user account (citizens; lawyers can sign up and then be verified).
+
 2. **Login** - `POST /api/auth/login` returns a JWT token.
+
 3. **Protected Routes** - the `protect` middleware verifies the token and attaches `req.user`.
+
 4. **Role Gates** - the `authorizeRoles(...roles)` middleware restricts endpoints to specific roles.
+
 5. **Password Reset** - `POST /api/auth/forgot-password` sends a reset email; `POST /api/auth/reset-password` completes the reset.
 
 ---
