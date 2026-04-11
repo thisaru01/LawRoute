@@ -27,7 +27,7 @@ export default function AdminArticleView() {
   const [error, setError] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusError, setStatusError] = useState("");
-  const { userId } = useAuth();
+  const { userId, role } = useAuth();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -74,6 +74,18 @@ export default function AdminArticleView() {
         if (nextStatus === "published") toast.success("Article published");
         else if (nextStatus === "rejected") toast.success("Article rejected");
         else toast.success("Article status updated");
+
+        const normalizedNext = String(nextStatus || "").toLowerCase();
+        if (
+          role === "admin" &&
+          !isAuthor &&
+          (normalizedNext === "published" || normalizedNext === "rejected")
+        ) {
+          navigate(`/admin/articles/${normalizedNext}`, {
+            replace: true,
+            state: { ownerScope: "others" },
+          });
+        }
       }
     } catch (e) {
       const msg = e?.message || "Failed to update article status";
@@ -106,6 +118,8 @@ export default function AdminArticleView() {
           <div>{article.category || ""}</div>
 
           {(() => {
+            if (role === "lawyer" || (role === "admin" && isAuthor)) return null;
+
             const a = article?.author;
             let ownerName = "";
             try {

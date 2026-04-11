@@ -1,124 +1,74 @@
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import ladyJustice from "@/assets/lady-justice.webp";
+
 export default function Hero() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:py-14">
-      <section className="grid gap-10 lg:grid-cols-2 lg:items-center">
-        <div className="space-y-5">
-          <p className="text-sm font-semibold text-slate-700">
-            Legal help, made simple
-          </p>
-          <h1 className="text-balance text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-            Connect with lawyers, manage cases, and get answers faster.
-          </h1>
-          <p className="text-pretty text-base leading-7 text-slate-700">
-            LawRoute helps citizens find the right legal support and helps
-            lawyers manage consultations and case documents in one place.
-          </p>
+    <section className="relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+      </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Request a consultation
-            </a>
-            <a
-              href="#"
-              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
-            >
-              Browse articles
-            </a>
+      <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:py-16 lg:py-20">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          {/* ── Left: Image placeholder ── */}
+          <div className="relative order-2 lg:order-1">
+            {/* Main image placeholder */}
+            <div className="relative w-full max-w-md mx-auto lg:mx-0 overflow-hidden">
+              <img
+                src={ladyJustice}
+                alt="Lady Justice"
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
 
-          <dl className="grid grid-cols-3 gap-4 pt-4">
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <dt className="text-xs font-medium text-slate-600">
-                Verified profiles
-              </dt>
-              <dd className="mt-1 text-lg font-semibold text-slate-900">
-                Lawyers
-              </dd>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <dt className="text-xs font-medium text-slate-600">Structured</dt>
-              <dd className="mt-1 text-lg font-semibold text-slate-900">
-                Cases
-              </dd>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <dt className="text-xs font-medium text-slate-600">Secure</dt>
-              <dd className="mt-1 text-lg font-semibold text-slate-900">
-                Documents
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="space-y-4">
-            <div className="rounded-lg bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-900">
-                Quick start
+          {/* ── Right: Content ── */}
+          <div className="order-1 flex flex-col gap-6 lg:order-2 lg:gap-8">
+            {/* Title & tagline */}
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] ">
+                Modern legal guidance
               </p>
-              <p className="mt-1 text-sm text-slate-700">
-                Choose what you want to do first:
-              </p>
+              <h1 className="text-[2.75rem] font-bold leading-[1.1] tracking-tight text-[#0F172A] sm:text-5xl lg:text-6xl">
+                Navigate Sri Lankan law with confidence
+              </h1>
             </div>
 
-            <div className="grid gap-3">
-              <a
-                href="#"
-                className="group rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50"
+            {/* Description */}
+            <p className="max-w-xl text-lg leading-relaxed">
+              LawRoute connects citizens, lawyers, and authorities in one
+              trusted digital space. Find the right legal help, understand your
+              options, and move your case forward with clarity and transparency.
+            </p>
+
+            {/* CTA */}
+            <div className="flex flex-row items-center gap-4 mt-2">
+              <Button
+                asChild
+                className="h-14 rounded-full bg-[#121212] px-10 text-base font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                <p className="text-sm font-semibold text-slate-900 group-hover:text-slate-900">
-                  I’m a citizen
-                </p>
-                <p className="mt-1 text-sm text-slate-700">
-                  Request legal guidance and track your consultation.
-                </p>
-              </a>
-              <a
-                href="#"
-                className="group rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50"
+                <Link to="/find-a-lawyer">Find a lawyer</Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="h-14 rounded-full bg-slate-50 px-10 text-base font-semibold border border-black transition-all  hover:border-b-gray-900"
               >
-                <p className="text-sm font-semibold text-slate-900">
-                  I’m a lawyer
-                </p>
-                <p className="mt-1 text-sm text-slate-700">
-                  Manage your profile, consultations, and case documents.
-                </p>
-              </a>
+                <Link to="/auth">Get started</Link>
+              </Button>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="mt-12 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Find the right fit
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-700">
-            Search by expertise and connect with professionals that match your
-            needs.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Keep everything organized
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-700">
-            Cases, meetings, and documents stay together in a single workflow.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Learn as you go
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-700">
-            Read practical articles and stay informed before your next step.
-          </p>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }

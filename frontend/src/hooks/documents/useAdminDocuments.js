@@ -7,6 +7,7 @@ export function useAdminDocuments() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   const fetchDocuments = useCallback(async () => {
@@ -76,14 +77,37 @@ export function useAdminDocuments() {
     [],
   );
 
+  const handleUpdateDocument = useCallback(async (docId, title, description) => {
+    if (!docId) return false;
+    setIsUpdating(true);
+    try {
+      const res = await axios.patch(`/documents/${docId}`, { title, description });
+      const updated = res?.data?.document;
+      if (updated) {
+        setDocuments((prev) => prev.map((d) => ((d._id || d.id) === (updated._id || updated.id) ? updated : d)));
+        toast.success("Document updated successfully");
+        return true;
+      }
+      return false;
+    } catch (err) {
+      setError(err?.message || "Failed to update document");
+      toast.error(err?.message || "Failed to update document");
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
+
   return {
     documents,
     loading,
     error,
     isUploading,
+    isUpdating,
     selectedFile,
     handleSelectFile,
     handleUploadDocumentConfirm,
     handleDelete,
+    handleUpdateDocument,
   };
 }

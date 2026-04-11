@@ -6,6 +6,7 @@ import {
   getAllDocuments,
   getDocument,
   downloadDocument,
+  updateDocument,
   deleteDocument,
 } from "../../controllers/documents/documentController.js";
 
@@ -24,6 +25,8 @@ router.post(
   libraryDocumentUpload.single("file"),
   createDocument,
 );
+
+router.patch('/:id', protect, authorizeRoles('admin'), updateDocument);
 
 router.delete("/:id", protect, authorizeRoles("admin"), deleteDocument);
 

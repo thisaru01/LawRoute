@@ -1,0 +1,37 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60 # seconds
+      arrivalRate: 5 # new virtual users per second
+      name: "Browse and review articles"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  # Public users hitting the articles feed and opening a detail page
+  - name: "Public: List published articles and view one"
+    flow:
+      - get:
+          url: "/api/articles/published"
+          capture:
+            - json: "$.articles[0]._id"
+              as: articleId
+      - get:
+          url: "/api/articles/{{ articleId }}"
+
+  # Admin reviewing pending articles authored by others
+  - name: "Admin: Login and list pending articles from others"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.ADMIN_EMAIL }}"
+            password: "{{ $processEnvironment.ADMIN_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: adminToken
+      - get:
+          url: "/api/articles/pending/others"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"

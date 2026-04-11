@@ -2,9 +2,6 @@ import * as articleService from "../../services/articles/articleService.js";
 
 
 // Create article
-// - Admins: article is immediately published
-// - Lawyers: article is created with status 'pending' and must be approved by admin
-// Expects `req.user` populated by authentication middleware with fields: `_id`, `role`
 export const createArticle = async (req, res, next) => {
   try {
     console.log("createArticle called - body:", req.body);
@@ -40,7 +37,6 @@ export const createArticle = async (req, res, next) => {
       return res.status(400).json({ message: "Title, content, category, image, and imagecard files are required" });
     }
 
-    // All articles start as "pending" now, even for admins
     const status = "pending";
 
       const article = await articleService.createArticle({
@@ -65,8 +61,6 @@ export const createArticle = async (req, res, next) => {
 };
 
 // Get all articles
-// - Public: returns only published articles
-// - Admin (with valid Bearer token): returns all articles
 export const getAllArticles = async (req, res, next) => {
   try {
     const articles = await articleService.getAllArticles({ authHeader: req.headers.authorization, query: req.query });
@@ -100,7 +94,7 @@ export const getPendingOthersArticles = async (req, res, next) => {
   }
 };
 
-// Public: get only published articles. Preserves other query params (category, author, etc.).
+// Public: get only published articles
 export const getPublishedArticles = async (req, res, next) => {
   try {
     const query = { ...req.query, status: "published" };
@@ -116,8 +110,6 @@ export const getPublishedArticles = async (req, res, next) => {
 };
 
 // Get articles of the currently authenticated user (owner only)
-// - Uses JWT to identify the user; no user id in query
-// - Returns all statuses (pending, published, rejected, etc.) for that owner
 export const getMyArticles = async (req, res, next) => {
   try {
     if (!req.user || !req.user._id) {
@@ -152,10 +144,7 @@ export const getArticle = async (req, res, next) => {
   }
 };
 
-// Update article content/metadata
-// - Only for articles with status 'pending'
-// - Admins: can update any pending article
-// - Lawyers: can update only their own pending articles
+// Update article content
 export const updateArticle = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -194,7 +183,6 @@ export const updateArticle = async (req, res, next) => {
   }
 };
 
-// export bottom of file (includes updateArticleStatus)
 
 // Update article status (admin only)
 export const updateArticleStatus = async (req, res, next) => {
@@ -217,13 +205,6 @@ export const updateArticleStatus = async (req, res, next) => {
 };
 
 // Delete article
-// - Pending status:
-//   * Admin can delete any pending article
-//   * Lawyer can delete only their own pending article
-// - Published status:
-//   * Only admin can delete, and only if they are NOT the admin who published it
-// - Other statuses:
-//   * Only admin can delete
 export const deleteArticle = async (req, res, next) => {
   try {
     const { id } = req.params;

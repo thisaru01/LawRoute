@@ -1,0 +1,41 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 2
+      name: "Warm up citizen read"
+    - duration: 30
+      arrivalRate: 4
+      name: "Steady citizen read"
+    - duration: 10
+      arrivalRate: 2
+      name: "Cool down citizen read"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Citizen: Login, list my issues, browse public"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          expect:
+            - statusCode: 200
+          json:
+            email: "{{ $processEnvironment.USER_EMAIL }}"
+            password: "{{ $processEnvironment.USER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - think: 1
+      - get:
+          url: "/api/civil-issues/my"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/civil-issues/public?page=1&limit=5"
+          expect:
+            - statusCode: 200
