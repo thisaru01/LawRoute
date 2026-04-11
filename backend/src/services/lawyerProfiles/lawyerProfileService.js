@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 
 const VERIFICATION_STATUSES = ["pending", "approved", "rejected"];
 
+const DEFAULT_PROFILE_PHOTO =
+  "https://res.cloudinary.com/lawroute/image/upload/v1771770529/profile_pic_placeholder_co6aye.png";
+
 const ALLOWED_BASIC_FIELDS = [
   "professionalTitle",
   "contactInfo",
@@ -229,8 +232,8 @@ const applyLegacyPayload = (lawyerProfile, body) => {
   return applied;
 };
 
-// Compute whether minimum profile details are complete. 
-const computeProfileCompleted = (lawyerProfile) => {
+// Compute whether minimum profile details are complete.
+const computeProfileCompleted = (lawyerProfile, user) => {
   const basic = lawyerProfile.basicInfo || {};
   const education = lawyerProfile.educationQualifications || {};
   const hasPracticeAreas =
@@ -243,21 +246,26 @@ const computeProfileCompleted = (lawyerProfile) => {
   const hasEducation =
     Array.isArray(education.education) && education.education.length > 0;
   const hasMemberships =
-    Array.isArray(lawyerProfile.memberships) && lawyerProfile.memberships.length > 0;
+    Array.isArray(lawyerProfile.memberships) &&
+    lawyerProfile.memberships.length > 0;
   const hasValidExpertise =
     typeof lawyerProfile.expertise === "string" &&
     ALLOWED_EXPERTISE_VALUES.includes(lawyerProfile.expertise) &&
     lawyerProfile.expertise !== "general";
 
+  const hasCustomPhoto =
+    user?.profilePhoto && user?.profilePhoto !== DEFAULT_PROFILE_PHOTO;
+
   return Boolean(
+    user?.name?.trim() &&
     basic.professionalTitle &&
-    basic.bio &&
     hasContactInfo &&
     hasPracticeAreas &&
     hasValidExpertise &&
     hasEducation &&
     hasMemberships &&
-    lawyerProfile.barRegistrationNumber,
+    lawyerProfile.barRegistrationNumber &&
+    hasCustomPhoto,
   );
 };
 
@@ -398,8 +406,11 @@ export const findLawyerProfileById = async (id) => {
   return mapLawyerProfileResponse(lawyerProfile);
 };
 
-// Return lawyer profiles for admin review, optionally filtered by verification status.
-export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) => {
+// Return lawyer profiles for admin review, optionally filtered by verification status and profile completion.
+export const findLawyerProfilesForAdmin = async ({
+  verificationStatus,
+  profileCompleted,
+} = {}) => {
   if (
     verificationStatus !== undefined &&
     !VERIFICATION_STATUSES.includes(verificationStatus)
@@ -415,6 +426,10 @@ export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) =>
     filter.verificationStatus = verificationStatus;
   }
 
+  if (profileCompleted !== undefined) {
+    filter.profileCompleted = profileCompleted === true || profileCompleted === "true";
+  }
+
   const lawyerProfiles = await LawyerProfile.find(filter)
     .populate({
       path: "user",
@@ -428,6 +443,7 @@ export const findLawyerProfilesForAdmin = async ({ verificationStatus } = {}) =>
     .filter((lawyerProfile) => Boolean(lawyerProfile.user))
     .map(mapLawyerProfileResponse);
 };
+
 
 // Update verification status for a lawyer profile after validating the target user is a lawyer.
 export const updateLawyerVerificationStatusByAdmin = async ({
@@ -558,9 +574,122 @@ export const updateLawyerProfileByUser = async (authUser, body) => {
     throw error;
   }
 
-  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile);
+  // Validate bio length if provided
+  const bio = lawyerProfile.basicInfo?.bio;
+  if (bio && bio.trim().length < 50) {
+    const error = new Error("Bio must be at least 50 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+  if (bio && bio.trim().length > 1000) {
+    const error = new Error("Bio must not exceed 1000 characters.");
+    error.statusCode = 422;
+    throw error;
+  }
 
-  await lawyerProfile.save();
+  // Validate totalYearsExperience if provided
+  const years = lawyerProfile.experience?.totalYearsExperience;
+  if (years !== undefined && years !== null && years !== "") {
+    const yearsNum = Number(years);
+    if (isNaN(yearsNum) || yearsNum < 0 || yearsNum > 60) {
+      const error = new Error("Years of experience must be a number between 0 and 60.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  // Validate contact details if provided
+  const contact = lawyerProfile.basicInfo?.contactInfo || {};
+  if (contact.phone) {
+    const phoneClean = contact.phone.toString().replace(/\s+/g, "");
+    if (!/^(?:\+94|0)?7[0-9]{8}$/.test(phoneClean)) {
+      const error = new Error("Invalid Sri Lankan phone number format.");
+      error.statusCode = 422;
+      throw error;
+    }
+  }
+
+  if (contact.location !== undefined && (!contact.location || contact.location.trim() === "")) {
+    const error = new Error("Location is required.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  if (contact.officeAddress && contact.officeAddress.trim().length < 10) {
+    const error = new Error("Office address must be at least 10 characters long.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  // Validate work history dates if provided
+  if (lawyerProfile.experience?.workHistory?.length > 0) {
+    const now = new Date();
+    lawyerProfile.experience.workHistory.forEach((job, idx) => {
+      if (job.startDate) {
+        const start = new Date(job.startDate);
+        if (start >= now) {
+          const error = new Error(`Work History #${idx + 1}: Start date must be in the past.`);
+          error.statusCode = 422;
+          throw error;
+        }
+        
+        if (job.endDate) {
+          const end = new Date(job.endDate);
+          if (end < start) {
+            const error = new Error(`Work History #${idx + 1}: End date cannot be before the start date.`);
+            error.statusCode = 422;
+            throw error;
+          }
+        }
+      }
+    });
+  }
+
+  // Validate education years if provided
+  if (lawyerProfile.education?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.education.forEach((edu, idx) => {
+      if (edu.graduationYear) {
+        const year = Number(edu.graduationYear);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Education #${idx + 1}: Graduation year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
+  // Validate certification years if provided
+  if (lawyerProfile.certifications?.length > 0) {
+    const currentYear = new Date().getFullYear();
+    lawyerProfile.certifications.forEach((cert, idx) => {
+      if (cert.year) {
+        const year = Number(cert.year);
+        if (year < 1950 || year > currentYear) {
+          const error = new Error(`Certification #${idx + 1}: Issued year must be between 1950 and ${currentYear}.`);
+          error.statusCode = 422;
+          throw error;
+        }
+      }
+    });
+  }
+
+  lawyerProfile.profileCompleted = computeProfileCompleted(lawyerProfile, user);
+
+  try {
+    await lawyerProfile.save();
+  } catch (err) {
+    // Duplicate key on barRegistrationNumber
+    if (err.code === 11000 && err.keyPattern?.barRegistrationNumber) {
+      const friendlyError = new Error(
+        "This Bar Registration Number is already registered to another lawyer. Please check your number and try again."
+      );
+      friendlyError.statusCode = 409;
+      throw friendlyError;
+    }
+    throw err;
+  }
 
   return lawyerProfile;
 };

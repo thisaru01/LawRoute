@@ -1,7 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Eye } from "lucide-react";
+import { useState } from "react";
+import LawyerReviewDialog from "./LawyerReviewDialog";
 
 const STATUS = {
   pending: "pending",
@@ -40,7 +42,7 @@ const ChecklistItem = ({ label, isCompleted }) => (
     ) : (
       <XCircle className="h-4 w-4 text-rose-500" />
     )}
-    <span className={isCompleted ? "text-muted-foreground" : "font-medium text-rose-600"}>
+    <span className={isCompleted ? "text-gray-900 font-medium" : "font-bold text-rose-600"}>
       {label}
     </span>
   </div>
@@ -52,6 +54,7 @@ export default function LawyerApprovalCard({
   onApprove,
   onReject,
 }) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const userId = lawyer?.user?.id;
   const name = lawyer?.user?.name || "Unnamed lawyer";
   const email = lawyer?.user?.email || "No email";
@@ -63,8 +66,8 @@ export default function LawyerApprovalCard({
   const edu = lawyer?.educationQualifications || {};
   
   const checklist = [
+    { label: "Full Name", isCompleted: !!lawyer?.user?.name },
     { label: "Professional Title", isCompleted: !!basic.professionalTitle },
-    { label: "Personal Bio", isCompleted: !!basic.bio },
     { 
       label: "Contact Info", 
       isCompleted: basic.contactInfo && typeof basic.contactInfo === "object" && Object.keys(basic.contactInfo).length > 0 
@@ -86,6 +89,10 @@ export default function LawyerApprovalCard({
       isCompleted: Array.isArray(lawyer?.memberships) && lawyer?.memberships.length > 0 
     },
     { label: "Bar Registration", isCompleted: !!lawyer?.barRegistrationNumber },
+    { 
+      label: "Profile Photo", 
+      isCompleted: lawyer?.user?.profilePhoto && !lawyer.user.profilePhoto.includes("placeholder") 
+    },
   ];
 
   return (
@@ -134,6 +141,16 @@ export default function LawyerApprovalCard({
         <div className="flex flex-wrap gap-2 pt-2">
           <Button
             type="button"
+            variant="outline"
+            className="flex-1 sm:flex-none gap-2"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Review Details
+          </Button>
+
+          <Button
+            type="button"
             className="flex-1 sm:flex-none"
             onClick={() => onApprove?.(userId)}
             disabled={!userId || Boolean(isBusy) || status === STATUS.approved}
@@ -151,6 +168,15 @@ export default function LawyerApprovalCard({
             {isBusy ? "Updating..." : "Reject"}
           </Button>
         </div>
+
+        <LawyerReviewDialog 
+          open={isPreviewOpen} 
+          onOpenChange={setIsPreviewOpen} 
+          lawyer={lawyer} 
+          onApprove={onApprove}
+          onReject={onReject}
+          isBusy={isBusy}
+        />
       </CardContent>
     </Card>
   );

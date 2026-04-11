@@ -30,6 +30,11 @@ export default function AdminLawyerApprovals() {
       const params = {};
       if (status !== STATUS.all) {
         params.verificationStatus = status;
+        
+        // Only show completed profiles for pending status as requested
+        if (status === STATUS.pending) {
+          params.profileCompleted = true;
+        }
       }
       
       const res = await getAdminLawyerProfiles(params);

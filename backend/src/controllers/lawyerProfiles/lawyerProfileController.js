@@ -78,6 +78,7 @@ export const getLawyerProfilesForAdmin = async (req, res, next) => {
   try {
     const lawyerProfiles = await findLawyerProfilesForAdmin({
       verificationStatus: req.query.verificationStatus,
+      profileCompleted: req.query.profileCompleted,
     });
 
     return res.status(200).json({

@@ -8,7 +8,6 @@ export const POST_TYPES = [
 
 export const VISIBILITY_OPTIONS = [
   { value: "public", label: "Public" },
-  { value: "followers", label: "Followers only" },
   { value: "private", label: "Private" },
 ];
 

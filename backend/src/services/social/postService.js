@@ -1,7 +1,7 @@
 import User from "../../models/userModel.js";
 import LawyerProfile from "../../models/lawyerProfiles/lawyerProfileModel.js";
 import Post from "../../models/social/postModel.js";
-import Follow from "../../models/social/followModel.js";
+// Follow model removed
 import { cloudinary } from "../../config/cloudinary.js";
 import mongoose from "mongoose";
 
@@ -201,19 +201,11 @@ export const findFeedPostsForLoggedUser = async (
   }
 
   const safeLimit = parseLimit(limit);
-  const followedLawyers = await Follow.distinct("followee", {
-    follower: authUser._id,
-  });
-
   const visibilityQuery = [
     { visibility: "public" },
     {
-      author: { $in: followedLawyers },
-      visibility: "followers",
-    },
-    {
       author: authUser._id,
-      visibility: { $in: ["public", "followers", "private"] },
+      visibility: { $in: ["public", "private"] },
     },
   ];
 

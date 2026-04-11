@@ -47,6 +47,27 @@ const csvToList = (value) => {
   return Array.from(unique);
 };
 
+export const validateBarNumber = (value) => {
+  if (!value || typeof value !== "string") return "Bar registration number is required.";
+  
+  const trimmed = value.trim();
+  const brnRegex = /^BRN-(\d{4})-(\d{4,6})$/i;
+  const match = trimmed.match(brnRegex);
+
+  if (!match) {
+    return "Invalid format. Expected: BRN-YYYY-NNNN (e.g., BRN-2024-0001)";
+  }
+
+  const year = parseInt(match[1]);
+  const currentYear = new Date().getFullYear();
+
+  if (year < 1950 || year > currentYear) {
+    return `Registration year must be between 1950 and ${currentYear}.`;
+  }
+
+  return null;
+};
+
 export const toFormState = (profile) => {
   const basicInfo = profile?.basicInfo || {};
   const experience = profile?.experience || {};
