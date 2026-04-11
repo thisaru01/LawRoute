@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMyArticles, getPendingOthersArticles, getPublishedArticles, getArticlesByStatus } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
@@ -12,6 +12,7 @@ const allowedStatuses = new Set(["pending", "published", "rejected"]);
 
 export default function AdminArticles() {
   const { status } = useParams();
+  const location = useLocation();
   const normalizedStatus = (status ?? "pending").toLowerCase();
 
   const safeStatus = allowedStatuses.has(normalizedStatus)
@@ -24,7 +25,9 @@ export default function AdminArticles() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState("own"); // 'own' | 'others'
+  const initialTab =
+    location.state?.ownerScope === "others" ? "others" : "own";
+  const [tab, setTab] = useState(initialTab); // 'own' | 'others'
   const { userId } = useAuth();
 
   const statusBadgeClassName = `ml-2 text-[11px] rounded-full px-3 py-1 capitalize border-none ${

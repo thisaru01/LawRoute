@@ -74,6 +74,18 @@ export default function AdminArticleView() {
         if (nextStatus === "published") toast.success("Article published");
         else if (nextStatus === "rejected") toast.success("Article rejected");
         else toast.success("Article status updated");
+
+        const normalizedNext = String(nextStatus || "").toLowerCase();
+        if (
+          role === "admin" &&
+          !isAuthor &&
+          (normalizedNext === "published" || normalizedNext === "rejected")
+        ) {
+          navigate(`/admin/articles/${normalizedNext}`, {
+            replace: true,
+            state: { ownerScope: "others" },
+          });
+        }
       }
     } catch (e) {
       const msg = e?.message || "Failed to update article status";
