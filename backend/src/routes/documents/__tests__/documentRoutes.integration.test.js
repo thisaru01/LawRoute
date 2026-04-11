@@ -53,8 +53,6 @@ describe("Document Routes", () => {
       const res = await request(app).get("/api/documents/not-a-valid-id");
 
       expect(res.status).toBe(400);
-      // getDocument forwards service error as 500 default wrapper, but our service throws with status 400
-      // and errorMiddleware is not used here, so we only reliably assert on status code
     });
 
     it("returns 404 when document not found", async () => {

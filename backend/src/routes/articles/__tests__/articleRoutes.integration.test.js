@@ -96,9 +96,21 @@ describe("Article Routes", () => {
         populate: populateMock,
       };
 
-      jest.spyOn(User, "findById").mockResolvedValue({
-        _id: TEST_ADMIN_ID,
-        role: "admin",
+      jest.spyOn(User, "findById").mockImplementation((id) => {
+        if (id === TEST_ADMIN_ID) {
+          // Used by protect() to attach req.user
+          return Promise.resolve({ _id: TEST_ADMIN_ID, role: "admin" });
+        }
+
+        if (id === TEST_AUTHOR_ID) {
+          // Used by updateArticleStatus() when preparing the optional status email
+          const leanMock = jest.fn().mockResolvedValue({ name: "Alice Author" });
+          return {
+            select: jest.fn().mockReturnValue({ lean: leanMock }),
+          };
+        }
+
+        return Promise.resolve(null);
       });
 
       jest.spyOn(Article, "findById").mockResolvedValue(article);
