@@ -4,10 +4,30 @@ import { useAdminCivilIssues } from "../hooks/useAdminCivilIssues";
 import AdminCivilIssueCard from "../components/civil-issues/AdminCivilIssueCard";
 import AdminCivilIssueStats from "../components/civil-issues/AdminCivilIssueStats";
 import DistrictFilter from "@/components/civil-issues/DistrictFilter";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock3, LoaderCircle, RefreshCcw, ShieldAlert, XCircle } from "lucide-react";
 
 const allowedStatuses = new Set(["pending", "in_progress", "resolved", "rejected"]);
+
+const STATUS_BADGE_STYLES = {
+  pending: {
+    icon: Clock3,
+    className: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
+  },
+  in_progress: {
+    icon: LoaderCircle,
+    className: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-50",
+  },
+  resolved: {
+    icon: CheckCircle2,
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+  },
+  rejected: {
+    icon: XCircle,
+    className: "border-red-200 bg-red-50 text-red-700 hover:bg-red-50",
+  },
+};
 
 export default function AdminCivilIssues() {
   const { status } = useParams();
@@ -37,6 +57,9 @@ export default function AdminCivilIssues() {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+  const statusBadge = STATUS_BADGE_STYLES[safeStatus] || STATUS_BADGE_STYLES.pending;
+  const StatusIcon = statusBadge.icon;
+
   return (
     <div className="space-y-6">
       {/* Real-time Status Counters for "Other" Category */}
@@ -45,9 +68,16 @@ export default function AdminCivilIssues() {
       <div className="flex items-center justify-between pt-2">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Civil Issues</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Triage Queue &mdash; Status: <span className="font-medium text-indigo-600">{label}</span>
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <span>Triage Queue &mdash;</span>
+            <Badge
+              variant="outline"
+              className={`gap-1.5 px-3 py-1 text-sm font-medium ${statusBadge.className}`}
+            >
+              <StatusIcon className="h-4 w-4" />
+              {label}
+            </Badge>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
