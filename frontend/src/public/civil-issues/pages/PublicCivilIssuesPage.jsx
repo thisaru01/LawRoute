@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar.jsx";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, MapPin, Paperclip, Zap } from "lucide-react";
+import { LayoutDashboard, MapPin, Paperclip, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IssueCard from "@/public/civil-issues/components/IssueCard.jsx";
 import IssueFilters from "@/public/civil-issues/components/IssueFilters.jsx";
@@ -44,15 +44,20 @@ export default function PublicCivilIssuesPage() {
   } = usePublicCivilIssuesPage();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
       <main>
-        <section className="bg-slate-50 py-12 sm:py-16 lg:py-20 border-b border-slate-200">
+        <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200">
           <div className="max-w-5xl mx-auto px-4 space-y-12">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Public Civil Issues Feed</h2>
+              <div className="space-y-3">
+                {/* Eyebrow badge */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Community · Public · Sri Lanka
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Public Civil Issues Feed</h2>
                 <p className="text-sm sm:text-base text-slate-500">Explore concerns shared by fellow citizens across Sri Lanka.</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <CivilIssueAwarenessDialog
@@ -170,22 +175,22 @@ export default function PublicCivilIssuesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">How This Helps</p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
                 <MapPin className="h-5 w-5 text-slate-500" />
               </div>
               <h4 className="mb-1 text-sm font-semibold text-slate-800">Relevant to Your Area</h4>
               <p className="text-xs leading-relaxed text-slate-500">See and report issues using district plus a more specific location so concerns stay locally relevant.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
                 <Paperclip className="h-5 w-5 text-slate-500" />
               </div>
               <h4 className="mb-1 text-sm font-semibold text-slate-800">Clearer Reports</h4>
               <p className="text-xs leading-relaxed text-slate-500">Attachments and details help authorities understand issues faster.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
                 <Zap className="h-5 w-5 text-slate-500" />
               </div>
               <h4 className="mb-1 text-sm font-semibold text-slate-800">Faster Responses for You</h4>
@@ -221,8 +226,9 @@ export default function PublicCivilIssuesPage() {
       </main>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-          © {new Date().getFullYear()} LawRoute
+        <div className="mx-auto max-w-6xl px-4 py-5 flex items-center justify-between gap-4 flex-wrap">
+          <span className="text-sm text-slate-500">© {new Date().getFullYear()} <span className="font-semibold text-slate-700">LawRoute</span></span>
+          <span className="text-[11px] text-slate-400 tracking-wide">Empowering citizens through legal awareness.</span>
         </div>
       </footer>
     </div>

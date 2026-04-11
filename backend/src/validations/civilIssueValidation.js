@@ -266,6 +266,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         "impactOnPeople",
         "contactNumber",
         "isPublic",
+        "retainedAttachments",
     ];
 
     const unknownFields = Object.keys(req.body).filter(
@@ -275,7 +276,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
     if (unknownFields.length > 0) {
         return res.status(400).json({
             success: false,
-            message: `Unknown fields: ${unknownFields.join(", ")}. Only subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber and isPublic can be updated.`,
+            message: `Unknown fields: ${unknownFields.join(", ")}. Only subject, district, exactLocation, postalAreaOrZip, whatHappened, whenItHappened, impactOnPeople, contactNumber, isPublic and retainedAttachments can be updated.`,
         });
     }
 
@@ -447,7 +448,7 @@ export const validateUpdateCivilIssue = (req, res, next) => {
         });
     }
 
-    if (isPublic !== undefined && typeof isPublic !== "boolean") {
+    if (isPublic !== undefined && typeof isPublic !== "boolean" && isPublic !== "true" && isPublic !== "false") {
         return res.status(400).json({
             success: false,
             message: "isPublic must be a boolean value.",

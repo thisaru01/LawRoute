@@ -63,7 +63,7 @@ export default function LawyerCaseDetails() {
     <CaseProvider value={contextValue}>
       <div className="space-y-4">
         <Tabs defaultValue="overview">
-          <TabsList variant="line">
+          <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="meetings">Meetings</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>

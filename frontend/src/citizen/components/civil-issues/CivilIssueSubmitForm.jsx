@@ -35,6 +35,8 @@ export default function CivilIssueSubmitForm({
     handleFileChange,
     handleSubmit,
     removeFile,
+    removeExistingFile,
+    retainedAttachments,
     setFormData,
     showValidationErrors,
     submitAttemptCount,
@@ -124,17 +126,17 @@ export default function CivilIssueSubmitForm({
         errors={showValidationErrors ? fieldErrors : {}}
       />
 
-      {!isEditMode ? (
-        <CivilIssueAttachmentsSection
-          attachments={attachments}
-          maxFiles={MAX_FILES}
-          maxFileSizeMB={MAX_FILE_SIZE_MB}
-          inputRef={attachmentsInputRef}
-          onFileChange={handleFileChange}
-          onRemoveFile={removeFile}
-          onTriggerFileDialog={() => attachmentsInputRef.current?.click()}
-        />
-      ) : null}
+      <CivilIssueAttachmentsSection
+        attachments={attachments}
+        existingAttachments={isEditMode ? retainedAttachments : []}
+        maxFiles={MAX_FILES}
+        maxFileSizeMB={MAX_FILE_SIZE_MB}
+        inputRef={attachmentsInputRef}
+        onFileChange={handleFileChange}
+        onRemoveFile={removeFile}
+        onRemoveExistingFile={removeExistingFile}
+        onTriggerFileDialog={() => attachmentsInputRef.current?.click()}
+      />
 
       <CivilIssueVisibilityToggle
         checked={formData.isPublic}

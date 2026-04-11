@@ -103,7 +103,7 @@ export default function CitizenCivilIssueEditPage() {
         <div className="mb-5 space-y-2 sm:mb-6">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Update Civil Issue</h1>
           <p className="text-sm text-slate-500 sm:text-base">
-            You can adjust the report details while this issue is still pending. Category, attachments, and public visibility cannot be changed here.
+            You can adjust the report details while this issue is still pending. Category cannot be changed here. You can add more attachments up to the 5-file limit.
           </p>
         </div>
 

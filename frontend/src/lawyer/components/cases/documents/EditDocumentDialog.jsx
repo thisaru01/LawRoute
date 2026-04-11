@@ -11,17 +11,35 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-export default function EditDocumentDialog({ doc, isOpen, onClose, onConfirm, isUpdating }) {
+// Dialog used to rename a document and update its description
+export default function EditDocumentDialog({
+  doc,
+  isOpen,
+  onClose,
+  onConfirm,
+  isUpdating,
+}) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  // When a document is selected and dialog opens, preload its values
   useEffect(() => {
     if (doc && isOpen) {
-      setTitle(doc.title || "");
-      setDescription(doc.description || "");
+      const t = doc.title || "";
+      const d = doc.description || "";
+      Promise.resolve().then(() => {
+        setTitle(t);
+        setDescription(d);
+      });
+      return;
     }
+    Promise.resolve().then(() => {
+      setTitle("");
+      setDescription("");
+    });
   }, [doc, isOpen]);
 
+  // Confirm handler delegates update logic back to parent via onConfirm
   const handleSave = async () => {
     if (!title.trim() || !doc) return;
     const success = await onConfirm(doc._id, title, description);
