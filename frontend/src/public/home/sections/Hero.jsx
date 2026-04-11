@@ -34,7 +34,7 @@ export default function Hero() {
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
-              to="/find-a-lawyer"
+              to="/find-a-lawyer#lawyer-search"
               className="inline-flex h-12 items-center justify-center rounded-full border border-transparent bg-[#faad38] px-8 text-sm font-semibold text-black shadow-sm transition-colors hover:border-white/60 hover:bg-transparent hover:text-white/90"
             >
               Find a lawyer
