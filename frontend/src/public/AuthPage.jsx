@@ -7,6 +7,9 @@ import SignInForm from "@/public/auth/SignInForm.jsx";
 import SignUpForm from "@/public/auth/SignUpForm.jsx";
 import { useAuth } from "@/context/auth/useAuth";
 import { getDashboardPathForRole } from "@/context/auth/authRouting";
+import logoWhite from "@/assets/LawRouteLogoWhite.png";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -104,12 +107,15 @@ export default function AuthPage() {
               <div className="flex h-full items-center justify-center p-10">
                 <div className="w-full max-w-sm">
                   <div className="mb-8 space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      LawRoute
+                    <div className="flex flex-col items-start gap-6">
+                      <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+                        <ArrowLeft className="h-5 w-5" />
+                        <span className="ml-2 text-sm">Home</span>
+                      </Link>
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {title}
+                      </h1>
                     </div>
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {title}
-                    </h1>
                     <p className="text-sm text-muted-foreground">{subtitle}</p>
                   </div>
 
@@ -153,17 +159,20 @@ export default function AuthPage() {
               <div className="relative flex h-full items-center justify-center overflow-hidden bg-primary p-10 text-primary-foreground">
                 <div className="absolute inset-0 bg-linear-to-br from-primary to-primary/70" />
                 <div className="relative w-full max-w-md space-y-10">
+                  <div>
+                    <img src={logoWhite} alt="LawRoute" className="h-24 mx-auto" />
+                  </div>
                   <div className="space-y-4">
                     <h2 className="text-4xl font-semibold tracking-tight">
                       Enter the future
-                      <br />
+                      
                       of legal support,
-                      <br />
+                      
                       today
                     </h2>
                     <p className="text-sm text-primary-foreground/80">
                       Find the right help, track your progress, and stay
-                      informed — all in one place.
+                      informed all in one place.
                     </p>
                   </div>
 
@@ -186,12 +195,15 @@ export default function AuthPage() {
           <div className="lg:hidden">
             <div className="grid gap-6 p-6 sm:p-10">
               <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  LawRoute
+                <div className="flex flex-col items-start gap-3">
+                  <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="ml-2 text-sm">Home</span>
+                  </Link>
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    {title}
+                  </h1>
                 </div>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {title}
-                </h1>
                 <p className="text-sm text-muted-foreground">{subtitle}</p>
               </div>
 

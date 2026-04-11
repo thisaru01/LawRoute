@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 import { Search, SlidersHorizontal, X, RotateCcw, AlertCircle } from "lucide-react";
 
@@ -40,6 +40,7 @@ function useDebounced(value, delay) {
 //  Component 
 export default function FindLawyerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   // Controlled inputs — read initial values from URL
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
@@ -58,6 +59,21 @@ export default function FindLawyerPage() {
     if (isFree)                    next.isFree    = "true";
     setSearchParams(next, { replace: true });
   }, [debouncedSearch, expertise, isFree, setSearchParams]);
+
+  // Smooth-scroll to an element when a hash is present in the URL (e.g. /find-a-lawyer#lawyer-search)
+  useEffect(() => {
+    if (!location?.hash) return;
+    const id = location.hash.replace(/^#/, "");
+    const scrollToId = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+
+    // Try immediately and once on next frame in case the element isn't mounted yet
+    scrollToId();
+    const raf = requestAnimationFrame(scrollToId);
+    return () => cancelAnimationFrame(raf);
+  }, [location]);
 
   // Fetch lawyers
   const { data: lawyers, isLoading, error, refresh } = useFindLawyers({
