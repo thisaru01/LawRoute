@@ -48,38 +48,47 @@ export default function LawyerDashboard() {
           description="Share your expertise with the community"
           href="/lawyer/articles/create"
           icon={<BookOpenIcon className="h-5 w-5" />}
+          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+          hoverBg="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10"
         />
         <QuickLinkCard 
           title="View Active Cases" 
           description="Manage your ongoing legal matters"
           href="/lawyer/cases/opened"
           icon={<BriefcaseIcon className="h-5 w-5" />}
+          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+          hoverBg="hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
         />
         <QuickLinkCard 
           title="Respond to Requests" 
           description="View new consultation requests"
           href="/lawyer/consultation-requests/pending"
           icon={<MessageIcon className="h-5 w-5" />}
+          iconColor="text-purple-600 dark:text-purple-400"
+          iconBg="bg-purple-100 dark:bg-purple-900/30"
+          hoverBg="hover:bg-purple-50/50 dark:hover:bg-purple-900/10"
         />
       </div>
     </div>
   );
 }
 
-function QuickLinkCard({ title, description, href, icon }) {
+function QuickLinkCard({ title, description, href, icon, iconColor, iconBg, hoverBg }) {
   return (
     <Button 
       variant="outline" 
       asChild 
-      className="group h-auto flex-col items-start gap-3 p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-2xl border-none shadow-sm dark:bg-zinc-900/40 hover:bg-primary/5 active:scale-95"
+      className={`group h-auto flex-col items-start gap-4 p-6 text-left transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl border-none shadow-sm dark:bg-zinc-900/40 ${hoverBg} active:scale-95 rounded-2xl`}
     >
       <a href={href} className="w-full">
-        <div className="rounded-xl bg-primary/10 p-3 text-primary transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-primary/20 shadow-sm">
+        <div className={`rounded-2xl ${iconBg} p-3.5 ${iconColor} transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm inline-flex items-center justify-center`}>
           {icon}
         </div>
-        <div className="space-y-1 mt-1">
+        <div className="space-y-1.5 mt-4">
           <div className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">{title}</div>
-          <div className="text-xs text-muted-foreground line-clamp-1 opacity-80 group-hover:opacity-100">{description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-2 leading-relaxed opacity-80 group-hover:opacity-100">{description}</div>
         </div>
       </a>
     </Button>

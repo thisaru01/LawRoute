@@ -43,12 +43,12 @@ export default function ContactSection({
   const hasValidationError = !!phoneError || !!locationError || !!addressError;
 
   return (
-    <Card className="overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-blue-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
+    <Card className="group overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-blue-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
       <CardHeader className="border-b bg-gray-50/30">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border shadow-sm text-blue-600">
-              <Phone className="w-5 h-5" />
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30">
+              <Phone className="w-6 h-6 text-blue-600 fill-blue-200/30" />
             </div>
             <div>
               <CardTitle className="text-xl">Contact Details</CardTitle>
