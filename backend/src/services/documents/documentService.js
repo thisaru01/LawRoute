@@ -1,9 +1,7 @@
-import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
 import Document from "../../models/documents/documentModel.js";
 import {
   ensureValidDocumentId,
-  ensureUserAuthenticated,
   validateCreatePayload,
   validateUpdatePayload,
   validateDeletePayload,
