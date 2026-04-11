@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { useAdminDocuments } from "@/hooks/documents/useAdminDocuments";
 import AdminUploadDocumentContent from "@/admin/components/documents/AdminUploadDocumentContent";
-import EditDocumentDialog from "@/lawyer/components/cases/EditDocumentDialog";
+import EditDocumentDialog from "@/lawyer/components/cases/documents/EditDocumentDialog";
 
 function DocumentCard({ doc, onDelete, onEdit }) {
   const fileName = doc.fileUrl?.split("/").pop() || doc.fileType || "Document";
