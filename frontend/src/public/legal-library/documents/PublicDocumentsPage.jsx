@@ -126,7 +126,7 @@ export default function PublicDocumentsPage() {
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 Documents
               </h1>
-              <p className="text-sm sm:text-base text-slate-500 max-w-2xl">
+              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
                 Browse publicly available legal documents uploaded by the
                 platform administrators.
               </p>

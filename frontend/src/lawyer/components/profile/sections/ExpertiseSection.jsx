@@ -26,12 +26,12 @@ export default function ExpertiseSection({
   LANGUAGE_OPTIONS,
 }) {
   return (
-    <Card className="overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-blue-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
+    <Card className="group overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 hover:border-indigo-200/80 transition-all duration-500 ease-in-out border-gray-200/60">
       <CardHeader className="border-b bg-gray-50/30">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border shadow-sm text-blue-600">
-              <Briefcase className="w-5 h-5 text-blue-500" />
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 shadow-sm text-indigo-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30">
+              <Briefcase className="w-6 h-6 text-indigo-600 fill-indigo-200/30" />
             </div>
             <div>
               <CardTitle className="text-xl">Expertise & Experience</CardTitle>

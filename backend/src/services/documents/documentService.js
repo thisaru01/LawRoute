@@ -1,31 +1,14 @@
-import mongoose from "mongoose";
 import { cloudinary } from "../../config/cloudinary.js";
 import Document from "../../models/documents/documentModel.js";
+import {
+  ensureValidDocumentId,
+  validateCreatePayload,
+  validateUpdatePayload,
+  validateDeletePayload,
+} from "../../validations/documents/documentValidation.js";
 
 export const createDocument = async ({ title, description, user, fileUrl, filePublicId, fileType }) => {
-  if (!user || !user._id) {
-    const err = new Error("Unauthorized");
-    err.status = 401;
-    throw err;
-  }
-
-  if (user.role !== "admin") {
-    const err = new Error("Only admins can upload documents");
-    err.status = 403;
-    throw err;
-  }
-
-  if (!title) {
-    const err = new Error("Title is required");
-    err.status = 400;
-    throw err;
-  }
-
-  if (!fileUrl || !filePublicId) {
-    const err = new Error("PDF file is required");
-    err.status = 400;
-    throw err;
-  }
+  validateCreatePayload({ user, title, fileUrl, filePublicId });
 
   let thumbnailUrl;
 
@@ -62,13 +45,7 @@ export const getAllDocuments = async () => {
 };
 
 export const getDocumentById = async ({ id }) => {
-  const cleanId = String(id).replace(/[<>]/g, "");
-
-  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
-    const err = new Error("Invalid document id");
-    err.status = 400;
-    throw err;
-  }
+  const cleanId = ensureValidDocumentId(id);
 
   const doc = await Document.findById(cleanId);
   if (!doc) {
@@ -80,26 +57,26 @@ export const getDocumentById = async ({ id }) => {
   return doc;
 };
 
+export const updateDocument = async ({ id, title, description, user }) => {
+  const cleanId = ensureValidDocumentId(id);
+  validateUpdatePayload({ user });
+
+  const doc = await Document.findById(cleanId);
+  if (!doc) {
+    const err = new Error("Document not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (title !== undefined) doc.title = title;
+  if (description !== undefined) doc.description = description;
+
+  await doc.save();
+  return doc;
+};
 export const deleteDocument = async ({ id, user }) => {
-  const cleanId = String(id).replace(/[<>]/g, "");
-
-  if (!mongoose.Types.ObjectId.isValid(cleanId)) {
-    const err = new Error("Invalid document id");
-    err.status = 400;
-    throw err;
-  }
-
-  if (!user || !user._id) {
-    const err = new Error("Unauthorized");
-    err.status = 401;
-    throw err;
-  }
-
-  if (user.role !== "admin") {
-    const err = new Error("Only admins can delete documents");
-    err.status = 403;
-    throw err;
-  }
+  const cleanId = ensureValidDocumentId(id);
+  validateDeletePayload({ user });
 
   const doc = await Document.findById(cleanId);
   if (!doc) {
@@ -124,5 +101,6 @@ export default {
   createDocument,
   getAllDocuments,
   getDocumentById,
+  updateDocument,
   deleteDocument,
 };

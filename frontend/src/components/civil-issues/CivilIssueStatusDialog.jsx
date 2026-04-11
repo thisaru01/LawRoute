@@ -14,6 +14,38 @@ import { updateCivilIssueStatus, rejectCivilIssue } from "@/api/services/civilIs
 import { toast } from "sonner";
 import { Loader2, ShieldAlert, CheckCircle2, PlayCircle } from "lucide-react";
 
+const validateNoteQuality = (value, { required = false } = {}) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return required ? "This note is required." : "";
+  }
+
+  // Blocks long repeated character sequences such as "aaaaaa" or "111111".
+  if (/(.)\1{5,}/i.test(trimmed)) {
+    return "Please enter a normal note without repeated characters.";
+  }
+
+  // Blocks repeated words like "test test test test".
+  if (/\b([a-z0-9]+)(?:\s+\1){3,}\b/i.test(trimmed)) {
+    return "Please provide a meaningful note instead of repeating words.";
+  }
+
+  const alphaNumChars = (trimmed.match(/[a-z0-9]/gi) || []).map((ch) =>
+    ch.toLowerCase(),
+  );
+  if (alphaNumChars.length >= 10) {
+    const uniqueCount = new Set(alphaNumChars).size;
+    const uniqueRatio = uniqueCount / alphaNumChars.length;
+
+    if (uniqueRatio < 0.2) {
+      return "Please provide a more realistic note.";
+    }
+  }
+
+  return "";
+};
+
 /**
  * A specialized dialog that adapts to different civil issue status transitions.
  * 
@@ -22,6 +54,7 @@ export default function CivilIssueStatusDialog({ issue, targetStatus, open, onOp
   const [note, setNote] = useState("");
   const [resolutionSummary, setResolutionSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const [noteError, setNoteError] = useState("");
 
   const isReject = targetStatus === "rejected";
   const isResolve = targetStatus === "resolved";
@@ -37,6 +70,17 @@ export default function CivilIssueStatusDialog({ issue, targetStatus, open, onOp
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const noteValidationMessage = validateNoteQuality(note, {
+      required: isReject || isResolve,
+    });
+    if (noteValidationMessage) {
+      setNoteError(noteValidationMessage);
+      toast.error(noteValidationMessage);
+      return;
+    }
+
+    setNoteError("");
     setLoading(true);
 
     try {
@@ -54,6 +98,7 @@ export default function CivilIssueStatusDialog({ issue, targetStatus, open, onOp
 
       setNote("");
       setResolutionSummary("");
+      setNoteError("");
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -88,11 +133,26 @@ export default function CivilIssueStatusDialog({ issue, targetStatus, open, onOp
               <Textarea
                 id="note"
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
+                onChange={(e) => {
+                  const nextNote = e.target.value;
+                  setNote(nextNote);
+
+                  if (noteError) {
+                    setNoteError(
+                      validateNoteQuality(nextNote, {
+                        required: isReject || isResolve,
+                      }),
+                    );
+                  }
+                }}
                 placeholder={isReject ? "Briefly explain why this is being rejected..." : "Add any relevant context..."}
                 required={isReject || isResolve}
+                aria-invalid={noteError ? "true" : "false"}
                 className="min-h-[100px] resize-none"
               />
+              {noteError && (
+                <p className="text-xs text-destructive">{noteError}</p>
+              )}
             </div>
 
             {isResolve && (

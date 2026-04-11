@@ -40,7 +40,7 @@ export default function PendingArticleCard({ article, status = "pending", routeP
 
       {/* top-left title removed to avoid duplicate with bottom overlay */}
         {/* bottom overlay with large title and excerpt (like screenshot) */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent text-white">
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-black/70 to-transparent text-white">
           <div className="flex flex-col">
             <h3 className="text-2xl font-semibold mb-2">{article?.title || "Untitled"}</h3>
 

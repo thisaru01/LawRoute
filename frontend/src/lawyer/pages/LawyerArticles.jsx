@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { getMyArticles } from "@/api/services/articleService";
 import PendingArticleCard from "@/admin/components/articles/PendingArticleCard";
 import { useAuth } from "@/context/auth/useAuth";
+import EmptyState from "@/components/consultation-requests/EmptyState";
+import { FileText } from "lucide-react";
 
 const ALLOWED = new Set(["pending", "published", "rejected"]);
 
@@ -51,7 +53,17 @@ export default function LawyerArticles() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {!loading && !error && articles.length === 0 && (
-          <p className="text-sm text-muted-foreground">No {activeStatus} articles found.</p>
+          <EmptyState
+            title={`No ${activeStatus} articles found.`}
+            message={
+              activeStatus === "pending"
+                ? "You don't have any pending articles. Submit a new article to see it listed here."
+                : activeStatus === "published"
+                ? "You haven't published any articles yet. Once you publish, they'll appear here."
+                : "None of your articles are currently rejected. If an article gets rejected, it will show up here with details."
+            }
+            icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
+          />
         )}
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
