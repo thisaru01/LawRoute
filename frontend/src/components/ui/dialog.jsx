@@ -48,8 +48,6 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
-  defaultTitle = "Dialog",
-  defaultDescription = "Dialog content",
   ...props
 }) {
   return (
@@ -62,10 +60,6 @@ function DialogContent({
           className
         )}
         {...props}>
-        <DialogPrimitive.Title className="sr-only">{defaultTitle}</DialogPrimitive.Title>
-        <DialogPrimitive.Description className="sr-only">
-          {defaultDescription}
-        </DialogPrimitive.Description>
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close data-slot="dialog-close" asChild>

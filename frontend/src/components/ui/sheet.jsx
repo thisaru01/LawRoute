@@ -39,8 +39,6 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
-  defaultTitle = "Sheet",
-  defaultDescription = "Sheet content",
   ...props
 }) {
   return (
@@ -55,10 +53,6 @@ function SheetContent({
         )}
         {...props}
       >
-        <SheetPrimitive.Title className="sr-only">{defaultTitle}</SheetPrimitive.Title>
-        <SheetPrimitive.Description className="sr-only">
-          {defaultDescription}
-        </SheetPrimitive.Description>
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close data-slot="sheet-close" asChild>
