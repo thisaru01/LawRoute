@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar.jsx";
+import Footer from "@/components/Footer.jsx";
 import { useNavigate } from "react-router-dom";
 import { LayoutDashboard, MapPin, Paperclip, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -225,12 +226,7 @@ export default function PublicCivilIssuesPage() {
         )}
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-5 flex items-center justify-between gap-4 flex-wrap">
-          <span className="text-sm text-slate-500">© {new Date().getFullYear()} <span className="font-semibold text-slate-700">LawRoute</span></span>
-          <span className="text-[11px] text-slate-400 tracking-wide">Empowering citizens through legal awareness.</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
