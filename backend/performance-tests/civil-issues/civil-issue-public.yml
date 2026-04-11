@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 3
+      name: "Warm up public civil issue browsing"
+    - duration: 30
+      arrivalRate: 6
+      name: "Steady public civil issue browsing"
+    - duration: 10
+      arrivalRate: 3
+      name: "Cool down public civil issue browsing"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Public: Browse visible civil issues"
+    flow:
+      - get:
+          url: "/api/civil-issues/public?page=1&limit=10"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/civil-issues/public?district=Colombo&location=Bambalapitiya&page=1&limit=5"
+          expect:
+            - statusCode: 200
