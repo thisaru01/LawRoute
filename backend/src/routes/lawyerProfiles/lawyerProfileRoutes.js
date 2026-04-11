@@ -8,6 +8,7 @@ import {
   updateLawyerVerificationStatus,
   updateLawyerProfile,
   getLawyerProfileById,
+  getLawyerDashboard,
 } from "../../controllers/lawyerProfiles/lawyerProfileController.js";
 import { protect, authorizeRoles } from "../../middleware/authMiddleware.js";
 import {
@@ -25,6 +26,14 @@ router.get("/approved", getApprovedLawyerProfiles);
 
 // Get logged-in lawyer profile
 router.get("/me", protect, authorizeRoles("lawyer"), getMyLawyerProfile);
+
+// Get dashboard statistics for the authenticated lawyer
+router.get(
+  "/dashboard/stats",
+  protect,
+  authorizeRoles("lawyer"),
+  getLawyerDashboard,
+);
 
 // Update logged-in lawyer profile
 router.put(

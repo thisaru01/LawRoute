@@ -1,0 +1,90 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 4
+      name: "Lawyer profile management mixed load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Public: Browse lawyer profiles"
+    weight: 35
+    flow:
+      - get:
+          url: "/api/lawyer-profile"
+      - get:
+          url: "/api/lawyer-profile/approved"
+          qs:
+            expertise: "civil"
+            isFree: "true"
+
+  - name: "Lawyer: View and update own profile"
+    weight: 45
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.LAWYER_EMAIL }}"
+            password: "{{ $processEnvironment.LAWYER_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+      - get:
+          url: "/api/lawyer-profile/me"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - put:
+          url: "/api/lawyer-profile/me"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            basicInfo:
+              professionalTitle: "Attorney-at-Law"
+              contactInfo:
+                phone: "0712345678"
+                officeAddress: "No 10, Main Street, Colombo"
+                location: "Colombo"
+              bio: "Experienced attorney providing practical and client-focused legal support for civil and commercial matters in Sri Lanka."
+              languages:
+                - "English"
+                - "Sinhala"
+              practiceAreas:
+                - name: "civil"
+                  level: "intermediate"
+            experience:
+              totalYearsExperience: 6
+            educationQualifications:
+              education:
+                - degree: "LLB"
+                  institute: "University of Colombo"
+                  graduationYear: 2016
+            memberships:
+              - "BASL"
+            expertise: "civil"
+            isFree: false
+
+  - name: "Admin: Review and update verification status"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $processEnvironment.ADMIN_EMAIL }}"
+            password: "{{ $processEnvironment.ADMIN_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: adminToken
+      - get:
+          url: "/api/lawyer-profile/admin/lawyers"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          qs:
+            verificationStatus: "pending"
+      - patch:
+          url: "/api/lawyer-profile/admin/lawyers/{{ $processEnvironment.LAWYER_ID }}/verification-status"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          json:
+            verificationStatus: "pending"
