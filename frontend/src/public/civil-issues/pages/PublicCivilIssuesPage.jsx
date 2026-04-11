@@ -1,5 +1,7 @@
 import Navbar from "@/components/Navbar.jsx";
-import { useNavigate } from "react-router-dom";
+import Footer from "@/components/Footer.jsx";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, MapPin, Paperclip, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IssueCard from "@/public/civil-issues/components/IssueCard.jsx";
@@ -13,6 +15,7 @@ import { useAuth } from "@/context/auth/useAuth";
 
 export default function PublicCivilIssuesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, role } = useAuth();
   const {
     CATEGORY_LABELS,
@@ -43,12 +46,26 @@ export default function PublicCivilIssuesPage() {
     totalPages,
   } = usePublicCivilIssuesPage();
 
+  // Smooth-scroll to hash when navigated from another page (e.g. /civil-issues#issues-list)
+  useEffect(() => {
+    if (!location?.hash) return;
+    const id = location.hash.replace(/^#/, "");
+    const scrollToId = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+
+    scrollToId();
+    const raf = requestAnimationFrame(scrollToId);
+    return () => cancelAnimationFrame(raf);
+  }, [location]);
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
       <main>
-        <section className="py-12 sm:py-16 lg:py-20 border-b border-slate-200">
+        <section id="issues-list" className="py-12 sm:py-16 lg:py-20 border-b border-slate-200">
           <div className="max-w-5xl mx-auto px-4 space-y-12">
             <div className="space-y-4">
               <div className="space-y-3">
@@ -225,12 +242,7 @@ export default function PublicCivilIssuesPage() {
         )}
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-5 flex items-center justify-between gap-4 flex-wrap">
-          <span className="text-sm text-slate-500">© {new Date().getFullYear()} <span className="font-semibold text-slate-700">LawRoute</span></span>
-          <span className="text-[11px] text-slate-400 tracking-wide">Empowering citizens through legal awareness.</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

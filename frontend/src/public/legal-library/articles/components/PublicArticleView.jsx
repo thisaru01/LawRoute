@@ -55,11 +55,11 @@ export default function PublicArticleView() {
   const heroSrc = article?.imageUrl || article?.imagecardUrl || "";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-background text-slate-900">
       <Navbar />
 
       <main>
-        <section className="bg-slate-50 border-b border-slate-200">
+        <section className="bg-background border-b border-slate-200">
           <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10">
             {/* back button displayed next to the title for horizontal alignment */}
 
@@ -138,11 +138,7 @@ export default function PublicArticleView() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-          © {new Date().getFullYear()} LawRoute
-        </div>
-      </footer>
+      
     </div>
   );
 }

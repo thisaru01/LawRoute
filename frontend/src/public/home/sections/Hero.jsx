@@ -26,15 +26,15 @@ export default function Hero() {
             Navigate Sri Lankan law with confidence
           </h1>
 
-          <p className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-100/80">
-            LawRoute connects citizens, lawyers, and authorities in one trusted digital space.
-            Find the right legal help, understand your options, and move your case forward with
-            clarity and transparency.
+          <p className="max-w-xl mt-4 text-base sm:text-lg leading-relaxed text-slate-100/80">
+            LawRoute connects citizens, lawyers, and authorities in one trusted
+            digital space. Find the right legal help, understand your options,
+            and move your case forward with clarity and transparency.
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-4">
+          <div className="mt-12 flex flex-wrap items-center gap-5">
             <Link
-              to="/find-a-lawyer"
+              to="/find-a-lawyer#lawyer-search"
               className="inline-flex h-12 items-center justify-center rounded-full border border-transparent bg-[#faad38] px-8 text-sm font-semibold text-black shadow-sm transition-colors hover:border-white/60 hover:bg-transparent hover:text-white/90"
             >
               Find a lawyer

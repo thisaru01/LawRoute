@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import section1 from "@/assets/section1.jpg";
+import section2 from "@/assets/section2.jpg";
+import section3 from "@/assets/section3.jpg";
+import section4 from "@/assets/section4.jpg";
+import section5 from "@/assets/section5.jpg";
 
 const FEATURES = [
   {
@@ -48,7 +53,7 @@ export default function Features() {
   const [firstFeature, ...otherFeatures] = FEATURES;
 
   return (
-    <section className="relative border-t border-slate-200 bg-white">
+    <section id="features" className="relative border-t border-slate-200 bg-white">
       {/* Subtle background pattern to match hero */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
         <div
@@ -94,17 +99,15 @@ export default function Features() {
                   asChild
                   className="h-12 rounded-full bg-[#121212] px-8 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <Link to={firstFeature.href}>{firstFeature.ctaLabel}</Link>
+                  <Link to={`${firstFeature.href}#lawyer-search`}>{firstFeature.ctaLabel}</Link>
                 </Button>
               </div>
             </div>
 
             {/* Image placeholder column */}
             <div className="order-2">
-              <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
-                <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">
-                  Feature preview
-                </div>
+              <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-4/3">
+                <img src={section1} alt="Request consultations" className="h-full w-full object-cover" />
               </div>
             </div>
           </div>
@@ -143,17 +146,51 @@ export default function Features() {
                       asChild
                       className="h-12 rounded-full bg-[#121212] px-8 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      <Link to={feature.href}>{feature.ctaLabel}</Link>
+                      <Link to={
+                        feature.href === "/find-a-lawyer"
+                          ? `${feature.href}#lawyer-search`
+                          : feature.href === "/legal-library/articles"
+                          ? `${feature.href}#articles-list`
+                          : feature.href === "/civil-issues"
+                          ? `${feature.href}#issues-list`
+                          : feature.href
+                      }>{feature.ctaLabel}</Link>
                     </Button>
                   </div>
                 </div>
 
                 {/* Image placeholder column */}
                 <div className={imageColClasses}>
-                  <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-[4/3]">
-                    <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">
-                      Feature preview
-                    </div>
+                  <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/80 shadow-sm aspect-4/3">
+                    {feature.id === "legal-library" ? (
+                      <img
+                        src={section3}
+                        alt={feature.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : feature.id === "cases" ? (
+                      <img
+                        src={section2}
+                        alt={feature.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : feature.id === "civil-issues" ? (
+                      <img
+                        src={section4}
+                        alt={feature.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : feature.id === "lawyer-profiles" ? (
+                      <img
+                        src={section5}
+                        alt={feature.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">
+                        Feature preview
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
