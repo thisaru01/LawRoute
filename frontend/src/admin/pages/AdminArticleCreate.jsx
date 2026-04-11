@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -24,7 +24,6 @@ export default function AdminArticleCreate({ redirectPath = "/admin/articles/pen
   const categories = useArticleCategories(DEFAULT_ARTICLE_CATEGORIES);
   const {
     file: image,
-    setFile: setImage,
     inputRef: imageInputRef,
     handleChange: handleImageChange,
     openPicker: openImagePicker,
@@ -33,7 +32,6 @@ export default function AdminArticleCreate({ redirectPath = "/admin/articles/pen
   } = useArticleFileInput();
   const {
     file: imageCard,
-    setFile: setImageCard,
     inputRef: imageCardInputRef,
     handleChange: handleImageCardChange,
     openPicker: openImageCardPicker,
