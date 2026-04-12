@@ -421,7 +421,7 @@ VITE_API_BASE_URL=https://lawroute-production.up.railway.app/api
 ### Live URLs
 
 - Backend (Railway): https://lawroute-production.up.railway.app
-- Frontend (Vercel): https://law-route-sl.vercel.app`
+- Frontend (Vercel): https://law-route-sl.vercel.app
 
 ---
 
