@@ -14,10 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  DEFAULT_ARTICLE_CATEGORIES,
-  useArticleCategories,
-} from "@/hooks/articles/useArticleCategories";
+import DEFAULT_ARTICLE_CATEGORIES from "@/constants/articleCategories";
 
 function formatDate(d) {
   try {
@@ -45,7 +42,7 @@ export default function PublicArticlesPage() {
   const [error, setError] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("All");
 
-  const categories = useArticleCategories(DEFAULT_ARTICLE_CATEGORIES);
+  const categories = DEFAULT_ARTICLE_CATEGORIES;
 
   useEffect(() => {
     let mounted = true;
@@ -100,7 +97,10 @@ export default function PublicArticlesPage() {
       <Navbar />
 
       <main>
-        <section id="articles-list" className="bg-background py-10 sm:py-14 border-b border-slate-200">
+        <section
+          id="articles-list"
+          className="bg-background py-10 sm:py-14 border-b border-slate-200"
+        >
           <div className="mx-auto w-full max-w-6xl px-4 space-y-6">
             <div className="space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
@@ -112,19 +112,22 @@ export default function PublicArticlesPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                  Browse published legal articles written by verified lawyers and authorities. These do not replace legal advice, but can help you
-                  understand common topics and procedures.
+                  Browse published legal articles written by verified lawyers
+                  and authorities. These do not replace legal advice, but can
+                  help you understand common topics and procedures.
                 </div>
 
                 <div className="pt-1 sm:pt-0">
                   <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="inline-flex items-center gap-2 rounded-md px-4 py-1 text-sm"
-                    >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="inline-flex items-center gap-2 rounded-md px-4 py-1 text-sm"
+                      >
                         <span className="font-medium text-foreground">
-                          {categoryFilter === "All" ? "All categories" : categoryFilter}
+                          {categoryFilter === "All"
+                            ? "All categories"
+                            : categoryFilter}
                         </span>
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -167,7 +170,9 @@ export default function PublicArticlesPage() {
             {error && !loading && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-red-900">Unable to Load Articles</h3>
+                  <h3 className="font-semibold text-red-900">
+                    Unable to Load Articles
+                  </h3>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
                 <button
@@ -197,12 +202,17 @@ export default function PublicArticlesPage() {
                 {filteredArticles.length === 0 ? (
                   <EmptyState
                     title="No articles have been published yet."
-                    message={"Check back later for new articles published by verified authors."}
+                    message={
+                      "Check back later for new articles published by verified authors."
+                    }
                     icon={<FileText className="mb-2 h-7 w-7 opacity-30" />}
                   />
                 ) : (
                   filteredArticles.map((article) => (
-                    <ArticleCard key={article._id || article.id} article={article} />
+                    <ArticleCard
+                      key={article._id || article.id}
+                      article={article}
+                    />
                   ))
                 )}
               </div>
@@ -214,8 +224,6 @@ export default function PublicArticlesPage() {
     </div>
   );
 }
-
-
 
 function ArticleCard({ article }) {
   const hasImage = Boolean(article?.imagecardUrl || article?.imageUrl);

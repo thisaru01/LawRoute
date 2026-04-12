@@ -326,7 +326,7 @@ npx dotenv -e .env -- npx artillery run performance-tests/consultaion-request/co
 
 If you prefer to export environment variables manually instead of using `dotenv`, set them in your shell before running Artillery.
 
-You can create or adjust additional scenarios by editing or adding YAML files in `backend/performance-tests/`.
+You can create or adjust additional scenarios by editing or adding .YML files in `backend/performance-tests/`.
 
 ### Testing Environment Configuration
 
@@ -412,7 +412,7 @@ MAIL_FROM=LawRoute <your_email@gmail.com>
 GEOAPIFY_API_KEY=<your_geoapify_key>
 ```
 
-- **Frontend (Netlify)**
+- **Frontend (Vercel)**
 
 ```env
 VITE_API_BASE_URL=https://lawroute-production.up.railway.app/api
@@ -420,8 +420,8 @@ VITE_API_BASE_URL=https://lawroute-production.up.railway.app/api
 
 ### Live URLs
 
-- Backend (Railway): `https://lawroute-production.up.railway.app`
-- Frontend (Netlify): `https://law-route-sl.vercel.app`
+- Backend (Railway): https://lawroute-production.up.railway.app
+- Frontend (Vercel): https://law-route-sl.vercel.app`
 
 ---
 
